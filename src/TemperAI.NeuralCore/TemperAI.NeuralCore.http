@@ -1,0 +1,6 @@
+@TemperAI.NeuralCore_HostAddress = http://localhost:5238
+
+GET {{TemperAI.NeuralCore_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

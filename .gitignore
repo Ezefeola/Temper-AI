@@ -1,0 +1,32 @@
+## IDE
+.vs/
+.vscode/
+*.userprefs
+*.suo
+
+## Build outputs
+bin/
+obj/
+publish/
+
+## Executables
+*.exe
+*.dll
+
+## OS
+.DS_Store
+Thumbs.db
+
+## User-specific
+*.user
+*.psess
+
+## Test results
+TestResults/
+
+## Node modules (if any)
+node_modules/
+
+## Temp files
+*.tmp
+*.log

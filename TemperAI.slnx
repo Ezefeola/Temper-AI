@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TemperAI.Cli/TemperAI.Cli.csproj" />
+    <Project Path="src/TemperAI.Core/TemperAI.Core.csproj" />
+    <Project Path="src/TemperAI.Installer/TemperAI.Installer.csproj" />
+    <Project Path="src/TemperAI.NeuralCore/TemperAI.NeuralCore.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TemperAI.Core.UnitTests/TemperAI.Core.UnitTests.csproj" />
+    <Project Path="tests/TemperAI.Installer.UnitTests/TemperAI.Installer.UnitTests.csproj" />
+    <Project Path="tests/TemperAI.NeuralCore.Domain.UnitTests/TemperAI.NeuralCore.Domain.UnitTests.csproj" />
+  </Folder>
+</Solution>
