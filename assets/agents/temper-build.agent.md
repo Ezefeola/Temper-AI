@@ -95,25 +95,28 @@ How would you like to proceed?
 
 ### Phase 4 — Execute based on user's choice
 
+**CRITICAL: Task Isolation Protocol**
+When spawning a sub-agent for a group, you MUST provide ONLY the tasks belonging to that group. Do NOT give the sub-agent access to the full `tasks.md` file. Instead, copy the relevant task definitions into the prompt. This prevents the sub-agent from "running ahead" and completing future tasks with lower quality.
+
 #### Automatic mode
 
 For each group:
-1. Spawn all sub-agents for the group simultaneously.
-2. Each sub-agent receives only its specific task and relevant context.
-3. Wait for all sub-agents in the group to complete.
-4. Ask the user to run `dotnet build` and verify the output.
-5. If build fails: report errors and stop. Do NOT proceed.
-6. If build succeeds: mark tasks as `done` in `tasks.md` and proceed to the next group.
+1. **Extract tasks**: Copy the exact text of the tasks in the current group from `tasks.md`.
+2. **Spawn sub-agents**: Pass the extracted tasks to the appropriate agents (backend, frontend, etc.).
+   - **Instruction to sub-agent**: "Execute ONLY these tasks. Do NOT read `tasks.md` to find more work. Stop immediately after completing these tasks."
+3. **Wait for completion**: Wait for all sub-agents in the group to report success.
+4. **Verify build**: Ask the user to run `dotnet build` and verify the output.
+5. **Update status**: If build succeeds, mark the completed tasks as `done` in `tasks.md`.
+6. **Proceed**: Move to the next group. If build fails: STOP and report errors.
 
 #### Manual mode
 
 For each group:
-1. Show the user the specific tasks in this group and which agents will be spawned.
-2. Ask for confirmation: "Spawn these [N] agents for Group [X]?"
-3. If user confirms: spawn the sub-agents and wait for completion.
-4. If user declines: stop and wait for further instructions.
-5. After completion: ask the user to run `dotnet build` and verify the output. If it fails, report errors and stop.
-6. If build succeeds: mark tasks as `done` and proceed to the next group.
+1. **Show tasks**: Display the specific tasks in this group.
+2. **Ask for confirmation**: "Spawn these [N] agents for Group [X]?"
+3. **Extract and spawn**: If confirmed, copy the task text and spawn the agents with the same isolation instruction as above.
+4. **Wait and verify**: Wait for completion, then ask the user to run `dotnet build`.
+5. **Update and proceed**: If build succeeds, mark tasks as `done` and move to the next group.
 
 ### Phase 5 — Final verification
 
@@ -172,21 +175,22 @@ The token budget is the same. The time savings come from concurrent execution.
 
 When spawning a sub-agent, provide ONLY:
 
-1. **The specific task** — one clear instruction, not a novel.
+1. **The specific tasks** — copy-paste the exact task definitions for this group.
 2. **The files it needs** — paths to relevant files, not the entire project.
 3. **The skills it needs** — only the skills relevant to its task.
 4. **The constraints** — TemperAI conventions that apply to this specific task.
 
-Do NOT provide:
-- The entire PRD
-- All previous phase outputs
-- Unrelated code files
-- Skills the sub-agent does not need
+**Do NOT provide:**
+- The full `tasks.md` file (prevents the agent from doing future tasks).
+- The entire PRD.
+- All previous phase outputs.
+- Unrelated code files.
+- Skills the sub-agent does not need.
 
 ## Absolute rules
 
 - **NEVER** write implementation code — you are a coordinator, not an implementer.
-- **NEVER** spawn tasks that modify the same file in parallel.
+- **NEVER** give a sub-agent the full `tasks.md` file — always extract only the current group's tasks.
 - **NEVER** skip dependency checks before proceeding to a group.
 - **NEVER** proceed to the next group if `dotnet build` fails.
 - **ALWAYS** ask the user for their preferred execution mode (automatic vs manual) before starting.

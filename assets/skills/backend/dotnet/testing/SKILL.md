@@ -228,9 +228,9 @@ public sealed class ProductsApiTests : IClassFixture<WebApplicationFactory<Progr
 
 ## Rules
 
-- Never use `async void` in tests — always `async Task`.
+For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - Never skip testing error paths — every validation must have a test.
 - Never write tests that depend on non-deterministic behavior.
 - Always test edge cases defined in the spec document.
-- Always use `sealed class` for test classes.
 - Always follow the naming convention: `Method_Scenario_Result`.

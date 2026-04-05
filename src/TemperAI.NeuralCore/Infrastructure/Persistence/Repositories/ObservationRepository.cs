@@ -63,6 +63,14 @@ public sealed class ObservationRepository : IObservationRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Observation>> GetAllAsNoTrackingAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Observations
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(
         Observation observation,
         CancellationToken cancellationToken = default)

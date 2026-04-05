@@ -835,14 +835,9 @@ public sealed class ProductServiceTests
 
 ## Absolute rules
 
+For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - Never put business logic in components — components only orchestrate UI and call services.
-- Never use `async void` — always `async Task`.
-- Never use `.Result` or `.Wait()` — causes deadlocks.
-- Never use primary constructors — always explicit constructors.
-- Never use return expression `=>` on methods — always braces `{}`.
-- Never use `using static` — always use explicit `using` directives with the namespace, then reference types by their name.
-- Never use named usings — rename the entity or use fully qualified namespace instead.
-- Never use `var` — always declare the explicit type.
 - Never inject `HttpClient` directly in components — always use a typed service.
 - Never instantiate `HttpClient` manually — always inject it through DI.
 - Never use `OnSubmit` on EditForm — always use `OnValidSubmit`.
@@ -851,9 +846,7 @@ public sealed class ProductServiceTests
 - Never store sensitive data in localStorage.
 - Always use `[Inject]` attribute for dependency injection — never constructor injection in components.
 - Always handle loading, empty, and error states in every component that fetches data.
-- Always use `CancellationToken` on async service methods.
 - Always separate logic into code-behind when the component exceeds 50 lines.
-- Always use `sealed` on service classes and component code-behind classes that are not inherited.
 - Always use `@key` on list items in `@foreach` loops.
 - Always use `<Virtualize>` for lists with more than 50 items.
 - Always use CSS isolation for component-specific styles.

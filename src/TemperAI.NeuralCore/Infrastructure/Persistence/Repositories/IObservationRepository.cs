@@ -24,6 +24,9 @@ public interface IObservationRepository
         string topicKey,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Observation>> GetAllAsNoTrackingAsync(
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         Observation observation,
         CancellationToken cancellationToken = default);

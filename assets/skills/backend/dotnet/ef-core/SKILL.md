@@ -227,17 +227,17 @@ public sealed class SaveResult
 
 ## Rules
 
+For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - Never `DataAnnotations` on entities or Value Objects.
 - Never `nvarchar(max)` or `varchar(max)` — always specify lengths from `Entity.Rules`.
 - Never `.Update()` from EF Core — change tracker detects changes automatically.
 - Always `GetByIdAsync` with tracking (for modifications) and `GetByIdAsNoTrackingAsync` without tracking (for reads).
-- Always `CancellationToken` on repository methods.
 - Always `AsNoTracking()` on read-only queries.
 - Always one `IEntityTypeConfiguration<T>` per entity.
 - Always `ApplyConfigurationsFromAssembly` in `OnModelCreating`.
 - Always handle `DbUpdateException` in `CompleteAsync` — never let it bubble up.
 - Never lazy loading — explicit includes always.
 - Value Objects configured with `OwnsOne` — no `[ComplexType]` or DataAnnotations.
-- **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - **Never call `builder.ToTable()`** — the table name must be the plural of the entity name, which EF Core infers automatically from the `DbSet<T>` property name. Explicit `ToTable` calls are redundant and error-prone.
 - **Never call `HasDefaultValueSql()` or `ValueGeneratedOnAdd()` for primary keys** — EF Core handles this automatically for `int` and `Guid` keys.

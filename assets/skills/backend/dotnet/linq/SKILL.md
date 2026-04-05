@@ -144,16 +144,136 @@ public async Task<List<Product>> SearchByNameAsync(
 }
 ```
 
+### IN clause with Contains
+
+```csharp
+// GOOD — translates to WHERE Id IN (...)
+public async Task<List<Product>> GetByIdsAsync(
+    List<Guid> ids,
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Products
+        .AsNoTracking()
+        .Where(product => ids.Contains(product.Id))
+        .ToListAsync(cancellationToken);
+}
+```
+
+### ExecuteUpdateAsync / ExecuteDeleteAsync (EF Core 7+)
+
+Use for bulk operations without loading entities into the change tracker.
+
+```csharp
+// GOOD — single SQL UPDATE, no entity loading
+public async Task<int> ActivateProductsByCategoryAsync(
+    string category,
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Products
+        .Where(product => product.Category == category)
+        .ExecuteUpdateAsync(
+            setters => setters.SetProperty(p => p.Status, ProductStatus.Active),
+            cancellationToken);
+}
+
+// BAD — loads all entities, updates each, then saves
+var products = await _appDbContext.Products
+    .Where(p => p.Category == category)
+    .ToListAsync(cancellationToken);
+
+foreach (var product in products)
+{
+    product.Status = ProductStatus.Active;
+}
+
+await _appDbContext.SaveChangesAsync(cancellationToken);
+```
+
+### Query tags for debugging
+
+```csharp
+// GOOD — query appears in logs with tag for easy identification
+public async Task<List<Product>> GetActiveProductsAsync(
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Products
+        .AsNoTracking()
+        .TagWith("GetActiveProducts")
+        .Where(product => product.Status == ProductStatus.Active)
+        .ToListAsync(cancellationToken);
+}
+```
+
+### Split queries for multiple collections
+
+Use `AsSplitQuery()` when including multiple collection navigations to avoid Cartesian explosion.
+
+```csharp
+// GOOD — separate SQL queries for each collection
+public async Task<Order?> GetByIdWithDetailsAsync(
+    Guid orderId,
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Orders
+        .AsNoTracking()
+        .AsSplitQuery()
+        .Include(order => order.Items)
+        .Include(order => order.Payments)
+        .Include(order => order.Shipments)
+        .FirstOrDefaultAsync(
+            order => order.Id == orderId,
+            cancellationToken);
+}
+```
+
+### Navigation properties — never manual joins
+
+```csharp
+// GOOD — uses navigation property, EF Core generates optimal JOIN
+public async Task<List<Product>> GetProductsBySupplierNameAsync(
+    string supplierName,
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Products
+        .AsNoTracking()
+        .Where(product => product.Supplier.Name == supplierName)
+        .ToListAsync(cancellationToken);
+}
+
+// BAD — manual join, harder to read, same result
+public async Task<List<Product>> GetProductsBySupplierNameAsync(
+    string supplierName,
+    CancellationToken cancellationToken = default)
+{
+    return await _appDbContext.Products
+        .AsNoTracking()
+        .Join(
+            _appDbContext.Suppliers,
+            product => product.SupplierId,
+            supplier => supplier.Id,
+            (product, supplier) => new { product, supplier })
+        .Where(x => x.supplier.Name == supplierName)
+        .Select(x => x.product)
+        .ToListAsync(cancellationToken);
+}
+```
+
 ## Performance rules
 
 - **Always** use `AsNoTracking()` for read-only queries.
 - **Always** use `Select` to project to DTOs when you do not need the full entity.
 - **Always** use `Include` explicitly — never rely on lazy loading.
 - **Always** use `CancellationToken` in async LINQ methods.
+- **Always** use `DateTime.UtcNow` in queries — `DateTime.Now` may not translate correctly to SQL.
+- **Always** use `AnyAsync()` instead of `CountAsync() > 0` — `AnyAsync` stops at the first match.
+- **Always** use `AsSplitQuery()` when including 2+ collection navigations.
+- **Always** use `ExecuteUpdateAsync` / `ExecuteDeleteAsync` for bulk operations.
 - **Never** use `.ToList()` before filtering — filter in the database, not in memory.
 - **Never** use `.AsEnumerable()` before filtering — it pulls all data into memory.
 - **Never** use client-side methods in LINQ expressions that EF Core cannot translate (e.g., custom methods, `DateTime.Now`).
-- **Never** use `Contains` on large in-memory collections — use a database-side join or temporary table.
+- **Never** use `Contains` on large in-memory collections (> 10,000 items) — use a database-side join or temporary table.
+- **Never** use manual `.Join()` — always use navigation properties instead.
+- **Never** use `DateTime.Now` in queries — always use `DateTime.UtcNow`.
 
 ## Query composition pattern
 

@@ -242,3 +242,30 @@ Domain/
 - Never use `throw` for business validations — use the Result tuple pattern.
 - Never put domain events on entities — publish them explicitly in use cases.
 - Never use DataAnnotations on entities or Value Objects.
+- **Always place the nested `Rules` class at the TOP of the entity** — before properties, constructor, and methods. Constraints should be visible first for readability.
+
+```csharp
+// GOOD — Rules class first
+public sealed class Product : Entity<Guid>
+{
+    public class Rules
+    {
+        public const int NAME_MAX_LENGTH = 100;
+    }
+
+    public string Name { get; private set; } = string.Empty;
+    // ...
+}
+
+// BAD — Rules class at the bottom
+public sealed class Product : Entity<Guid>
+{
+    public string Name { get; private set; } = string.Empty;
+    // ... methods ...
+
+    public class Rules  // WRONG — should be at the top
+    {
+        public const int NAME_MAX_LENGTH = 100;
+    }
+}
+```

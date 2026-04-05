@@ -263,7 +263,7 @@ TemperAI installs skills and agents into:
 - **Never** `async void` — always `async Task`
 - **Never** `.Result` or `.Wait()` — always `await`
 - **Never** `using static` — always explicit `using` directives
-- **Never** named usings — rename the entity or use fully qualified namespace
+- **Never** named usings — rename the entity or use a plural folder name
 - **Never** global usings — always per-file `using` directives
 - **Never** `var` — always explicit type declaration
 - **Never** fully qualified type names in code — always use `using` directives

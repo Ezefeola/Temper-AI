@@ -201,73 +201,17 @@ public static class ResultExtensions
 
 ### Absolute rules — never broken in any architecture
 
-- Never primary constructors — always explicit constructor.
-- Never return expression `=>` on methods — always braces `{}`.
+For all general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - Never `DataAnnotations` on entities or Value Objects.
 - Never `nvarchar(max)` or `varchar(max)` — always length from rules.
 - Never `.Update()` from EF Core — change tracker detects changes.
-- Never `async void` — always `async Task`.
-- Never `.Result` or `.Wait()` — causes deadlocks.
 - Never lazy loading — explicit includes always.
 - Never throw for business validations.
-- Always `sealed` on classes that are not inherited.
-- Always `CancellationToken` on public async methods.
-- Always variable names matching their type — `SaveResult saveResult`, `Product product`.
 - Always `varchar` for ASCII, `nvarchar` for Unicode.
 - Always one `IEntityTypeConfiguration<T>` per entity.
 - Always `GetByIdAsync` with tracking, `GetByIdAsNoTrackingAsync` without tracking.
-- **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
-- **Never use named usings** (e.g., `using TodoTask = ...`) — if a name collision occurs, use the fully qualified namespace or rename the entity. Aliases obscure code and make refactoring difficult.
-- Domain folder names must be **plural** and different from the class name — `Domain/Products/Product.cs`, never `Domain/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
 - **Never use hardcoded numbers in validators** — always reference `Entity.Rules` constants (e.g., `.MaximumLength(Product.Rules.NAME_MAX_LENGTH)`). This centralizes constraint management and prevents inconsistencies.
-- **Never break short lines unnecessarily** — keep assignments on a single line if they fit. Only break when the line exceeds reasonable length. `Result<T> result = await handler.HandleAsync(request, cancellationToken);` stays on one line.
-- **Never use `var`** — always declare the explicit type. `Product product = ...`, `List<string> errors = ...`, `SaveResult saveResult = ...`. Implicit typing hides the actual type and makes code harder to read and navigate.
-- **Always write code in English** — class names, method names, property names, enum names, enum values, namespaces, comments, and variable names must all be in English. The only exception is user-facing error messages returned in API responses (e.g., `"El nombre es obligatorio"`). Examples: `ProductStatus.Active` not `ProductStatus.Activo`, `OrderType.Purchase` not `OrderType.Compra`, `IsRequired` not `EsRequerido`.
-- **Never use fully qualified type names in code** (e.g., `public Projects.Enums.ProjectStatus Status`) — always add a `using` directive at the top of the file and reference the type by its simple name (e.g., `public ProjectStatus Status`). Fully qualified names in property declarations, method signatures, and variable declarations make code verbose and harder to read.
-- **Always organize code structure consistently** — every file must follow this exact order:
-  1. All `using` directives grouped together at the top (no blank lines between them).
-  2. One blank line after the last `using`.
-  3. The `namespace` declaration.
-  4. One blank line after the `namespace` opening brace.
-  5. The class/record/interface body.
-- **Never interleave `using` directives with other code** — all usings must be at the very top of the file, grouped together.
-- **Never put multiple blank lines** — use exactly one blank line to separate logical sections (usings from namespace, namespace from class, class members).
-
-```csharp
-// GOOD — clean structure
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace TemperAI.NeuralCore.Domain.Entities.Products;
-
-public sealed class Product : Entity<Guid>
-{
-    // ...
-}
-
-// BAD — blank lines between usings, no blank line before namespace
-using System;
-
-using System.Collections.Generic;
-
-namespace TemperAI.NeuralCore.Domain.Entities.Products;
-public sealed class Product : Entity<Guid>
-{
-    // ...
-}
-
-// BAD — using mixed with code
-namespace TemperAI.NeuralCore.Domain.Entities.Products;
-
-using System;
-
-public sealed class Product : Entity<Guid>
-{
-    // ...
-}
-```
 
 ---
 

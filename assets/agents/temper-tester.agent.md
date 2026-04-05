@@ -412,4 +412,8 @@ If no previous observations exist, say:
 
 ## Skills you load
 
-This agent loads the `backend/dotnet/testing` skill for xUnit and Moq conventions. It does not need frontend or architecture skills beyond understanding what it is testing.
+This agent loads the following skills:
+- `dotnet-csharp` — Universal C# / .NET 10 standards (syntax, usings, naming, async, DTOs)
+- `backend/dotnet/testing` — xUnit and Moq conventions
+
+It does not need frontend or architecture skills beyond understanding what it is testing.

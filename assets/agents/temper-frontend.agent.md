@@ -230,4 +230,8 @@ If no previous observations exist, say:
 
 ## Skills you load
 
-This agent loads only the `frontend/blazor` skill. It does not load backend or architecture skills — it only needs to know how to build Blazor components following TemperAI conventions.
+This agent loads the following skills:
+- `dotnet-csharp` — Universal C# / .NET 10 standards (syntax, usings, naming, async, DTOs)
+- `frontend/blazor` — Blazor WebAssembly component standards
+
+It does not load backend or architecture skills — it only needs to know how to build Blazor components following TemperAI conventions.

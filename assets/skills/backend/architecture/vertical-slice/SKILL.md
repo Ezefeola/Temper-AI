@@ -676,24 +676,19 @@ app.Run();
 
 ## Rules specific to Vertical Slice Architecture
 
+For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - **Single project** — no layer separation into Api/Application/Domain/Infrastructure
 - **No Repository pattern** — `DbContext` is used directly in handlers
 - **No UnitOfWork** — `SaveChangesAsync` is called directly in the handler
 - **No interfaces for handlers** — handlers are concrete classes, injected directly
 - `Domain/` at root level — each entity in its own **plural** folder (`Products/`, `Orders/`) with its enums, events, and value objects
-- Domain folder names must be **plural** and different from the class name — `Domain/Products/Product.cs`, never `Domain/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names
 - `Persistence/` at root level contains DbContext and EF Core configurations
 - `Shared/` only contains cross-cutting concerns: Result, base Entity, extensions
 - Each feature folder contains **everything** it needs: endpoint, handler, DTOs, validator
 - **No `UseCase` suffix** — feature names describe the action: `CreateProduct`, `GetProductById`
 - Entities are simple by default — add factory methods and invariants only when business logic requires it
 - EF Core configurations in `Persistence/Configurations/`
-- Always use `AsNoTracking()` for read-only queries
-- Always use `Result<TResponse>` for error handling — never throw for business validations
-- DTOs always `sealed record` with explicit properties and `Dto` suffix
 - **Never use one Controller per endpoint** — either use Minimal APIs (one file per endpoint) OR one Controller per feature (all endpoints grouped). Never create `CreateProductEndpoint : ControllerBase`, `UpdateProductEndpoint : ControllerBase`, etc.
-- **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate
-- **Never use named usings** (e.g., `using TodoTask = ...`) — if a name collision occurs, use the fully qualified namespace or rename the entity
-- **Never break short lines unnecessarily** — keep assignments on a single line if they fit
 - **Never use hardcoded numbers in validators** — always reference `Entity.Rules` constants
 - For data access implementation details, load `backend/dotnet/ef-core`

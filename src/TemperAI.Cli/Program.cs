@@ -3,6 +3,31 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using TemperAI.Cli.Commands;
 
+if (args.Length == 1 && args[0] == "neuralcore")
+{
+    var neuralCoreDir = Path.GetDirectoryName(Environment.ProcessPath);
+    var neuralCoreExe = Path.Combine(neuralCoreDir, "TemperAI.NeuralCore.exe");
+
+    if (!File.Exists(neuralCoreExe))
+    {
+        Console.Error.WriteLine("NeuralCore MCP server not found. Run 'temper-ai setup' to install.");
+        return 1;
+    }
+
+    var startInfo = new ProcessStartInfo
+    {
+        FileName = neuralCoreExe,
+        UseShellExecute = false,
+        RedirectStandardInput = true,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true
+    };
+
+    using var process = Process.Start(startInfo);
+    process?.WaitForExit();
+    return process?.ExitCode ?? 0;
+}
+
 if (args.Length == 0)
 {
     return RunMenu();

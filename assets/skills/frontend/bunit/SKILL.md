@@ -54,9 +54,9 @@ public sealed class ProductListTests : TestContext
 
 ## Rules
 
+For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+
 - Never test implementation details — test what the user sees.
 - Never mock component rendering — use bUnit's `RenderComponent<T>`.
 - Always test both positive and negative paths.
-- Always use `sealed class` for test classes.
 - Always follow the xUnit naming convention: `Component_Scenario_Result`.
-- **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.

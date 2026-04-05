@@ -21,13 +21,13 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 |---|---|---|
 | Start new project / analyze PRD | `temper-init` | `prd-analyzer` |
 | Generate user stories | `temper-spec` | `prd-analyzer` |
-| Design architecture | `temper-design` | `backend/architecture/[chosen]` + `backend/dotnet/api` |
+| Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
 | Break into tasks | `temper-tasks` | None |
-| Implement backend | `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/architecture/[chosen]` |
-| Implement frontend | `temper-frontend` | `frontend/blazor` |
-| Write tests | `temper-tester` | `backend/dotnet/testing` |
+| Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/[chosen]` |
+| Implement frontend | `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
+| Write tests | `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
 | Docker / CI/CD | `temper-devops` | `devops/docker` + `devops/github-actions` |
-| Review code | `temper-review` | `backend/dotnet/api` + `backend/architecture/[chosen]` |
+| Review code | `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `backend/architecture/[chosen]` |
 | Generate docs | `temper-docs` | None |
 | Bug fix / small change | `temper-backend` (quick path) | Only what's needed |
 
@@ -37,6 +37,7 @@ Skills are loaded on-demand. Never load all skills at once.
 
 | Skill | When to load |
 |---|---|
+| `dotnet-csharp` | **ALWAYS** — loaded by every agent that writes C# code |
 | `prd-analyzer` | Reading or building a PRD |
 | `backend/architecture/clean` | Project uses Clean Architecture |
 | `backend/architecture/hexagonal` | Project uses Hexagonal Architecture |

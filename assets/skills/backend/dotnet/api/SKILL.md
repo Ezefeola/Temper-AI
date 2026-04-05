@@ -1,67 +1,17 @@
 ---
 name: dotnet-api
 description: >
-  Universal .NET 10 standards that apply to ANY backend project regardless of
-  architecture. Covers async/await, FluentValidation, error handling middleware,
-  Program.cs setup, logging, naming conventions, nullable reference types,
-  and appsettings structure. For EF Core specifics, load backend/dotnet/ef-core.
-  Load this skill for any .NET backend work.
+  ASP.NET Core API standards for .NET 10 projects. Covers controllers,
+  middleware, routing, error handling, DI setup, logging, FluentValidation,
+  nullable reference types, and appsettings structure.
+  For general C# conventions (syntax, usings, naming, async patterns),
+  load dotnet-csharp. For EF Core specifics, load backend/dotnet/ef-core.
 ---
 
-# .NET 10 Universal Standards — TemperAI
+# ASP.NET Core API Standards — TemperAI
 
-> These standards apply to ALL .NET 10 backend projects regardless of architecture pattern.
-> For EF Core specifics (entity configuration, repository patterns, DbContext), load `backend/dotnet/ef-core`.
-
----
-
-## Async/await standards
-
-### Absolute rules
-
-- **Never `async void`** — always `async Task`. `async void` crashes the process on unhandled exceptions.
-- **Never `.Result` or `.Wait()`** — causes deadlocks in ASP.NET Core. Always use `await`.
-- **Always `CancellationToken`** on public async methods — enables request cancellation and graceful shutdown.
-- **Always pass `CancellationToken`** to downstream async calls — do not swallow it.
-- **Always name async methods with `Async` suffix** — `GetByIdAsync`, `SaveChangesAsync`.
-
-```csharp
-// GOOD
-public async Task<Result<ProductResponseDto>> GetByIdAsync(
-    Guid id,
-    CancellationToken cancellationToken = default)
-{
-    ProductResponseDto product = await _service.GetByIdAsync(id, cancellationToken);
-
-    if (product is null)
-    {
-        return Result<ProductResponseDto>
-            .Failure(HttpStatusCode.NotFound)
-            .WithDescription("Product not found");
-    }
-
-    return Result<ProductResponseDto>
-        .Success(HttpStatusCode.OK)
-        .WithPayload(product);
-}
-
-// BAD — async void
-public async void DoSomething() { }
-
-// BAD — .Result
-Product product = _service.GetById(id).Result;
-
-// BAD — no CancellationToken
-public async Task<Product> GetByIdAsync(Guid id)
-{
-    return await _repository.FirstAsync(p => p.Id == id);
-}
-```
-
-### ConfigureAwait
-
-- Do not use `ConfigureAwait(false)` in ASP.NET Core applications — the synchronization context is not captured.
-- Use `ConfigureAwait(false)` only in library code that may be consumed by UI applications.
+> For general C# conventions (syntax, usings, naming, async, DTOs), load `dotnet-csharp`.
+> For EF Core specifics (entity configuration, repositories, DbContext), load `backend/dotnet/ef-core`.
 
 ---
 
@@ -305,48 +255,6 @@ public class ProductsController : ControllerBase
 - **Only expose Scalar in Development** — use `if (app.Environment.IsDevelopment())`.
 - **Always set a meaningful title** with `WithTitle("ProjectName API")`.
 
-### Extension method pattern
-
-```csharp
-// Infrastructure/DependencyInjection.cs
-public static class DependencyInjection
-{
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services
-            .AddDatabase(configuration)
-            .AddRepositories()
-            .AddUnitOfWork();
-
-        return services;
-    }
-
-    private static IServiceCollection AddDatabase(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        // See backend/dotnet/ef-core for EF Core implementation
-        return services;
-    }
-
-    private static IServiceCollection AddRepositories(
-        this IServiceCollection services)
-    {
-        services.AddScoped<IProductRepository, ProductRepository>();
-        return services;
-    }
-
-    private static IServiceCollection AddUnitOfWork(
-        this IServiceCollection services)
-    {
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        return services;
-    }
-}
-```
-
 ---
 
 ## Logging with ILogger<T>
@@ -411,25 +319,6 @@ public sealed class CreateProduct : ICreateProduct
 
 ---
 
-## C# naming conventions
-
-| Element | Convention | Example |
-|---|---|---|
-| Classes | `PascalCase` | `Product`, `CreateProductHandler` |
-| Interfaces | `I` + `PascalCase` | `IProductRepository`, `ICreateProduct` |
-| Methods | `PascalCase` | `GetByIdAsync`, `CreateAsync` |
-| Properties | `PascalCase` | `Name`, `CreatedAt` |
-| Fields (private) | `_camelCase` | `_unitOfWork`, `_logger` |
-| Local variables | `camelCase` — match type name | `SaveResult saveResult`, `Product product` |
-| Parameters | `camelCase` | `cancellationToken`, `createProductRequestDto` |
-| Constants | `PascalCase` in nested `Rules` class | `Rules.NAME_MAX_LENGTH` |
-| DTOs | `PascalCase` + `Dto` suffix | `CreateProductRequestDto` |
-| Use cases | `PascalCase` — no `UseCase` suffix | `CreateProduct`, `UpdateProduct` |
-| Events | `PascalCase` + `Event` suffix | `ProductCreatedEvent` |
-| Enums | `PascalCase` | `ProductStatus`, `OrderType` |
-
----
-
 ## Nullable reference types
 
 ### How to enable
@@ -468,43 +357,6 @@ private IProductService ProductService { get; set; } = default!;
 // BAD — unjustified null-forgiving
 Product product = await _repository.GetByIdAsync(id)!; // why is this safe?
 ```
-
----
-
-## Global usings — do not use
-
-Global usings are a **bad practice** in TemperAI projects. Do not use them.
-
-- Nothing guarantees that a globally imported namespace is needed in every file.
-- They pollute the IntelliSense and make it unclear where types come from.
-- They create hidden dependencies that are hard to track when refactoring.
-- They make it harder for new developers to understand the project structure.
-
-Always use explicit `using` directives at the top of each file. Only import what you actually use.
-
-```csharp
-// GOOD — explicit usings
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-
-// BAD — global usings
-global using Microsoft.AspNetCore.Mvc;
-global using Microsoft.Extensions.Logging;
-```
-
-### `using static` — never
-
-- **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
-
-### Named usings — never
-
-- **Never use named usings** (e.g., `using TodoTask = ...`) — if a name collision occurs, use the fully qualified namespace or rename the entity. Aliases obscure code and make refactoring difficult.
-
-### Line formatting
-
-- **Never break short lines unnecessarily** — keep assignments on a single line if they fit on screen.
-- **GOOD:** `Result<CreateProductResponseDto> result = await handler.HandleAsync(request, cancellationToken);`
-- **BAD:** breaking a 90-character assignment into 3 lines for no reason.
 
 ---
 
@@ -549,24 +401,3 @@ global using Microsoft.Extensions.Logging;
 - **Connection strings in `appsettings.json` should be empty** — filled by environment or secrets in production.
 - **Logging levels** — `Information` for production, `Debug` for development. Never `Trace` in production.
 - **Use environment variables** for production configuration — `ConnectionStrings__Default`, `ASPNETCORE_ENVIRONMENT`.
-
----
-
-## Absolute rules
-
-- Never `async void` — always `async Task`.
-- Never `.Result` or `.Wait()` — always `await`.
-- Never `DataAnnotations` on entities or Value Objects.
-- Never `using static` — always use explicit `using` directives.
-- Never use named usings — rename the entity or use fully qualified namespace instead.
-- Never use global usings — always use explicit per-file `using` directives.
-- Never break short lines unnecessarily — keep assignments on one line if they fit.
-- Never use `var` — always declare the explicit type. `Product product = ...`, `List<string> errors = ...`. Implicit typing hides the actual type.
-- Never commit secrets to `appsettings.json`.
-- Never use `!` (null-forgiving operator) without justification.
-- Always `CancellationToken` on public async methods.
-- Always structured logging with named placeholders.
-- Always `ProblemDetails` for error responses.
-- Always extension methods for DI setup — keep `Program.cs` clean.
-- Always variable names matching their type — `SaveResult saveResult`, `Product product`.
-- Always write code in English — class names, methods, properties, enums, enum values, namespaces, and comments. Only user-facing error messages in API responses may be in the user's language.

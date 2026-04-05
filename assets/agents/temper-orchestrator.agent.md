@@ -5,7 +5,7 @@ description: >
   the full pipeline (init → spec → design → tasks → build → review → docs)
   or handle the request directly with a single agent. Evaluates complexity
   before spawning sub-agents to minimize token usage and avoid unnecessary overhead.
-mode: subagent
+mode: primary
 allowed-tools: read_file, write_file, read_directory, ask_followup_question
 ---
 
