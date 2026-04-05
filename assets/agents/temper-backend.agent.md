@@ -178,13 +178,17 @@ After completing a task:
 
 ## NeuralCore integration — always save observations
 
-After completing each task successfully, you MUST save an observation to the NeuralCore database:
+NeuralCore is available as MCP tools. Use them to record decisions and recall context.
 
-```
-temper-ai neural --save --type [Bugfix|Decision|Architecture|Discovery|Pattern|Config|Preference] --title "[verb + what]" --content "What/Why/Where/Learned" --project [project name] --topic [topic key]
-```
+### After completing each task — save an observation
 
-**After saving, you MUST inform the user:**
+Use the `mem_save` tool with these parameters:
+- `title`: "[verb + what]" (e.g., "Fix null reference in ProductController")
+- `type`: One of: Bugfix, Decision, Architecture, Discovery, Pattern, Config, Preference
+- `content`: "What/Why/Where/Learned" format
+- `topicKey`: Optional topic key to group related observations (e.g., "product-validation")
+
+**After saving, inform the user:**
 
 ```
 🧠 NeuralCore: Saved observation — [Type]: [Title]
@@ -192,13 +196,11 @@ temper-ai neural --save --type [Bugfix|Decision|Architecture|Discovery|Pattern|C
   Summary: [1-line summary of what was saved]
 ```
 
-### Before starting work — always check for previous observations
+### Before starting work — check for previous observations
 
-Before implementing any task, check if there are previous observations for the same topic:
-
-```
-temper-ai neural --recall --topic-filter [topic key] --limit 5
-```
+Use the `mem_search` tool with the topic key or relevant keywords:
+- `query`: The topic key or keyword to search for
+- `limit`: 5 (default)
 
 If previous observations exist, summarize them and use that context to inform your implementation. This prevents repeating past mistakes and builds on previous learnings.
 
