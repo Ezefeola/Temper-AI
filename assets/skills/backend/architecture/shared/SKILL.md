@@ -207,7 +207,7 @@ For all general C# conventions (syntax, usings, naming, async, DTOs), see `dotne
 - Never `nvarchar(max)` or `varchar(max)` — always length from rules.
 - Never `.Update()` from EF Core — change tracker detects changes.
 - Never lazy loading — explicit includes always.
-- Never throw for business validations.
+- Never throw exceptions — use Result pattern for all error handling.
 - Always `varchar` for ASCII, `nvarchar` for Unicode.
 - Always one `IEntityTypeConfiguration<T>` per entity.
 - Always `GetByIdAsync` with tracking, `GetByIdAsNoTrackingAsync` without tracking.

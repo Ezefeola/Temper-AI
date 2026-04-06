@@ -489,7 +489,7 @@ public sealed class ApiHttpClient
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            throw new ProductNotFoundException(id);
+            return null;
         }
 
         response.EnsureSuccessStatusCode();
@@ -497,7 +497,7 @@ public sealed class ApiHttpClient
         ProductResponseDto product = await response.Content.ReadFromJsonAsync<ProductResponseDto>(
             cancellationToken: cancellationToken);
 
-        return product ?? throw new InvalidOperationException("Unexpected null response");
+        return product;
     }
 
     public async Task<ProductResponseDto> CreateProductAsync(
@@ -510,7 +510,7 @@ public sealed class ApiHttpClient
         ProductResponseDto product = await response.Content.ReadFromJsonAsync<ProductResponseDto>(
             cancellationToken: cancellationToken);
 
-        return product ?? throw new InvalidOperationException("Unexpected null response");
+        return product;
     }
 }
 ```
@@ -522,7 +522,7 @@ public sealed class ApiHttpClient
 - Services never catch and swallow exceptions — let them bubble up to the component.
 - Services never reference Blazor types — keep them testable with plain unit tests.
 - Services always return typed results — never `HttpResponseMessage` or `JsonElement`.
-- Always throw custom exceptions for known error cases (NotFound, Conflict) so components can handle them gracefully.
+- Services return `null` for 404 NotFound — never throw exceptions.
 
 ---
 

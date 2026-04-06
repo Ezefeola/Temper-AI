@@ -108,6 +108,16 @@ using TodoManagerApi.Domain.Entities.WorkItems;
 ❌ `public async Task<Product> GetByIdAsync(Guid id) { }`
 ✅ `public async Task<Product> GetByIdAsync(Guid id, CancellationToken ct = default) { }`
 
+### 16. Never throw exceptions — use Result pattern instead
+❌ `if (!IsValid) throw new ValidationException("Invalid");`
+✅ `if (!IsValid) return Result<T>.Failure(HttpStatusCode.BadRequest).WithErrors(["Invalid"]);`
+
+**Rules:**
+- **Never throw exceptions** in application code — only the global ExceptionHandler can throw for unhandled errors.
+- **Never create custom exceptions** — use the Result pattern for all error handling.
+- **Always use Result<T>.Success() / Result<T>.Failure()** to return errors with appropriate HTTP status codes.
+- **The ExceptionHandler** (middleware) is the only place that catches and converts exceptions to ProblemDetails responses.
+
 ---
 
 ## DTOs & Patterns

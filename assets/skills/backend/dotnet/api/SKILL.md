@@ -49,7 +49,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 ## Global error handling middleware
 
-All unhandled exceptions must be caught and returned as `ProblemDetails`.
+All unhandled exceptions must be caught and returned as `ProblemDetails`. Since we never throw custom exceptions in application code, only unexpected errors reach this handler.
 
 ```csharp
 // Program.cs
@@ -64,77 +64,21 @@ app.UseExceptionHandler(errorApp =>
 
         Exception exception = exceptionHandlerPathFeature?.Error;
 
-        ProblemDetails problemDetails = exception switch
+        ProblemDetails problemDetails = new ProblemDetails
         {
-            NotFoundException notFound => new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Resource not found",
-                Detail = notFound.Message
-            },
-            ValidationException validation => new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Validation failed",
-                Detail = "One or more validation errors occurred",
-                Extensions = { ["errors"] = validation.Errors }
-            },
-            ConflictException conflict => new ProblemDetails
-            {
-                Status = StatusCodes.Status409Conflict,
-                Title = "Conflict",
-                Detail = conflict.Message
-            },
-            _ => new ProblemDetails
-            {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "Internal server error",
-                Detail = "An unexpected error occurred"
-            }
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "Internal server error",
+            Detail = "An unexpected error occurred"
         };
 
         ILogger<Program> logger = context.RequestServices
             .GetRequiredService<ILogger<Program>>();
 
-        if (exception is not NotFoundException && exception is not ValidationException)
-        {
-            logger.LogError(exception, "Unhandled exception occurred");
-        }
+        logger.LogError(exception, "Unhandled exception occurred");
 
         await context.Response.WriteAsJsonAsync(problemDetails);
     });
 });
-```
-
-### Custom exception types
-
-```csharp
-public sealed class NotFoundException : Exception
-{
-    public NotFoundException(string entityName, object id)
-        : base($"{entityName} with id {id} was not found")
-    {
-    }
-}
-
-public sealed class ValidationException : Exception
-{
-    public List<string> Errors { get; }
-
-    public ValidationException(List<string> errors)
-        : base("One or more validation errors occurred")
-    {
-        Errors = errors;
-    }
-}
-
-public sealed class ConflictException : Exception
-{
-    public ConflictException(string message)
-        : base(message)
-    {
-    }
-}
 ```
 
 ---

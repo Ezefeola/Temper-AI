@@ -5,13 +5,11 @@ description: >
   Use when the project has multiple input channels (API, CLI, message queue),
   need to test the domain in isolation, or when adapters change frequently.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  Also load architecture/shared for common conventions.
   For implementation details, load backend/dotnet/ef-core or your chosen data access skill.
 ---
 
 # Hexagonal Architecture — TemperAI Standards
 
-> Also load `architecture/shared` for Result pattern, DTO conventions, naming, and controller rules.
 > For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
 
 ## When to use

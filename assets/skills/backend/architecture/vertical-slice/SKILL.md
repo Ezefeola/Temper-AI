@@ -5,13 +5,11 @@ description: >
   Use for CRUDs, MVPs, rapid prototypes, or simple systems where
   Clean Architecture would be overkill. Do not use for complex business
   domains — prefer Clean Architecture in that case.
-  Also load architecture/shared for common conventions.
   For data access implementation, load backend/dotnet/ef-core or your chosen data access skill.
 ---
 
 # Vertical Slice Architecture — TemperAI Standards
 
-> Also load `architecture/shared` for Result pattern, DTO conventions, naming, and controller rules.
 > For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
 
 ## When to use

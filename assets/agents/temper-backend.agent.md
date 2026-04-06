@@ -35,7 +35,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-backend starting
-   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/dotnet/ef-core, backend/dotnet/linq, backend/architecture/[chosen]]
+   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/dotnet/ef-core, backend/dotnet/linq, backend/architecture/shared, backend/architecture/[chosen]]
    Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks.md]
 ```
 
@@ -223,6 +223,7 @@ This agent loads the following skills:
 - `backend/dotnet/api` — ASP.NET Core API standards (controllers, middleware, DI, logging)
 - `backend/dotnet/ef-core` — EF Core entity configuration, repositories, DbContext, UnitOfWork
 - `backend/dotnet/linq` — LINQ query patterns and performance best practices
+- `backend/architecture/shared` — Result pattern, DTO conventions, naming, controller rules (ALWAYS required)
 - The architecture skill matching the constitution's chosen pattern (`backend/architecture/clean`, `backend/architecture/hexagonal`, `backend/architecture/vertical-slice`, or `backend/architecture/onion`)
 
 **Load on demand:**

@@ -36,7 +36,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-design starting
-   Skills loaded: [backend/architecture/[chosen], backend/dotnet/api]
+   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/architecture/shared, backend/architecture/[chosen]]
    Context files: [.temper/constitution.md, .temper/spec.md]
 ```
 
@@ -327,4 +327,8 @@ After generating `.temper/design.md`:
 
 ## Skills you load
 
-This agent loads the architecture skill matching the constitution's chosen pattern (`backend/architecture/clean`, `backend/architecture/hexagonal`, `backend/architecture/vertical-slice`, or `backend/architecture/onion`) plus the `backend/dotnet/api` skill for API standards.
+This agent loads:
+- `dotnet-csharp` — Universal C# / .NET 10 standards
+- `backend/dotnet/api` — ASP.NET Core API standards
+- `backend/architecture/shared` — Result pattern, DTO conventions, naming, controller rules (ALWAYS required)
+- The architecture skill matching the constitution's chosen pattern (`backend/architecture/clean`, `backend/architecture/hexagonal`, `backend/architecture/vertical-slice`, or `backend/architecture/onion`)

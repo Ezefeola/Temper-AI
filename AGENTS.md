@@ -25,11 +25,11 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 | Break into tasks | `temper-tasks` | None |
 | Generate build plan | `temper-plan` | None |
 | **Execute build** | **`temper-orchestrator`** (spawns sub-agents) | Varies by sub-agent |
-| Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/[chosen]` |
+| Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/shared` + `backend/architecture/[chosen]` |
 | Implement frontend | `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
 | Write tests | `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
 | Docker / CI/CD | `temper-devops` | `devops/docker` + `devops/github-actions` |
-| Review code | `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `backend/architecture/[chosen]` |
+| Review code | `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `backend/architecture/shared` + `backend/architecture/[chosen]` |
 | Generate docs | `temper-docs` | None |
 | Bug fix / small change | `temper-backend` (quick path) | Only what's needed |
 
@@ -41,6 +41,7 @@ Skills are loaded on-demand. Never load all skills at once.
 |---|---|
 | `dotnet-csharp` | **ALWAYS** — loaded by every agent that writes C# code |
 | `prd-analyzer` | Reading or building a PRD |
+| `backend/architecture/shared` | **ALWAYS** for backend agents — Result pattern, DTO conventions, naming, controller rules |
 | `backend/architecture/clean` | Project uses Clean Architecture |
 | `backend/architecture/hexagonal` | Project uses Hexagonal Architecture |
 | `backend/architecture/vertical-slice` | Project uses Vertical Slice |

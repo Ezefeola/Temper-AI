@@ -6,13 +6,11 @@ description: >
   need to test business logic in isolation, or when the system
   is enterprise, e-commerce, ERP, CRM, or any rich domain.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  Also load architecture/shared for common conventions.
   For implementation details, load backend/dotnet/ef-core or your chosen data access skill.
 ---
 
 # Clean Architecture + DDD — TemperAI Standards
 
-> Also load `architecture/shared` for Result pattern, DTO conventions, naming, and controller rules.
 > For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
 
 ## When to use

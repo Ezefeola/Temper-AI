@@ -6,13 +6,11 @@ description: >
   aggregate roots, and the Specification pattern. All dependencies
   point inward toward the domain core.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  Also load architecture/shared for common conventions.
   For implementation details, load backend/dotnet/ef-core or your chosen data access skill.
 ---
 
 # Onion Architecture — TemperAI Standards
 
-> Also load `architecture/shared` for Result pattern, DTO conventions, naming, and controller rules.
 > For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
 
 ## When to use
