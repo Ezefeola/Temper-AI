@@ -28,7 +28,8 @@ These are the default maximum estimated token limits per phase. They can be over
 | `temper-spec` | 9,000 | User stories + acceptance criteria |
 | `temper-design` | 14,000 | Architecture design + entity definitions |
 | `temper-tasks` | 14,000 | Task breakdown from design |
-| `temper-build` (per task) | 5,000 | Implementation per task |
+| `temper-plan` | 10,000 | Build execution plan |
+| Build (per group) | 5,000 | Implementation per group |
 | `temper-review` | 18,000 | Full code review against conventions |
 | `temper-docs` | 16,000 | README, ARCHITECTURE, API docs |
 | **Total (full pipeline)** | **83,000** | Sum of all phases |
@@ -72,7 +73,8 @@ Each project has a `.temper/budget.md` file that tracks token usage:
 | temper-spec | 1,500 | 3,000 | 4,500 | Done |
 | temper-design | — | — | — | Pending |
 | temper-tasks | — | — | — | Pending |
-| temper-build | — | — | — | Pending |
+| temper-plan | — | — | — | Pending |
+| Build (per group) | — | — | — | Pending |
 | temper-review | — | — | — | Pending |
 | temper-docs | — | — | — | Pending |
 

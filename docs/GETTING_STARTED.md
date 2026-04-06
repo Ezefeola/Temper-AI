@@ -19,9 +19,10 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 This will:
-1. Publish the CLI to `%LOCALAPPDATA%\Programs\TemperAI\`
-2. Add that directory to your user PATH
-3. Verify the installation
+1. Publish the CLI to `%LOCALAPPDATA%\Programs\TemperAI\temper-ai.exe`
+2. Publish NeuralCore MCP server to `%LOCALAPPDATA%\Programs\TemperAI\TemperAI.NeuralCore.exe`
+3. Add that directory to your user PATH
+4. Verify the installation
 
 ### Option B: From the CLI itself
 
@@ -47,7 +48,7 @@ You should see the interactive menu with all available commands.
 temper-ai install
 ```
 
-This copies all skills and agent files to your AI assistant's configuration directory.
+This copies all skills and agent files to your AI assistant's configuration directory. You'll be asked if you want to install NeuralCore (persistent memory). If you say yes, it will automatically publish the NeuralCore executable (if needed) and configure MCP for your selected agents.
 
 | AI Assistant | Where files are installed |
 |---|---|
@@ -64,6 +65,45 @@ temper-ai update
 ```
 
 This compares your installed files with the latest versions and shows what's outdated.
+
+---
+
+## NeuralCore — Persistent Memory
+
+NeuralCore is an MCP (Model Context Protocol) server that provides persistent memory across AI sessions. It allows agents to save and recall observations, decisions, and patterns between sessions.
+
+### How it works
+
+1. **Auto-start:** NeuralCore starts automatically when you open your AI assistant (OpenCode, Claude Code, Copilot).
+2. **Auto-stop:** NeuralCore shuts down when you close your AI session.
+3. **Persistent storage:** Observations are saved to SQLite and indexed for fast retrieval.
+4. **MCP tools:** Agents use `mem_save`, `mem_search`, `mem_context`, and `mem_session_summary` tools.
+
+### Managing NeuralCore
+
+```cmd
+temper-ai neuralcore
+```
+
+This opens an interactive menu with the following options:
+
+| Option | Description |
+|---|---|
+| 🔍 **status** | Check if NeuralCore is published and configured for each agent |
+| 🧪 **test** | Run a connectivity test against the MCP server |
+| 📦 **publish** | Compile NeuralCore as a standalone executable |
+| ⚙️ **install** | Configure MCP in your AI agents (publishes automatically if needed) |
+| 📜 **logs** | View the latest server logs |
+
+### CLI Flags
+
+```cmd
+temper-ai neuralcore --status     # Check status
+temper-ai neuralcore --test       # Run connectivity test
+temper-ai neuralcore --publish    # Publish executable
+temper-ai neuralcore --install    # Install MCP config
+temper-ai neuralcore --logs       # View logs
+```
 
 ---
 
@@ -117,13 +157,23 @@ This generates `.temper/design.md` with entity definitions, API endpoints, datab
 
 This generates `.temper/tasks.md` with atomic, trackable implementation tasks.
 
+### 3.5 Plan the Build
+
+```
+@temper-plan
+```
+
+This generates `.temper/build-plan.md` with parallel execution groups and agent assignments.
+
 ### 3.6 Build the Project
 
+The ephemeral orchestrator reads the build plan and spawns sub-agents one group at a time. **Each group runs in a fresh session** to maintain clean context:
+
 ```
-@temper-build
+@temper-next
 ```
 
-This executes the tasks — the backend agent writes C# code, the frontend agent writes Blazor components, the tester writes tests, and the devops agent creates Docker and CI/CD files.
+This triggers the orchestrator to execute Group 1 — spawning backend, frontend, and devops agents in separate conversations with clean context. After each group, you'll verify with `dotnet build`, then start a new session (`/new` in OpenCode) and run `/temper-next` again for the next group.
 
 ### 3.7 Review the Code
 

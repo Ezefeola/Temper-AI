@@ -19,10 +19,12 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 
 | User intention | Agent | Skills loaded |
 |---|---|---|
-| Start new project / analyze PRD | `temper-init` | `prd-analyzer` |
-| Generate user stories | `temper-spec` | `prd-analyzer` |
+| Start new project / analyze PRD | `temper-init` | `dotnet-csharp`, `prd-analyzer` |
+| Generate user stories | `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
 | Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
 | Break into tasks | `temper-tasks` | None |
+| Generate build plan | `temper-plan` | None |
+| **Execute build** | **`temper-orchestrator`** (spawns sub-agents) | Varies by sub-agent |
 | Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/[chosen]` |
 | Implement frontend | `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
 | Write tests | `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
@@ -52,6 +54,7 @@ Skills are loaded on-demand. Never load all skills at once.
 | `frontend/bunit` | Blazor component tests |
 | `devops/docker` | Dockerfiles, docker-compose |
 | `devops/github-actions` | CI/CD workflows |
+| `token-budget` | Token budget tracking and management |
 
 ## Context Rules
 

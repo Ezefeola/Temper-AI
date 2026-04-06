@@ -71,12 +71,13 @@ Loading all skills (Clean Architecture, EF Core, DDD, Blazor, Docker, Testing) f
               │ (1 agent)  │       │ (SDD phases) │
               └─────┬──────┘       └──────┬──────┘
                     │                     │
-              ┌─────▼──────┐      ┌──────▼──────────┐
-              │ Direct     │      │ init → spec →   │
-              │ execution  │      │ design → tasks → │
-              │            │      │ build → review → │
-              └────────────┘      │ docs            │
-                                  └─────────────────┘
+               ┌─────▼──────┐      ┌──────▼──────────┐
+               │ Direct     │      │ init → spec →   │
+               │ execution  │      │ design → tasks → │
+               │            │      │ plan → [orch.  │
+               │            │      │  executes] →    │
+               └────────────┘      │ review → docs   │
+                                   └─────────────────┘
 ```
 
 ---
@@ -128,6 +129,7 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-spec` | `.temper/constitution.md` | Design, tasks, code |
 | `temper-design` | `constitution.md` + `spec.md` | Tasks, code |
 | `temper-tasks` | `constitution.md` + `spec.md` + `design.md` | Code |
+| `temper-plan` | `tasks.md` + `design.md` | Code |
 | `temper-backend` | `tasks.md` + `design.md` + relevant files | Full codebase |
 | `temper-review` | `spec.md` + `design.md` + generated code | PRD, constitution |
 | `temper-docs` | All `.temper/` files | Implementation details |
@@ -140,6 +142,7 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-spec` | `prd-analyzer` |
 | `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None (reads `.temper/` files) |
+| `temper-plan` | None (reads `.temper/` files) |
 | `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `architecture/[chosen]` |
 | `temper-frontend` | `frontend/blazor` |
 | `temper-tester` | `backend/dotnet/testing` |
@@ -159,7 +162,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-spec` | 1,500-3,000 | 3,000-6,000 | 4,500-9,000 |
 | `temper-design` | 3,000-6,000 | 4,000-8,000 | 7,000-14,000 |
 | `temper-tasks` | 5,000-10,000 | 2,000-4,000 | 7,000-14,000 |
-| `temper-build` (per task) | 1,000-3,000 | 500-2,000 | 1,500-5,000 |
+| `temper-plan` | 3,000-6,000 | 2,000-4,000 | 5,000-10,000 |
+| Build (per group) | 1,000-3,000 | 500-2,000 | 1,500-5,000 |
 | `temper-review` | 5,000-15,000 | 1,000-3,000 | 6,000-18,000 |
 | `temper-docs` | 5,000-10,000 | 3,000-6,000 | 8,000-16,000 |
 
@@ -179,44 +183,48 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 ## The DAG: Dependency Flow
 
 ```
-                    ┌─────────┐
-                    │  Init   │
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │  Spec   │
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │ Design  │
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │  Tasks  │
-                    └────┬────┘
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-         ┌────▼────┐          ┌────▼────┐
-         │ Backend │          │Frontend │
-         └────┬────┘          └────┬────┘
-              │                     │
-         ┌────▼────┐          ┌────▼────┐
-         │ Tester  │          │ DevOps  │
-         └────┬────┘          └────┬────┘
-              │                     │
-              └──────────┬──────────┘
-                         │
-                    ┌────▼────┐
-                    │ Review  │
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │  Docs   │
-                    └─────────┘
+                     ┌─────────┐
+                     │  Init   │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │  Spec   │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │ Design  │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │  Tasks  │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │  Plan   │
+                     └────┬────┘
+                          │
+          ┌───────────────┼───────────────┐
+          │               │               │
+     ┌────▼────┐     ┌────▼────┐     ┌────▼────┐
+     │ Backend │     │Frontend │     │ DevOps  │
+     └────┬────┘     └────┬────┘     └────┬────┘
+          │               │               │
+          └───────────────┼───────────────┘
+                          │
+                     ┌────▼────┐
+                     │ Tester  │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │ Review  │
+                     └────┬────┘
+                          │
+                     ┌────▼────┐
+                     │  Docs   │
+                     └─────────┘
 ```
 
-**Parallel execution:** Backend and Frontend can run in parallel. Tester and DevOps can run in parallel. Review waits for all to complete.
+**Execution model:** The orchestrator reads the build plan and spawns sub-agents one group at a time. Each sub-agent runs in a separate conversation with clean context. Backend, Frontend, and DevOps can run in parallel within a group. Tester runs after the code it tests is built.
 
 ---
 
@@ -228,9 +236,10 @@ Each phase has a quality gate:
 2. **Spec gate:** User stories and acceptance criteria approved
 3. **Design gate:** Architecture and API design approved
 4. **Tasks gate:** Task breakdown approved
-5. **Build gate:** Each task approved individually
-6. **Review gate:** All convention checks pass
-7. **Docs gate:** Documentation approved
+5. **Plan gate:** Build plan approved
+6. **Build gate:** Each group verified with `dotnet build`
+7. **Review gate:** All convention checks pass
+8. **Docs gate:** Documentation approved
 
 **No phase proceeds without passing its gate.**
 
@@ -244,6 +253,7 @@ Each phase has a quality gate:
 - `spec.md` — requirements
 - `design.md` — architecture
 - `tasks.md` — implementation tasks
+- `build-plan.md` — execution plan with parallel groups
 
 ### Ephemeral State (conversation context)
 

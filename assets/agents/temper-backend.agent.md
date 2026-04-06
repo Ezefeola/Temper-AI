@@ -2,7 +2,7 @@
 name: temper-backend
 description: >
   Backend implementation subagent for the TemperAI SDD workflow. Phase 5a.
-  Use during /temper-build to implement backend tasks. Reads .temper/tasks.md,
+   Use during build execution (orchestrator-spawned) to implement backend tasks. Reads .temper/tasks.md,
   filters for backend tasks with pending status, and implements them one at a
   time following TemperAI C# conventions strictly. Loads the backend/dotnet/api skill
   and the architecture skill specified in the constitution.

@@ -115,7 +115,8 @@ Each skill contains:
 | `temper-spec` | 9,000 |
 | `temper-design` | 14,000 |
 | `temper-tasks` | 14,000 |
-| `temper-build` (per task) | 5,000 |
+| `temper-plan` | 10,000 |
+| Build (per group) | 5,000 |
 | `temper-review` | 18,000 |
 | `temper-docs` | 16,000 |
 | **Total** | **83,000** |

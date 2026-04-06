@@ -2,14 +2,15 @@
 
 ## Overview
 
-The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases. Each phase produces a specific artifact and requires user approval before proceeding.
+The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases plus a build execution step handled by the orchestrator. Each phase produces a specific artifact and requires user approval before proceeding.
 
 ```
 Phase 1: Init      → constitution.md
 Phase 2: Spec      → spec.md
 Phase 3: Design    → design.md
 Phase 4: Tasks     → tasks.md
-Phase 5: Build     → Generated code (C#, Blazor, tests, Docker)
+Phase 5: Plan      → build-plan.md
+         Build     → Generated code (orchestrator spawns sub-agents per group)
 Phase 6: Review    → Review report
 Phase 7: Docs      → README, ARCHITECTURE, API docs, CHANGELOG
 ```
@@ -118,26 +119,58 @@ Review the task list and approve or request changes.
 
 ---
 
-## Phase 5: Build (`temper-build`)
+## Phase 5: Planning (`temper-plan`)
 
 **Input:** `.temper/tasks.md` + `.temper/design.md`
+**Output:** `.temper/build-plan.md`
+**Skills loaded:** None
+
+### What happens
+
+1. The agent reads the task list and builds a dependency graph.
+2. It groups independent tasks that can run in parallel.
+3. It produces `build-plan.md` with:
+   - Execution groups (tasks that can run in parallel)
+   - Agent assignments per group (backend, frontend, tester, devops)
+   - Estimated token cost per group
+   - Verification steps (`dotnet build` / `dotnet test`) between groups
+4. The plan is shown to the user for approval.
+
+### User action
+
+Review the build plan and approve or request changes.
+
+---
+
+## Build Execution (handled by `temper-orchestrator`)
+
+**Input:** `.temper/build-plan.md`
 **Output:** Generated source code
-**Skills loaded:** Depends on task type
+**Skills loaded:** Depends on sub-agent type
 
 ### How it works
 
-The build orchestrator:
+After the build plan is approved, the **orchestrator** (`temper-orchestrator`) executes it:
 
-1. Reads the task list and builds a dependency graph.
-2. Groups independent tasks that can run in parallel.
-3. Spawns sub-agents for each group:
+1. Reads `.temper/build-plan.md` to understand the execution groups.
+2. For each group, spawns the appropriate sub-agents in **separate conversations** with clean context:
    - **`temper-backend`** — Domain entities, EF Core configurations, repositories, use cases, DTOs, controllers
    - **`temper-frontend`** — Blazor pages, components, services, layouts
    - **`temper-tester`** — xUnit tests, bUnit component tests
    - **`temper-devops`** — Dockerfiles, docker-compose, GitHub Actions
-4. Each sub-agent receives only its specific task and the relevant design section.
-5. After each task completes, it's marked as `done` in `tasks.md`.
-6. The orchestrator waits for all tasks in a group before proceeding to the next.
+3. Each sub-agent receives **only** its specific tasks — not the full task list.
+4. After each group completes, the orchestrator asks the user to run `dotnet build`.
+5. If build succeeds, proceeds to the next group. If it fails, stops and reports errors.
+6. After all groups complete, asks the user to run `dotnet test`.
+
+### Why the orchestrator executes (not a separate agent)
+
+The orchestrator is the **root of the conversation tree**. When it spawns sub-agents, each one gets a **fresh, clean context** — no accumulated history from previous phases. This prevents context window bloat and ensures consistent code quality across all tasks.
+
+If a separate build agent tried to spawn sub-agents, it would create nested conversations (level 2+), which:
+- Consumes more resources per level of nesting
+- Loses visibility at the orchestrator level
+- May not be supported by all AI platforms
 
 ### Parallel execution
 
@@ -150,7 +183,7 @@ The build orchestrator:
 
 ### User action
 
-Each task's output is shown for approval before proceeding to the next.
+Each group's output is verified with `dotnet build` before proceeding to the next group.
 
 ---
 
@@ -247,7 +280,8 @@ This compares current files against the last snapshot and identifies which phase
 
 | Changed file | Phases that need re-running |
 |---|---|
-| `constitution.md` | spec → design → tasks → build → review → docs |
-| `spec.md` | design → tasks → build → review → docs |
-| `design.md` | tasks → build → review → docs |
-| `tasks.md` | build → review → docs |
+| `constitution.md` | spec → design → tasks → plan → build → review → docs |
+| `spec.md` | design → tasks → plan → build → review → docs |
+| `design.md` | tasks → plan → build → review → docs |
+| `tasks.md` | plan → build → review → docs |
+| `build-plan.md` | build → review → docs |

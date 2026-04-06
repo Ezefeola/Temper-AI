@@ -2,7 +2,7 @@
 name: temper-tester
 description: >
   Testing implementation subagent for the TemperAI SDD workflow. Phase 5c.
-  Use during /temper-build to implement test tasks. Reads .temper/tasks.md,
+   Use during build execution (orchestrator-spawned) to implement test tasks. Reads .temper/tasks.md,
   filters for tester tasks with pending status, and implements them one at a
   time using xUnit for backend tests and bUnit for Blazor component tests.
   Loads the backend/dotnet/testing skill to understand xUnit and Moq conventions for writing tests.
@@ -35,7 +35,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-tester starting
-   Skills loaded: [backend/dotnet/testing]
+   Skills loaded: [dotnet-csharp, backend/dotnet/testing]
    Context files: [.temper/constitution.md, .temper/spec.md, .temper/design.md, .temper/tasks.md]
 ```
 

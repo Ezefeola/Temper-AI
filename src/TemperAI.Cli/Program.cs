@@ -3,7 +3,9 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using TemperAI.Cli.Commands;
 
-if (args.Length == 1 && args[0] == "neuralcore")
+// Check for MCP server trigger (hidden flag used by AI agents)
+// We use --mcp to avoid conflicting with the 'neuralcore' management command
+if (args.Contains("--mcp"))
 {
     var neuralCoreDir = Path.GetDirectoryName(Environment.ProcessPath);
     var neuralCoreExe = Path.Combine(neuralCoreDir, "TemperAI.NeuralCore.exe");
@@ -20,12 +22,62 @@ if (args.Length == 1 && args[0] == "neuralcore")
         UseShellExecute = false,
         RedirectStandardInput = true,
         RedirectStandardOutput = true,
-        RedirectStandardError = true
+        RedirectStandardError = true,
+        CreateNoWindow = true
     };
 
     using var process = Process.Start(startInfo);
-    process?.WaitForExit();
-    return process?.ExitCode ?? 0;
+
+    if (process is null)
+    {
+        Console.Error.WriteLine("Failed to start NeuralCore MCP server.");
+        return 1;
+    }
+
+    // Forward stdin from OpenCode to NeuralCore
+    var stdinTask = Task.Run(async () =>
+    {
+        using var reader = new StreamReader(Console.OpenStandardInput());
+        var writer = process.StandardInput;
+        while (true)
+        {
+            var line = await reader.ReadLineAsync();
+            if (line is null) break;
+            await writer.WriteLineAsync(line);
+            await writer.FlushAsync();
+        }
+        writer.Close();
+    });
+
+    // Forward stdout from NeuralCore to OpenCode
+    var stdoutTask = Task.Run(async () =>
+    {
+        var reader = process.StandardOutput;
+        using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+        while (true)
+        {
+            var line = await reader.ReadLineAsync();
+            if (line is null) break;
+            await writer.WriteLineAsync(line);
+        }
+    });
+
+    // Forward stderr from NeuralCore to OpenCode (for logs)
+    var stderrTask = Task.Run(async () =>
+    {
+        var reader = process.StandardError;
+        using var writer = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+        while (true)
+        {
+            var line = await reader.ReadLineAsync();
+            if (line is null) break;
+            await writer.WriteLineAsync(line);
+        }
+    });
+
+    await process.WaitForExitAsync();
+    await Task.WhenAll(stdinTask, stdoutTask, stderrTask);
+    return process.ExitCode;
 }
 
 if (args.Length == 0)
@@ -90,6 +142,13 @@ app.Configure(config =>
           .WithDescription("Instala temper-ai.exe en el PATH global")
           .WithExample("setup");
 
+    config.AddCommand<NeuralCoreCommand>("neuralcore")
+          .WithDescription("Gestiona NeuralCore MCP server (publish, install, status, test)")
+          .WithExample("neuralcore", "--publish")
+          .WithExample("neuralcore", "--install")
+          .WithExample("neuralcore", "--status")
+          .WithExample("neuralcore", "--test");
+
     config.AddCommand<NeuralCommand>("neural")
           .WithDescription("Guarda y recupera observaciones del proyecto (NeuralCore)")
           .WithExample("neural", "--save", "--title", "Fix null ref", "--content", "Fixed...", "--type", "Bugfix")
@@ -112,17 +171,18 @@ static int RunMenu()
     AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
     AnsiConsole.WriteLine();
 
-    List<CommandOption> commands =
-    [
-        new("install", "Instala skills y agentes en tu agente AI", "install"),
-        new("update", "Actualiza skills y agentes instalados", "update"),
-        new("status", "Muestra el estado de la instalacion actual", "status"),
-        new("budget", "Muestra el uso de tokens del proyecto", "budget"),
-        new("snapshot", "Gestiona snapshots para rollback automatico", "snapshot"),
-        new("incremental", "Detecta que fases necesitan re-ejecutarse", "incremental"),
-        new("skill", "Crea, instala y descubre skills personalizados", "skill"),
-        new("setup", "Instala temper-ai.exe en el PATH global", "setup")
-    ];
+        List<CommandOption> commands =
+        [
+            new("install", "Instala skills y agentes en tu agente AI", "install"),
+            new("update", "Actualiza skills y agentes instalados", "update"),
+            new("status", "Muestra el estado de la instalacion actual", "status"),
+            new("neuralcore", "Gestiona NeuralCore MCP server (memoria persistente)", "neuralcore"),
+            new("budget", "Muestra el uso de tokens del proyecto", "budget"),
+            new("snapshot", "Gestiona snapshots para rollback automatico", "snapshot"),
+            new("incremental", "Detecta que fases necesitan re-ejecutarse", "incremental"),
+            new("skill", "Crea, instala y descubre skills personalizados", "skill"),
+            new("setup", "Instala temper-ai.exe en el PATH global", "setup")
+        ];
 
     List<string> displayNames = commands.Select(c => c.DisplayName).ToList();
 

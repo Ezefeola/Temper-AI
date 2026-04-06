@@ -176,16 +176,61 @@ temper-ai skill --list
 
 ---
 
+### `temper-ai neuralcore`
+
+Manages the NeuralCore MCP server for persistent AI memory. Opens an interactive menu with options to check status, test connectivity, install, and update.
+
+**Interactive Menu Options:**
+| Option | Description |
+|---|---|
+| 🔍 **status** | Check if NeuralCore is published and configured for each agent |
+| 🧪 **test** | Run a connectivity test against the MCP server |
+| 📦 **publish** | Compile NeuralCore as a standalone executable |
+| ⚙️ **install** | Configure MCP in your AI agents (publishes automatically if needed) |
+| 📜 **logs** | View the latest server logs |
+
+**CLI Flags:**
+| Flag | Description |
+|---|---|
+| `--status` | Check NeuralCore status directly |
+| `--test` | Run connectivity test directly |
+| `--publish` | Publish NeuralCore executable |
+| `--install` | Install MCP configuration for agents |
+| `--logs` | Show server logs |
+| `-a, --agent <id>` | Target a specific agent (`copilot`, `claude`, `opencode`) |
+
+**Examples:**
+```cmd
+temper-ai neuralcore                  # Interactive menu
+temper-ai neuralcore --status         # Check status
+temper-ai neuralcore --test           # Run test
+temper-ai neuralcore --publish        # Publish executable
+temper-ai neuralcore --install        # Install MCP config
+temper-ai neuralcore --install --agent opencode  # Install for OpenCode only
+```
+
+**Note:** When running `temper-ai install`, you'll be asked if you want to install NeuralCore. If you say yes, it will automatically publish (if needed) and configure MCP for your selected agents.
+
+**How the test works:** The `--test` command starts NeuralCore and waits 10 seconds. If the process is still running (not crashed), the test passes. Since MCP servers are long-running processes, a "timeout" message actually means the server is working correctly and will be auto-started by your AI assistant when needed.
+
+---
+
 ### `temper-ai setup`
 
-Installs the CLI executable to the global PATH.
+Installs the CLI executable to the global PATH and configures NeuralCore MCP.
 
 **What it does:**
 1. Copies the current executable to `%LOCALAPPDATA%\Programs\TemperAI\temper-ai.exe`
-2. Adds that directory to the user's PATH environment variable
-3. Verifies the installation
+   - If the file is locked (running), uses a deferred PowerShell script to copy after the process exits.
+2. Adds that directory to the user's PATH environment variable.
+3. Configures NeuralCore MCP in OpenCode and Copilot CLI configuration files.
+4. Publishes NeuralCore as a standalone executable (if not already published).
+
+**Self-update handling:** If you run `temper-ai setup` from the installed version, it detects that the file is in use and schedules the update via a temporary PowerShell script that runs after the process exits.
 
 **After running:** Close and reopen your terminal for PATH changes to take effect.
+
+**Recommendation:** For a clean installation, use `.\install.ps1` from the repository root instead of `temper-ai setup`.
 
 ---
 

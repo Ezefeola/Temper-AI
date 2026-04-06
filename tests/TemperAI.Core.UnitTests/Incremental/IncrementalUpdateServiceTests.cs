@@ -68,11 +68,13 @@ public sealed class IncrementalUpdateServiceTests
         File.WriteAllText(Path.Combine(snapshotDir, "spec.md"), "original");
         File.WriteAllText(Path.Combine(snapshotDir, "design.md"), "original");
         File.WriteAllText(Path.Combine(snapshotDir, "tasks.md"), "original");
+        File.WriteAllText(Path.Combine(snapshotDir, "build-plan.md"), "original");
 
         File.WriteAllText(Path.Combine(_testDirectory, "constitution.md"), "modified");
         File.WriteAllText(Path.Combine(_testDirectory, "spec.md"), "original");
         File.WriteAllText(Path.Combine(_testDirectory, "design.md"), "original");
         File.WriteAllText(Path.Combine(_testDirectory, "tasks.md"), "original");
+        File.WriteAllText(Path.Combine(_testDirectory, "build-plan.md"), "original");
 
         IncrementalResult result = _service.AnalyzeChanges(_testDirectory);
 
@@ -81,7 +83,7 @@ public sealed class IncrementalUpdateServiceTests
         Assert.Contains("temper-spec", result.AffectedPhases);
         Assert.Contains("temper-design", result.AffectedPhases);
         Assert.Contains("temper-tasks", result.AffectedPhases);
-        Assert.Contains("temper-build", result.AffectedPhases);
+        Assert.Contains("temper-plan", result.AffectedPhases);
         Assert.Contains("temper-review", result.AffectedPhases);
         Assert.Contains("temper-docs", result.AffectedPhases);
     }
@@ -95,11 +97,13 @@ public sealed class IncrementalUpdateServiceTests
         File.WriteAllText(Path.Combine(snapshotDir, "spec.md"), "same");
         File.WriteAllText(Path.Combine(snapshotDir, "design.md"), "same");
         File.WriteAllText(Path.Combine(snapshotDir, "tasks.md"), "original");
+        File.WriteAllText(Path.Combine(snapshotDir, "build-plan.md"), "original");
 
         File.WriteAllText(Path.Combine(_testDirectory, "constitution.md"), "same");
         File.WriteAllText(Path.Combine(_testDirectory, "spec.md"), "same");
         File.WriteAllText(Path.Combine(_testDirectory, "design.md"), "same");
         File.WriteAllText(Path.Combine(_testDirectory, "tasks.md"), "modified");
+        File.WriteAllText(Path.Combine(_testDirectory, "build-plan.md"), "original");
 
         IncrementalResult result = _service.AnalyzeChanges(_testDirectory);
 
@@ -108,7 +112,7 @@ public sealed class IncrementalUpdateServiceTests
         Assert.DoesNotContain("temper-spec", result.AffectedPhases);
         Assert.DoesNotContain("temper-design", result.AffectedPhases);
         Assert.Contains("temper-tasks", result.AffectedPhases);
-        Assert.Contains("temper-build", result.AffectedPhases);
+        Assert.Contains("temper-plan", result.AffectedPhases);
         Assert.Contains("temper-review", result.AffectedPhases);
         Assert.Contains("temper-docs", result.AffectedPhases);
     }
@@ -116,12 +120,12 @@ public sealed class IncrementalUpdateServiceTests
     [Fact]
     public void GetReRunOrder_ReturnsPhasesInCorrectOrder()
     {
-        List<string> affected = ["temper-build", "temper-review", "temper-docs"];
+        List<string> affected = ["temper-plan", "temper-review", "temper-docs"];
 
         IReadOnlyList<PhaseDependency> order = _service.GetReRunOrder(affected);
 
         Assert.Equal(3, order.Count);
-        Assert.Equal("temper-build", order[0].PhaseName);
+        Assert.Equal("temper-plan", order[0].PhaseName);
         Assert.Equal("temper-review", order[1].PhaseName);
         Assert.Equal("temper-docs", order[2].PhaseName);
     }

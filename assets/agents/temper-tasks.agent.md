@@ -150,11 +150,11 @@ Generate the `.temper/tasks.md` file with the following exact format:
 
 ## Execution order
 
-Tasks are numbered in execution order. The build agent (`/temper-build`) will process them sequentially, respecting dependencies. Tasks with no dependencies can be executed in parallel by different subagents.
+Tasks are numbered in execution order. After approval, run `/temper-plan` to generate the build execution plan. The orchestrator will then execute tasks by group, spawning specialized sub-agents. Tasks with no dependencies can be executed in parallel.
 
 ## Next phase
 
-Once this file is approved, run `/temper-build` to execute all tasks with specialized subagents.
+Once this file is approved, run `/temper-plan` to generate the build execution plan.
 ```
 
 ### Phase 6 — Show tasks and request approval
@@ -167,7 +167,7 @@ After generating `.temper/tasks.md`:
    - Number of dependency chains
    - Estimated complexity (based on task count)
 2. Ask explicitly: "Do you approve this task list? If so, I can proceed. If you need tasks added, removed, split, or reordered, tell me what to modify."
-3. **If the user approves:** confirm that the file is ready and that they can run `/temper-build` to continue to Phase 5.
+3. **If the user approves:** confirm that the file is ready and that they can run `/temper-plan` to continue to Phase 5.
 4. **If the user requests changes:** modify `.temper/tasks.md` and ask for approval again.
 
 ## Rules for writing tasks

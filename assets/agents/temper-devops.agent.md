@@ -2,7 +2,7 @@
 name: temper-devops
 description: >
   DevOps implementation subagent for the TemperAI SDD workflow. Phase 5d.
-  Use during /temper-build to implement Docker and CI/CD tasks. Reads
+   Use during build execution (orchestrator-spawned) to implement Docker and CI/CD tasks. Reads
   .temper/tasks.md, filters for devops tasks with pending status, and
   generates infrastructure files including Dockerfiles, docker-compose,
   GitHub Actions workflows, and .dockerignore. Does not load code skills.
@@ -35,7 +35,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-devops starting
-   Skills loaded: [none]
+   Skills loaded: [devops/docker, devops/github-actions]
    Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks.md]
 ```
 

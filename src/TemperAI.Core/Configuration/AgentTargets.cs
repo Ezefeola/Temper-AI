@@ -4,8 +4,6 @@ namespace TemperAI.Core.Configuration;
 
 public static class AgentTargets
 {
-    // Devuelve todos los agentes soportados con sus paths configurados
-    // Los paths se resuelven en runtime para el usuario actual
     public static IReadOnlyList<AgentTarget> All()
     {
         string homeDirectory = Environment.GetFolderPath(
@@ -20,6 +18,8 @@ public static class AgentTargets
                 SkillsPath = Path.Combine(homeDirectory, ".copilot", "skills"),
                 AgentsPath = Path.Combine(homeDirectory, ".copilot", "agents"),
                 ConfigPath = Path.Combine(homeDirectory, ".copilot"),
+                McpConfigFile = Path.Combine(homeDirectory, ".github", "copilot", "mcp.json"),
+                McpConfigFormat = "copilot",
                 Supported = true
             },
             new()
@@ -29,6 +29,8 @@ public static class AgentTargets
                 SkillsPath = Path.Combine(homeDirectory, ".claude", "skills"),
                 AgentsPath = Path.Combine(homeDirectory, ".claude", "agents"),
                 ConfigPath = Path.Combine(homeDirectory, ".claude"),
+                McpConfigFile = Path.Combine(homeDirectory, ".claude", "mcp.json"),
+                McpConfigFormat = "claude",
                 Supported = true
             },
             new()
@@ -38,6 +40,8 @@ public static class AgentTargets
                 SkillsPath = Path.Combine(homeDirectory, ".config", "opencode", "skills"),
                 AgentsPath = Path.Combine(homeDirectory, ".config", "opencode", "agent"),
                 ConfigPath = Path.Combine(homeDirectory, ".config", "opencode"),
+                McpConfigFile = Path.Combine(homeDirectory, ".config", "opencode", "opencode.json"),
+                McpConfigFormat = "opencode",
                 Supported = true
             }
         }.AsReadOnly();

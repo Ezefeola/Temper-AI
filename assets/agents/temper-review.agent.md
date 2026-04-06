@@ -2,7 +2,7 @@
 name: temper-review
 description: >
   Quality review agent for the TemperAI SDD workflow. Phase 6.
-  Use after /temper-build to validate generated code against TemperAI
+   Use after build execution to validate generated code against TemperAI
   conventions and the project specification. Reads .temper/spec.md and
   .temper/design.md, scans all generated code for convention violations,
 and produces a review report with pass/fail items and exact file

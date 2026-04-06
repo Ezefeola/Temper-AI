@@ -16,6 +16,10 @@ public sealed class InstallSettings : CommandSettings
     [CommandOption("-a|--agent")]
     [Description("ID del agente a instalar (copilot, claude, opencode)")]
     public string? AgentId { get; init; }
+
+    [CommandOption("--neuralcore")]
+    [Description("Instala NeuralCore MCP server")]
+    public bool? InstallNeuralCore { get; init; }
 }
 
 public sealed class InstallCommand : Command<InstallSettings>
@@ -39,6 +43,10 @@ public sealed class InstallCommand : Command<InstallSettings>
             return 1;
         }
 
+        bool installNeuralCore = settings.InstallNeuralCore ?? AnsiConsole.Confirm(
+            "¿Queres instalar NeuralCore para memoria persistente entre sesiones?",
+            defaultValue: true);
+
         if (settings.DryRun)
         {
             AnsiConsole.MarkupLine("[yellow]  Modo dry-run — no se escribira nada al disco[/]");
@@ -51,11 +59,94 @@ public sealed class InstallCommand : Command<InstallSettings>
         {
             InstallResult installResult = installerService.Install(agentTarget);
             PrintResult(installResult);
+
+            if (installNeuralCore && !settings.DryRun)
+            {
+                string neuralCoreExe = NeuralCoreInstallerService.GetNeuralCoreExePath();
+
+                if (!NeuralCoreInstallerService.IsPublished())
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.MarkupLine("[bold]NeuralCore no esta publicado. Publicando ahora...[/]");
+                    AnsiConsole.WriteLine();
+
+                    var progress = AnsiConsole.Progress();
+                    progress.AutoClear = true;
+                    progress.Columns(new ProgressColumn[]
+                    {
+                        new TaskDescriptionColumn(),
+                        new ProgressBarColumn(),
+                        new SpinnerColumn(),
+                    });
+
+                    bool publishSuccess = false;
+
+                    progress.Start(ctx =>
+                    {
+                        ProgressTask? task = null;
+
+                        PublishResult result = NeuralCoreInstallerService.PublishNeuralCore(msg =>
+                        {
+                            task ??= ctx.AddTask("[cyan]Publicando NeuralCore...[/]");
+                            task.Description = $"[cyan]{msg}[/]";
+                            task.Value = task.MaxValue;
+                        });
+
+                        if (result.Success)
+                        {
+                            publishSuccess = true;
+                            AnsiConsole.MarkupLine($"[green]✓[/] NeuralCore publicado ({result.Size})");
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine($"[red]✗ Error al publicar:[/] {result.Error}");
+                        }
+                    });
+
+                    if (!publishSuccess)
+                    {
+                        AnsiConsole.MarkupLine("[yellow]⚠ NeuralCore no se pudo publicar. Saltando configuracion MCP.[/]");
+                        AnsiConsole.MarkupLine("[dim]   Ejecutá [bold]temper-ai neuralcore --publish[/] manualmente.[/]");
+                        continue;
+                    }
+
+                    neuralCoreExe = NeuralCoreInstallerService.GetNeuralCoreExePath();
+                }
+
+                NeuralCoreInstallerService neuralCoreInstaller = new();
+                string neuralCorePath = NeuralCoreInstallerService.GetNeuralCoreInstallPath();
+                InstallResult neuralResult = neuralCoreInstaller.InstallNeuralCore(agentTarget, neuralCorePath);
+
+                if (neuralResult.IsSuccess)
+                {
+                    AnsiConsole.MarkupLine($"[green]✓[/] NeuralCore configurado para {agentTarget.Name}");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine($"[yellow]⚠[/] NeuralCore config parcial para {agentTarget.Name}");
+
+                    foreach (string error in neuralResult.Errors)
+                    {
+                        AnsiConsole.MarkupLine($"  [red]✗[/] {error}");
+                    }
+                }
+            }
         }
 
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
-        AnsiConsole.MarkupLine("[green]Listo![/] Abri tu agente AI y empeza a usar TemperAI.");
+
+        if (installNeuralCore)
+        {
+            AnsiConsole.MarkupLine("[green]Listo![/] Skills, agentes y NeuralCore instalados.");
+            AnsiConsole.MarkupLine("[dim]NeuralCore se iniciara automaticamente cuando abras tu agente AI.[/]");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[green]Listo![/] Abri tu agente AI y empeza a usar TemperAI.");
+            AnsiConsole.MarkupLine("[dim]Para agregar NeuralCore despues, ejecutá: [bold]temper-ai neuralcore[/][/]");
+        }
+
         AnsiConsole.WriteLine();
 
         return 0;

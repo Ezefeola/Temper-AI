@@ -259,13 +259,14 @@ Token budget tracking. Loaded for budget management.
 
 | Agent | Skills Loaded |
 |---|---|
-| `temper-init` | `prd-analyzer` |
-| `temper-spec` | `prd-analyzer` |
-| `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
+| `temper-init` | `dotnet-csharp`, `prd-analyzer` |
+| `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
+| `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
-| `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/ddd` + `architecture/[chosen]` |
-| `temper-frontend` | `frontend/blazor` |
-| `temper-tester` | `backend/dotnet/testing` |
+| `temper-plan` | None |
+| `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]` |
+| `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
+| `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
 | `temper-devops` | `devops/docker` + `devops/github-actions` |
-| `temper-review` | `backend/dotnet/api` + `architecture/[chosen]` |
+| `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]` |
 | `temper-docs` | None |

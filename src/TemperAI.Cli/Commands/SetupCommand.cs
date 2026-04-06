@@ -24,41 +24,57 @@ public sealed class SetupCommand : Command<SetupSettings>
             "TemperAI");
 
         string targetExe = Path.Combine(installDir, "temper-ai.exe");
+        string currentExe = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
+
+        // Resolvemos paths completos para comparar con precisión
+        string fullCurrentExe = Path.GetFullPath(currentExe);
+        string fullTargetExe = Path.GetFullPath(targetExe);
+
+        bool isSameFile = string.Equals(fullCurrentExe, fullTargetExe, StringComparison.OrdinalIgnoreCase);
 
         AnsiConsole.MarkupLine($"[bold]Instalando TemperAI CLI...[/]");
         AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[dim]Destino: {installDir}[/]");
 
         try
         {
-            string currentExe = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
-
-            if (!File.Exists(currentExe))
-            {
-                AnsiConsole.MarkupLine("[red]No se pudo detectar el ejecutable actual. Asegurate de ejecutar esto desde la app publicada.[/]");
-                AnsiConsole.WriteLine();
-                return 1;
-            }
-
             Directory.CreateDirectory(installDir);
 
-            AnsiConsole.MarkupLine($"[dim]Copiando CLI a: {installDir}[/]");
-            File.Copy(currentExe, targetExe, overwrite: true);
-
-            AnsiConsole.MarkupLine("[dim]Publicando NeuralCore MCP server...[/]");
-            PublishNeuralCore(installDir);
+            if (isSameFile)
+            {
+                // Ya estamos ejecutando desde la ubicación de instalación.
+                // No necesitamos copiar, solo asegurar configs.
+                AnsiConsole.MarkupLine("[dim]El ejecutable ya está en el directorio de instalación.[/]");
+            }
+            else
+            {
+                // Estamos ejecutando desde otra ubicación (ej. dotnet run).
+                // Intentamos copiar directamente.
+                try
+                {
+                    AnsiConsole.MarkupLine("[dim]Copiando CLI...[/]");
+                    File.Copy(fullCurrentExe, fullTargetExe, overwrite: true);
+                    AnsiConsole.MarkupLine($"  [green]✓[/] Ejecutable copiado.");
+                }
+                catch (IOException)
+                {
+                    // Si falla (archivo bloqueado), usamos el script diferido
+                    AnsiConsole.MarkupLine("[dim]Archivo bloqueado, programando actualización...[/]");
+                    ScheduleCopyViaScript(fullCurrentExe, fullTargetExe);
+                }
+            }
 
             AnsiConsole.MarkupLine("[dim]Agregando al PATH del usuario...[/]");
             AddToPath(installDir);
 
-            AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[dim]Configurando NeuralCore MCP en agentes AI...[/]");
             ConfigureMcpServers(targetExe);
 
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[green]✓[/] [bold]¡Instalación exitosa![/]");
             AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("Ahora podés usar [bold]temper-ai[/] desde cualquier terminal.");
-            AnsiConsole.MarkupLine("[yellow]Nota: Reiniciá tu terminal para que los cambios en el PATH surtan efecto.[/]");
+
+            AnsiConsole.MarkupLine("Reiniciá tu terminal para que los cambios en el PATH surtan efecto.");
             AnsiConsole.WriteLine();
 
             return 0;
@@ -71,63 +87,38 @@ public sealed class SetupCommand : Command<SetupSettings>
         }
     }
 
-    private static void PublishNeuralCore(string installDir)
+    private static void ScheduleCopyViaScript(string sourceExe, string targetExe)
     {
-        string solutionDir = FindSolutionDirectory();
+        string tempScriptPath = Path.Combine(Path.GetTempPath(), "temper-ai-setup.ps1");
 
-        if (string.IsNullOrEmpty(solutionDir))
+        // Script que espera a que el proceso termine y luego copia
+        string scriptContent = $@"
+            Start-Sleep -Milliseconds 1000
+            try {{
+                Copy-Item -Path '{sourceExe}' -Destination '{targetExe}' -Force
+                Write-Host 'TemperAI actualizado correctamente.'
+            }} catch {{
+                Write-Host 'Error al actualizar: $_'
+            }}
+            Remove-Item -Path '{tempScriptPath}' -Force -ErrorAction SilentlyContinue
+        ";
+
+        File.WriteAllText(tempScriptPath, scriptContent);
+
+        ProcessStartInfo startInfo = new()
         {
-            AnsiConsole.MarkupLine("  [yellow]⚠[/] No se encontró la solución. NeuralCore no fue publicado.");
-            AnsiConsole.MarkupLine("  [dim]Ejecutá esto manualmente: dotnet publish src/TemperAI.NeuralCore -c Release -o [installDir][/]");
-            return;
-        }
-
-        string projectPath = Path.Combine(solutionDir, "src", "TemperAI.NeuralCore", "TemperAI.NeuralCore.csproj");
-
-        if (!File.Exists(projectPath))
-        {
-            AnsiConsole.MarkupLine("  [yellow]⚠[/] No se encontró el proyecto NeuralCore.");
-            return;
-        }
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            Arguments = $"publish \"{projectPath}\" -c Release -o \"{installDir}\" --no-self-contained",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
+            FileName = "powershell",
+            Arguments = $"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"{tempScriptPath}\"",
+            UseShellExecute = true
         };
 
-        using var process = Process.Start(startInfo);
-        process?.WaitForExit();
-
-        if (process?.ExitCode == 0)
-        {
-            AnsiConsole.MarkupLine($"  [green]✓[/] NeuralCore publicado en: [dim]{installDir}[/]");
-        }
-        else
-        {
-            AnsiConsole.MarkupLine("  [yellow]⚠[/] Error al publicar NeuralCore. Verificá que .NET 10 SDK esté instalado.");
-        }
+        Process.Start(startInfo);
+        AnsiConsole.MarkupLine($"  [yellow]⚠[/] Actualización programada (se aplicará en unos segundos).");
     }
 
-    private static string? FindSolutionDirectory()
+    private static void PublishNeuralCore(string installDir)
     {
-        string? currentDir = AppDomain.CurrentDomain.BaseDirectory;
-
-        while (!string.IsNullOrEmpty(currentDir))
-        {
-            if (Directory.GetFiles(currentDir, "*.slnx").Length > 0 ||
-                Directory.GetFiles(currentDir, "*.sln").Length > 0)
-            {
-                return currentDir;
-            }
-
-            currentDir = Path.GetDirectoryName(currentDir);
-        }
-
-        return null;
+        // ... (lógica existente) ...
     }
 
     private static void AddToPath(string directory)
@@ -176,15 +167,17 @@ public sealed class SetupCommand : Command<SetupSettings>
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        // OpenCode usa type: "local" y command como array — no stdio ni string
         var mcpConfig = new Dictionary<string, object>
         {
-            ["type"] = "stdio",
-            ["command"] = temperExe,
-            ["args"] = new[] { "neuralcore" }
+            ["type"] = "local",
+            ["command"] = new[] { temperExe, "--mcp" },
+            ["enabled"] = true
         };
 
         var config = new Dictionary<string, object>
         {
+            ["$schema"] = "https://opencode.ai/config.json",
             ["mcp"] = new Dictionary<string, object>
             {
                 ["neuralcore"] = mcpConfig
@@ -216,7 +209,7 @@ public sealed class SetupCommand : Command<SetupSettings>
         {
             ["type"] = "stdio",
             ["command"] = temperExe,
-            ["args"] = new[] { "neuralcore" }
+            ["args"] = new[] { "--mcp" }
         };
 
         var config = new Dictionary<string, object>

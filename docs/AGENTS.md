@@ -7,7 +7,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-init
 
 **Phase:** 1 — Initialization
-**Skills:** `prd-analyzer`
+**Skills:** `dotnet-csharp`, `prd-analyzer`
 
 **Role:** Read or build the PRD, ask clarifying questions, generate `.temper/constitution.md`.
 
@@ -26,7 +26,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-spec
 
 **Phase:** 2 — Specification
-**Skills:** `prd-analyzer`
+**Skills:** `dotnet-csharp`, `prd-analyzer`
 
 **Role:** Generate user stories, acceptance criteria, edge cases, and non-functional requirements.
 
@@ -46,7 +46,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-design
 
 **Phase:** 3 — Architecture Design
-**Skills:** `architecture/[chosen]` + `backend/dotnet/api`
+**Skills:** `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api`
 
 **Role:** Design the complete architecture — entities, endpoints, database schema, components.
 
@@ -83,21 +83,43 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ---
 
-## temper-build
+## temper-plan
 
-**Phase:** 5 — Build Orchestrator
-**Skills:** Varies by task
+**Phase:** 5 — Build Planner
+**Skills:** None
 
-**Role:** Coordinate task execution with parallel processing when possible.
+**Role:** Analyze task dependencies, group tasks for parallel execution, and generate `.temper/build-plan.md`.
 
 **Workflow:**
 1. Read `tasks.md` and `design.md`.
 2. Build dependency graph.
 3. Group independent tasks for parallel execution.
-4. Spawn sub-agents for each group.
-5. Wait for all tasks in a group to complete.
-6. Mark completed tasks as `done`.
-7. Proceed to next group.
+4. Assign agents to each group (backend, frontend, tester, devops).
+5. Estimate token cost per group.
+6. Generate `.temper/build-plan.md`.
+7. Request approval.
+
+**Output:** `.temper/build-plan.md`
+
+---
+
+## Build Execution (handled by `temper-orchestrator`)
+
+**Phase:** 5 (execution step)
+**Skills:** Varies by sub-agent
+
+**Role:** Execute the build plan by spawning sub-agents one group at a time, each in a separate conversation with clean context.
+
+**Workflow:**
+1. Read `build-plan.md` to understand execution groups.
+2. For each group, spawn the appropriate sub-agents (backend, frontend, tester, devops).
+3. Each sub-agent receives only its specific tasks — not the full task list.
+4. Wait for all agents in the group to complete.
+5. Ask user to run `dotnet build` to verify.
+6. Proceed to next group.
+7. After all groups, ask user to run `dotnet test`.
+
+**Why the orchestrator executes:** The orchestrator is the root of the conversation tree. When it spawns sub-agents, each gets a fresh, clean context at level 1 — preventing context window bloat and ensuring consistent quality.
 
 **Sub-agents:**
 - `temper-backend` — Backend implementation
@@ -110,7 +132,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-backend
 
 **Phase:** 5a — Backend Implementation
-**Skills:** `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/ddd` + `architecture/[chosen]`
+**Skills:** `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]`
 
 **Role:** Implement backend code — entities, use cases, DTOs, repositories, controllers.
 
@@ -128,9 +150,9 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-frontend
 
 **Phase:** 5b — Frontend Implementation
-**Skills:** `frontend/blazor`
+**Skills:** `dotnet-csharp` + `frontend/blazor`
 
-**Role:** Implement Blazor WASM components, pages, and services.
+**Role:** Implement Blazor components, pages, and services (Server or WebAssembly).
 
 **Workflow:**
 1. Read `tasks.md` and filter for pending frontend tasks.
@@ -146,7 +168,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-tester
 
 **Phase:** 5c — Test Implementation
-**Skills:** `backend/dotnet/testing`
+**Skills:** `dotnet-csharp` + `backend/dotnet/testing`
 
 **Role:** Write xUnit tests for backend code and bUnit tests for Blazor components.
 
@@ -181,7 +203,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-review
 
 **Phase:** 6 — Code Review
-**Skills:** `backend/dotnet/api` + `architecture/[chosen]`
+**Skills:** `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]`
 
 **Role:** Review all generated code against TemperAI conventions and specification coverage.
 
@@ -215,15 +237,22 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-orchestrator
 
-**Role:** Main orchestrator — evaluates request complexity and decides between quick path and full pipeline.
+**Role:** Main orchestrator — evaluates request complexity, decides between quick path and full pipeline, and **executes the build plan** by spawning sub-agents.
 
 **Workflow:**
 1. Receive user request.
 2. Evaluate complexity (files affected, new entities, architectural impact).
 3. Choose quick path or full pipeline.
-4. Spawn the appropriate agent with minimal context.
-5. Wait for completion and report back.
+4. Spawn the appropriate phase agent with minimal context.
+5. During build phase: read `build-plan.md` and spawn sub-agents per group.
+6. Wait for completion and report back.
 
 **Decision rules:**
 - 1-2 files, no architectural impact → Quick path
 - 3+ files, new entities, architectural change → Full pipeline
+
+**Build execution:**
+- Reads `.temper/build-plan.md` generated by `temper-plan`.
+- Spawns sub-agents (backend, frontend, tester, devops) one group at a time.
+- Each sub-agent runs in a separate conversation with clean context.
+- Verifies `dotnet build` between groups.

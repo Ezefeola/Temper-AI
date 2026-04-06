@@ -34,24 +34,24 @@ public sealed class IncrementalUpdateService
             TrackedFiles = ["tasks.md"],
             Status = "unknown"
         },
-        ["temper-build"] = new PhaseDependency
+        ["temper-plan"] = new PhaseDependency
         {
-            PhaseName = "temper-build",
+            PhaseName = "temper-plan",
             DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-tasks"],
-            TrackedFiles = [],
+            TrackedFiles = ["build-plan.md"],
             Status = "unknown"
         },
         ["temper-review"] = new PhaseDependency
         {
             PhaseName = "temper-review",
-            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-build"],
+            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-plan"],
             TrackedFiles = [],
             Status = "unknown"
         },
         ["temper-docs"] = new PhaseDependency
         {
             PhaseName = "temper-docs",
-            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-build", "temper-review"],
+            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"],
             TrackedFiles = [],
             Status = "unknown"
         }
@@ -145,7 +145,7 @@ public sealed class IncrementalUpdateService
             "temper-spec",
             "temper-design",
             "temper-tasks",
-            "temper-build",
+            "temper-plan",
             "temper-review",
             "temper-docs"
         ];
@@ -205,11 +205,11 @@ public sealed class IncrementalUpdateService
 
         string[][] cascadeRules =
         [
-            ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-build", "temper-review", "temper-docs"],
-            ["temper-spec", "temper-design", "temper-tasks", "temper-build", "temper-review", "temper-docs"],
-            ["temper-design", "temper-tasks", "temper-build", "temper-review", "temper-docs"],
-            ["temper-tasks", "temper-build", "temper-review", "temper-docs"],
-            ["temper-build", "temper-review", "temper-docs"],
+            ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-plan", "temper-review", "temper-docs"],
             ["temper-review", "temper-docs"]
         ];
 

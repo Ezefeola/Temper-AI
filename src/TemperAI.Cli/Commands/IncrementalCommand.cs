@@ -157,7 +157,7 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
             "temper-spec",
             "temper-design",
             "temper-tasks",
-            "temper-build",
+            "temper-plan",
             "temper-review",
             "temper-docs"
         ];
@@ -168,9 +168,9 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
             ["temper-spec"] = ["temper-init"],
             ["temper-design"] = ["temper-init", "temper-spec"],
             ["temper-tasks"] = ["temper-init", "temper-spec", "temper-design"],
-            ["temper-build"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks"],
-            ["temper-review"] = ["temper-init", "temper-spec", "temper-design", "temper-build"],
-            ["temper-docs"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-build", "temper-review"]
+            ["temper-plan"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks"],
+            ["temper-review"] = ["temper-init", "temper-spec", "temper-design", "temper-plan"],
+            ["temper-docs"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"]
         };
 
         Dictionary<string, string[]> files = new()
@@ -179,7 +179,7 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
             ["temper-spec"] = ["spec.md"],
             ["temper-design"] = ["design.md"],
             ["temper-tasks"] = ["tasks.md"],
-            ["temper-build"] = [],
+            ["temper-plan"] = ["build-plan.md"],
             ["temper-review"] = [],
             ["temper-docs"] = []
         };

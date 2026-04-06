@@ -2,7 +2,7 @@
 name: temper-frontend
 description: >
   Frontend implementation subagent for the TemperAI SDD workflow. Phase 5b.
-  Use during /temper-build to implement Blazor frontend tasks. Reads
+   Use during build execution (orchestrator-spawned) to implement Blazor frontend tasks. Reads
   .temper/tasks.md, filters for frontend tasks with pending status, and
   implements them one at a time following TemperAI Blazor conventions.
   Loads only the frontend/blazor skill — does not need backend knowledge.
@@ -37,7 +37,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-frontend starting
-   Skills loaded: [frontend/blazor]
+   Skills loaded: [dotnet-csharp, frontend/blazor]
    Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks.md]
 ```
 

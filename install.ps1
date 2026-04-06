@@ -23,7 +23,17 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  > Publicado en: $installDir" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "[2/3] Agregando al PATH del usuario..." -ForegroundColor Yellow
+Write-Host "[2/4] Publicando NeuralCore MCP server..." -ForegroundColor Yellow
+dotnet publish "$scriptDir\src\TemperAI.NeuralCore\TemperAI.NeuralCore.csproj" -c Release -o $installDir --self-contained true -p:PublishSingleFile=true --nologo -v q
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ! Warning: No se pudo publicar NeuralCore. Verificá que .NET 10 SDK esté instalado." -ForegroundColor Yellow
+} else {
+    Write-Host "  > NeuralCore publicado en: $installDir" -ForegroundColor Green
+}
+
+Write-Host ""
+Write-Host "[3/4] Agregando al PATH del usuario..." -ForegroundColor Yellow
 
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 
@@ -41,7 +51,7 @@ if ($currentPath -notlike "*$installDir*") {
 }
 
 Write-Host ""
-Write-Host "[3/3] Verificando instalacion..." -ForegroundColor Yellow
+Write-Host "[4/4] Verificando instalacion..." -ForegroundColor Yellow
 
 if (Test-Path $targetExe) {
     Write-Host "  > Ejecutable encontrado: $targetExe" -ForegroundColor Green

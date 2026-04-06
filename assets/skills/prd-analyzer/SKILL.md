@@ -109,7 +109,7 @@ These are questions that prevent you from generating the constitution:
 
 ### Backend
 
-- **Default:** .NET 10, C# 13 — this is the TemperAI standard. Only suggest alternatives if the PRD explicitly requires something else.
+- **Default:** .NET 10, C# 14 — this is the TemperAI standard. Only suggest alternatives if the PRD explicitly requires something else.
 
 ### Database
 
@@ -276,7 +276,7 @@ If the PRD is unclear about complexity, ask: "Does this system have complex busi
 
 | Component | Decision |
 |---|---|
-| Backend | .NET 10, C# 13 |
+| Backend | .NET 10, C# 14 |
 | Frontend | [Blazor Server / Blazor WASM / API only] |
 | Database | [SQL Server / PostgreSQL / SQLite] |
 | Authentication | [JWT / Identity / OAuth / No auth] |

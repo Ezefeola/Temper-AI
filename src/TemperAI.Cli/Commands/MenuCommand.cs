@@ -19,6 +19,7 @@ public sealed class MenuCommand : Command<MenuSettings>
             new("install", "Instala skills y agentes en tu agente AI", ["--dry-run", "--agent copilot"]),
             new("update", "Actualiza skills y agentes instalados", ["--force", "--dry-run"]),
             new("status", "Muestra el estado de la instalacion actual", []),
+            new("neuralcore", "Gestiona NeuralCore MCP server (memoria persistente)", []),
             new("budget", "Muestra el uso de tokens del proyecto", ["--reset"]),
             new("snapshot", "Gestiona snapshots para rollback automatico", ["--create --phase init", "--latest", "--restore"]),
             new("incremental", "Detecta que fases necesitan re-ejecutarse", ["--check", "--force"]),
@@ -109,6 +110,9 @@ public sealed class MenuCommand : Command<MenuSettings>
 
             config.AddCommand<SkillCommand>("skill")
                   .WithDescription("Crea, instala y descubre skills personalizados");
+
+            config.AddCommand<NeuralCoreCommand>("neuralcore")
+                  .WithDescription("Gestiona NeuralCore MCP server (status, test, install, update)");
         });
 
         return subApp.Run([commandName]);

@@ -9,10 +9,10 @@ TemperAI transforms how developers build .NET applications by combining **Spec-D
 ## Quick Start
 
 ```powershell
-# 1. Install the CLI globally
+# 1. Install the CLI globally (includes NeuralCore MCP server)
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 
-# 2. Install skills and agents into your AI assistant
+# 2. Install skills, agents, and configure NeuralCore into your AI assistant
 temper-ai install
 
 # 3. Open your AI assistant (OpenCode, Copilot, Claude Code)
@@ -34,10 +34,12 @@ Traditional AI coding assistants accumulate context across long conversations. B
 
 **Spec-Driven Development (SDD)** — a structured workflow where:
 
-1. **Each phase starts fresh** — no accumulated context from previous phases
-2. **Specialized agents** — each agent handles one specific task with only the context it needs
-3. **Quality gates** — each phase requires user approval before proceeding
-4. **Token efficiency** — quick path for simple changes, full pipeline for complex features
+1. **Ephemeral orchestrator** — each phase runs in a fresh session with zero accumulated context
+2. **State persistence** — `.temper/orchestrator-state.md` tracks progress between sessions
+3. **Specialized agents** — each agent handles one specific task with only the context it needs
+4. **Quality gates** — each phase requires user approval before proceeding
+5. **Token efficiency** — quick path for simple changes, full pipeline for complex features
+6. **Persistent memory** — NeuralCore MCP server saves observations between sessions
 
 ---
 
@@ -60,12 +62,13 @@ Traditional AI coding assistants accumulate context across long conversations. B
               │ (1 agent)  │       │ (SDD phases) │
               └─────┬──────┘       └──────┬──────┘
                     │                     │
-              ┌─────▼──────┐      ┌──────▼──────────┐
-              │ Direct     │      │ init → spec →   │
-              │ execution  │      │ design → tasks → │
-              │            │      │ build → review → │
-              └────────────┘      │ docs            │
-                                  └─────────────────┘
+               ┌─────▼──────┐      ┌──────▼──────────┐
+               │ Direct     │      │ init → spec →   │
+               │ execution  │      │ design → tasks → │
+               │            │      │ plan → [orch.  │
+               │            │      │  executes] →    │
+               └────────────┘      │ review → docs   │
+                                   └─────────────────┘
 ```
 
 ### Decision Matrix
@@ -95,68 +98,69 @@ temper-ai/
 │
 ├── assets/                         ← Embedded resources (installed into AI agents)
 │   ├── skills/
+│   │   ├── README.md
+│   │   ├── dotnet-csharp/
+│   │   │   └── SKILL.md            ← Universal C# / .NET 10 standards
+│   │   ├── prd-analyzer/
+│   │   │   └── SKILL.md            ← PRD analysis & constitution generation
+│   │   ├── token-budget/
+│   │   │   └── SKILL.md            ← Token budget management
 │   │   ├── backend/
 │   │   │   ├── dotnet/
-│   │   │   │   ├── api/           ← Universal .NET API standards
-│   │   │   │   ├── ef-core/       ← EF Core entity config, repositories
-│   │   │   │   ├── linq/          ← LINQ query patterns
-│   │   │   │   ├── ddd/           ← Domain-Driven Design patterns
-│   │   │   │   └── testing/       ← xUnit, Moq, bUnit standards
+│   │   │   │   ├── api/            ← ASP.NET Core API standards
+│   │   │   │   ├── ef-core/        ← EF Core entity config, repositories
+│   │   │   │   ├── linq/           ← LINQ query patterns
+│   │   │   │   ├── ddd/            ← Domain-Driven Design patterns
+│   │   │   │   └── testing/        ← xUnit, Moq, bUnit standards
 │   │   │   └── architecture/
-│   │   │       ├── shared/        ← Rules common to ALL architectures
-│   │   │       ├── clean/         ← Clean Architecture structure
-│   │   │       ├── hexagonal/     ← Hexagonal (Ports & Adapters)
-│   │   │       ├── vertical-slice/← Vertical Slice for CRUDs
-│   │   │       └── onion/         ← Onion Architecture
+│   │   │       ├── shared/         ← Rules common to ALL architectures
+│   │   │       ├── clean/          ← Clean Architecture structure
+│   │   │       ├── hexagonal/      ← Hexagonal (Ports & Adapters)
+│   │   │       ├── vertical-slice/ ← Vertical Slice for CRUDs
+│   │   │       └── onion/          ← Onion Architecture
 │   │   ├── frontend/
-│   │   │   ├── blazor/            ← Blazor WASM component standards
-│   │   │   └── bunit/             ← Blazor component testing
+│   │   │   ├── blazor/             ← Blazor component standards (Server & WASM)
+│   │   │   └── bunit/              ← Blazor component testing
 │   │   └── devops/
-│   │       ├── docker/            ← Docker multi-stage, compose
-│   │       ├── github-actions/    ← CI/CD workflows
-│   │       └── ci-cd/             ← Deployment strategies
+│   │       ├── docker/             ← Docker multi-stage, compose
+│   │       ├── github-actions/     ← CI/CD workflows
+│   │       └── ci-cd/              ← Deployment strategies
 │   │
 │   ├── agents/                     ← Agent definitions
-│   │   ├── temper-init.agent.md   ← Phase 1: PRD + Constitution
-│   │   ├── temper-spec.agent.md   ← Phase 2: User Stories
-│   │   ├── temper-design.agent.md ← Phase 3: Architecture Design
-│   │   ├── temper-tasks.agent.md  ← Phase 4: Task Breakdown
-│   │   ├── temper-build.agent.md  ← Phase 5: Build Orchestrator
-│   │   ├── temper-backend.agent.md← Phase 5a: Backend Implementation
-│   │   ├── temper-frontend.agent.md← Phase 5b: Frontend Implementation
-│   │   ├── temper-tester.agent.md ← Phase 5c: Test Implementation
-│   │   ├── temper-devops.agent.md ← Phase 5d: DevOps Implementation
-│   │   ├── temper-review.agent.md ← Phase 6: Code Review
-│   │   ├── temper-docs.agent.md   ← Phase 7: Documentation
-│   │   └── temper-orchestrator.agent.md ← Main Orchestrator
+│   │   ├── README.md
+│   │   ├── temper-orchestrator.agent.md  ← Main orchestrator
+│   │   ├── temper-init.agent.md          ← Phase 1: PRD + Constitution
+│   │   ├── temper-spec.agent.md          ← Phase 2: User Stories
+│   │   ├── temper-design.agent.md        ← Phase 3: Architecture Design
+│   │   ├── temper-tasks.agent.md         ← Phase 4: Task Breakdown
+│   │   ├── temper-plan.agent.md          ← Phase 5: Build Planner
+│   │   ├── temper-backend.agent.md       ← Phase 5a: Backend Implementation
+│   │   ├── temper-frontend.agent.md      ← Phase 5b: Frontend Implementation
+│   │   ├── temper-tester.agent.md        ← Phase 5c: Test Implementation
+│   │   ├── temper-devops.agent.md        ← Phase 5d: DevOps Implementation
+│   │   ├── temper-review.agent.md        ← Phase 6: Code Review
+│   │   └── temper-docs.agent.md          ← Phase 7: Documentation
 │   │
-│   └── commands/                   ← Slash commands for AI agents
-│       ├── temper-init.md
-│       ├── temper-next.md
-│       └── temper-status.md
+│   ├── commands/                   ← Slash commands for AI agents
+│   │   ├── temper-init.md
+│   │   ├── temper-next.md
+│   │   └── temper-status.md
+│   │
+│   └── config/
+│       └── README.md
 │
 ├── src/
-│   ├── TemperAI.Cli/              ← CLI application (temper-ai.exe)
-│   │   ├── Commands/
-│   │   │   ├── InstallCommand.cs
-│   │   │   ├── UpdateCommand.cs
-│   │   │   ├── StatusCommand.cs
-│   │   │   ├── BudgetCommand.cs
-│   │   │   ├── SnapshotCommand.cs
-│   │   │   ├── IncrementalCommand.cs
-│   │   │   ├── SkillCommand.cs
-│   │   │   ├── SetupCommand.cs
-│   │   │   └── MenuCommand.cs
-│   │   └── Program.cs
-│   │
-│   ├── TemperAI.Core/             ← Shared core library
+│   ├── TemperAI.Core/              ← Shared core library
 │   │   ├── Assets/
-│   │   │   └── EmbeddedAssets.cs  ← Reads embedded skill/agent files
+│   │   │   └── EmbeddedAssets.cs   ← Reads embedded skill/agent files
 │   │   ├── Configuration/
-│   │   │   └── AgentTargets.cs    ← Supported AI agents config
+│   │   │   └── AgentTargets.cs     ← Supported AI agents config
 │   │   ├── Models/
+│   │   │   ├── AgentTarget.cs
+│   │   │   ├── InstallResult.cs
+│   │   │   └── SaveResult.cs
 │   │   ├── Snapshots/
-│   │   │   ├── SnapshotService.cs ← Snapshot/rollback logic
+│   │   │   ├── SnapshotService.cs  ← Snapshot/rollback logic
 │   │   │   ├── SnapshotInfo.cs
 │   │   │   └── SnapshotResult.cs
 │   │   ├── Incremental/
@@ -165,23 +169,63 @@ temper-ai/
 │   │   │   └── PhaseDependency.cs
 │   │   └── Skills/
 │   │       ├── SkillCreatorService.cs ← Skill creation/installation
-│   │       ├── SkillMetadata.cs
 │   │       ├── SkillInfo.cs
+│   │       ├── SkillMetadata.cs
 │   │       └── SkillResult.cs
 │   │
-│   ├── TemperAI.Installer/        ← Installation engine
-│   │   ├── InstallerService.cs    ← Copies assets to agent directories
-│   │   └── InstallResult.cs
+│   ├── TemperAI.Installer/         ← Installation engine
+│   │   ├── InstallerService.cs     ← Copies assets to agent directories
+│   │   └── TemperAI.Installer.csproj
 │   │
-│   └── TemperAI.NeuralCore/       ← Session tracking & observations
+│   └── TemperAI.NeuralCore/        ← Session tracking & MCP memory server
 │       ├── Domain/
+│       │   ├── Common/
+│       │   │   └── Primitives/
+│       │   │       └── Entity.cs
+│       │   └── Entities/
+│       │       ├── Sessions/
+│       │       │   ├── Session.cs
+│       │       │   └── Enums/
+│       │       └── Observations/
+│       │           ├── Observation.cs
+│       │           └── Enums/
 │       ├── Application/
+│       │   ├── Common/
+│       │   │   └── Result.cs
+│       │   ├── UseCases/
+│       │   └── DependencyInjection.cs
 │       ├── Infrastructure/
-│       └── Api/
+│       │   ├── Persistence/
+│       │   │   ├── NeuralCoreDbContext.cs
+│       │   │   ├── IUnitOfWork.cs
+│       │   │   ├── UnitOfWork.cs
+│       │   │   ├── Configurations/
+│       │   │   └── Repositories/
+│       │   └── DependencyInjection.cs
+│       ├── Api/
+│       │   └── Controllers/
+│       ├── Mcp/
+│       │   ├── McpServer.cs
+│       │   └── Tools/
+│       │       ├── MemSaveTool.cs
+│       │       ├── MemSearchTool.cs
+│       │       ├── MemContextTool.cs
+│       │       └── MemSessionSummaryTool.cs
+│       └── Program.cs
+│
+├── tests/
+│   ├── TemperAI.NeuralCore.Domain.UnitTests/
+│   │   └── Entities/
+│   │       ├── Observations/
+│   │       │   └── ObservationTests.cs
+│   │       └── Sessions/
+│   │           └── SessionTests.cs
+│   └── TemperAI.Installer.UnitTests/
 │
 ├── install.ps1                    ← Global CLI installer script
 ├── AGENTS.md                      ← Agent routing index (read by AI)
 ├── TEMPER_AI_ARCHITECTURE.md      ← Architecture documentation
+├── TEMPER_AI_PROYECTO.md          ← Complete project documentation (Spanish)
 └── TemperAI.slnx                  ← Solution file
 ```
 
@@ -220,8 +264,40 @@ Each project gets a `.temper/` directory that tracks the SDD workflow state:
 | `spec.md` | User stories, acceptance criteria, edge cases |
 | `design.md` | Architecture, entities, endpoints, database schema |
 | `tasks.md` | Atomic implementation tasks with dependencies |
+| `build-plan.md` | Build execution plan with parallel groups |
+| `orchestrator-state.md` | Persistent state for the ephemeral orchestrator |
 | `budget.md` | Token usage tracking per phase |
 | `.snapshots/` | Automatic snapshots for rollback |
+
+---
+
+## NeuralCore — Persistent Memory
+
+NeuralCore is an MCP (Model Context Protocol) server that provides persistent memory across AI sessions. It allows agents to save and recall observations, decisions, and patterns between sessions.
+
+### How it works
+
+1. **Auto-start:** NeuralCore starts automatically when you open your AI assistant (OpenCode, Claude Code, Copilot).
+2. **Auto-stop:** NeuralCore shuts down when you close your AI session.
+3. **Persistent storage:** Observations are saved to SQLite and indexed for fast retrieval.
+4. **MCP tools:** Agents use `mem_save`, `mem_search`, `mem_context`, and `mem_session_summary` tools.
+
+### Setup
+
+```powershell
+# During installation, say "yes" to NeuralCore
+temper-ai install
+
+# Or manage NeuralCore separately
+temper-ai neuralcore
+```
+
+The `neuralcore` menu provides:
+- **Status** — Check if NeuralCore is published and configured
+- **Test** — Run connectivity test
+- **Publish** — Compile NeuralCore as a standalone executable
+- **Install** — Configure MCP in your AI agents
+- **Logs** — View server logs
 
 ---
 
@@ -242,9 +318,10 @@ TemperAI installs skills and agents into:
 | Command | Description |
 |---|---|
 | `temper-ai` | Interactive menu (default when run without arguments) |
-| `temper-ai install` | Install skills and agents into AI assistants |
+| `temper-ai install` | Install skills, agents, and optionally NeuralCore |
 | `temper-ai update` | Update installed skills and agents |
 | `temper-ai status` | Show installation status |
+| `temper-ai neuralcore` | Manage NeuralCore MCP server (publish, install, status, test) |
 | `temper-ai budget` | View token usage tracking |
 | `temper-ai snapshot` | Manage snapshots for rollback |
 | `temper-ai incremental` | Detect which phases need re-running |
