@@ -243,20 +243,6 @@ public static class ResultExtensions
             StatusCode = (int)result.HttpStatusCode
         };
     }
-
-    private static string ResolveTitle(HttpStatusCode httpStatusCode)
-    {
-        return httpStatusCode switch
-        {
-            HttpStatusCode.BadRequest => "Invalid request",
-            HttpStatusCode.NotFound => "Resource not found",
-            HttpStatusCode.Conflict => "Conflict with current state",
-            HttpStatusCode.InternalServerError => "Internal server error",
-            HttpStatusCode.Unauthorized => "Unauthorized",
-            HttpStatusCode.Forbidden => "Access denied",
-            _ => "Error"
-        };
-    }
 }
 ```
 
