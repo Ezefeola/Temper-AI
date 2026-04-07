@@ -251,13 +251,14 @@ temper-init → temper-spec → temper-design → temper-tasks → temper-plan �
    - Wait for completion.
    - Verify the output files exist (constitution.md, specs/INDEX.md, design.md, etc.).
    - **If the phase agent fails:** Retry once with the error context. If it fails again, set `Status: blocked` and report to the user. NEVER attempt the phase yourself. NEVER generate the output yourself. NEVER create the files yourself. The state file is your ONLY allowed file write. If the tasks agent fails, you respawn it — you do NOT write the task files yourself. If the spec agent fails, you respawn it — you do NOT write the specs yourself. If the design agent fails, you respawn it — you do NOT write the design yourself.
-4. **Show summary and ask for explicit approval:**
+4. **MANDATORY: Ask user for explicit approval BEFORE proceeding:**
+   - **NEVER skip this step — not even if the phase appears to have succeeded perfectly.**
    - Present a concise summary of what was generated/changed.
    - Ask explicitly: **"Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."**
-   - **Wait for the user's explicit "yes" (or equivalent approval).**
-   - **NEVER assume approval** because the user ran `/temper-next` or started a new session.
+   - **Wait for the user's explicit "yes" (or equivalent approval). Do NOT assume it.**
+   - **Running `/temper-next` or starting a new session does NOT constitute approval.**
    - **If the user requests changes:** Spawn the appropriate agent with the feedback, show the revised output, and ask for approval again.
-   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. Do NOT proceed.
+   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. STOP here. Do NOT proceed to next phase.
 5. **Update `.temper/orchestrator-state.md`** (ONLY after explicit approval):
    - Set `Current phase` to the next phase.
    - Update `Last completed task` with what was done.
@@ -293,13 +294,14 @@ During the build phase, you execute **one group per invocation**:
    - Mark the task as `done` in the task file and update `.temper/tasks/INDEX.md`.
 4. **Verify build:** Ask the user to run `dotnet build`.
    - If fails: Update state file → `Status: blocked`, `Last build status: failed`, report errors.
-5. **Show summary and ask for explicit approval:**
+5. **MANDATORY: Ask user for explicit approval BEFORE proceeding to next group:**
+   - **NEVER skip this step — not even if the build succeeded perfectly.**
    - Present a concise summary of what was implemented in this group.
    - Ask explicitly: **"Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."**
-   - **Wait for the user's explicit "yes" (or equivalent approval).**
-   - **NEVER assume approval** because the user ran `/temper-next` or started a new session.
+   - **Wait for the user's explicit "yes" (or equivalent approval). Do NOT assume it.**
+   - **Running `/temper-next` or starting a new session does NOT constitute approval.**
    - **If the user requests changes:** Spawn the appropriate agent with the feedback, show the revised output, and ask for approval again.
-   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. Do NOT proceed.
+   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. STOP here. Do NOT proceed to next group.
 6. **Update state file** (ONLY after explicit approval):
    - If build succeeds and more groups remain: Update → `Build group: N+1 of M`, `Last build status: ok`, `Next action: "Execute Group N+1"`.
    - If build succeeds and all groups complete: Update → `Current phase: review`, `Next action: "Spawn temper-review"`.
@@ -320,13 +322,14 @@ Quick path means spawning a specialized agent directly — NOT writing code your
      2. **Identify the failure point:** Determine exactly what failed and why.
      3. **Spawn a recovery agent** with the original request, error message, files already created, and instruction: "Continue from where it left off. Do NOT regenerate what already exists."
      4. **If the recovery agent also fails:** Set `Status: blocked` and report to the user with full error details.
-5. **Show summary and ask for explicit approval:**
+5. **MANDATORY: Ask user for explicit approval BEFORE reporting completion:**
+   - **NEVER skip this step — not even if the task appears to have succeeded perfectly.**
    - Present a concise summary of what was changed.
    - Ask explicitly: **"Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."**
-   - **Wait for the user's explicit "yes" (or equivalent approval).**
-   - **NEVER assume approval** because the user ran `/temper-next` or started a new session.
+   - **Wait for the user's explicit "yes" (or equivalent approval). Do NOT assume it.**
+   - **Running `/temper-next` or starting a new session does NOT constitute approval.**
    - **If the user requests changes:** Spawn the appropriate agent with the feedback, show the revised output, and ask for approval again.
-   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. Do NOT proceed.
+   - **If the user does not explicitly approve:** Set `Status: awaiting-approval` in the state file. STOP here. Do NOT report completion.
 6. **Update `.temper/orchestrator-state.md`** (ONLY after explicit approval): Set `Status: complete`, `Next action: "Quick path task finished."`
 7. **Report to user:** "Task complete. No further phases needed."
 
@@ -634,22 +637,32 @@ Example: `20260404-120000_design`
 - `orchestrator-state.md`
 - `budget.md`
 
-## Approval Protocol — MANDATORY
+## Approval Protocol — MANDATORY (NEVER SKIP)
 
-The orchestrator MUST follow this protocol after EVERY phase output and EVERY sub-agent result:
+**This protocol is NOT optional. The orchestrator MUST follow it after EVERY phase output and EVERY sub-agent result.**
 
-1. **Show summary** — present what was generated/changed in a concise format.
+### When to apply
+- After every phase agent completes (init, spec, design, tasks, plan, review, docs)
+- After every sub-agent completes during build execution
+- After every quick path agent completes
+- After every recovery agent completes
+
+### Protocol steps
+
+1. **Show summary** — present what was generated/changed in a concise format (3-5 bullet points max).
 2. **Ask explicitly** — "Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."
-3. **Wait** — do NOT proceed until the user explicitly approves.
+3. **Wait** — do NOT proceed until the user explicitly approves. Do NOT assume approval.
 4. **On approval** — update state file and proceed to next phase.
 5. **On rejection** — spawn the appropriate agent with user feedback, show revised output, ask again.
 6. **On silence** — set `Status: awaiting-approval` in state file. Do NOT assume approval.
 
-**CRITICAL: Starting a new session or running `/temper-next` does NOT constitute approval.** The orchestrator must ask explicitly every single time. This applies to:
-- Phase outputs (spec, design, tasks, plan, review, docs)
-- Sub-agent results during build execution
-- Quick-path results
-- Recovery agent results
+### What does NOT constitute approval
+
+- Running `/temper-next`
+- Starting a new session
+- User saying "continue" or "go ahead" without explicitly saying "yes"
+- User providing feedback (this means they want changes, not that they approved)
+- Nothing said (silence is NOT approval)
 
 ## Recovery Protocol — Continue from failure point
 
