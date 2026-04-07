@@ -155,6 +155,12 @@ app.Configure(config =>
           .WithExample("neural", "--recall", "--limit", "20")
           .WithExample("neural", "--recall", "--topic-filter", "null-ref-fix")
           .WithExample("neural", "--session", "--project", "MyProject");
+
+    config.AddCommand<UninstallCommand>("uninstall")
+          .WithDescription("Desinstala TemperAI completamente (CLI, NeuralCore, skills, agents)")
+          .WithExample("uninstall")
+          .WithExample("uninstall", "--dry-run")
+          .WithExample("uninstall", "--force");
 });
 
 return app.Run(args);
@@ -181,7 +187,8 @@ static int RunMenu()
             new("snapshot", "Gestiona snapshots para rollback automatico", "snapshot"),
             new("incremental", "Detecta que fases necesitan re-ejecutarse", "incremental"),
             new("skill", "Crea, instala y descubre skills personalizados", "skill"),
-            new("setup", "Instala temper-ai.exe en el PATH global", "setup")
+            new("setup", "Instala temper-ai.exe en el PATH global", "setup"),
+            new("uninstall", "Desinstala TemperAI completamente", "uninstall")
         ];
 
     List<string> displayNames = commands.Select(c => c.DisplayName).ToList();

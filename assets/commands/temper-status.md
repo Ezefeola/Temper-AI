@@ -14,7 +14,7 @@ Muestra el estado actual del proyecto en el workflow SDD de TemperAI.
 
 1. Lee `.temper/orchestrator-state.md` (fuente de verdad principal).
 2. Si no existe, detecta el estado leyendo los archivos `.temper/`.
-3. Muestra el progreso de tareas si existe `tasks.md`.
+3. Muestra el progreso de tareas si existe `tasks/INDEX.md`.
 4. Lista las fases pendientes.
 
 ## Instrucciones para el agente
@@ -34,9 +34,9 @@ Si `.temper/orchestrator-state.md` existe, extraer:
 
 Si `.temper/orchestrator-state.md` NO existe, listar:
 - `.temper/constitution.md`
-- `.temper/spec.md`
+- `.temper/specs/INDEX.md`
 - `.temper/design.md`
-- `.temper/tasks.md`
+- `.temper/tasks/INDEX.md`
 - `.temper/build-plan.md`
 
 ### Paso 3 — Determinar fase actual (fallback)
@@ -45,17 +45,17 @@ Si `.temper/orchestrator-state.md` NO existe, listar:
 |---|---|
 | Ninguno | Fase 0 — Sin iniciar |
 | Solo `constitution.md` | Fase 1 — Inicializacion completada |
-| `constitution.md` + `spec.md` | Fase 2 — Especificacion completada |
-| `constitution.md` + `spec.md` + `design.md` | Fase 3 — Diseno completado |
-| `constitution.md` + `spec.md` + `design.md` + `tasks.md` | Fase 4 — Tareas definidas |
+| `constitution.md` + `specs/INDEX.md` | Fase 2 — Especificacion completada |
+| `constitution.md` + `specs/` + `design.md` | Fase 3 — Diseno completado |
+| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 4 — Tareas definidas |
 | Todos los anteriores + `build-plan.md` | Fase 5 — Plan completado |
 | Todos + codigo generado | Build Execution — En progreso o completado |
 | Todos + revision aprobada | Fase 6 — Revision completada |
 | Todos + documentacion | Fase 7 — Workflow completo |
 
-### Paso 4 — Analizar tareas (si existe tasks.md)
+### Paso 4 — Analizar tareas (si existe tasks/INDEX.md)
 
-Si `.temper/tasks.md` existe, contar:
+Si `.temper/tasks/INDEX.md` existe, contar:
 - Total de tareas
 - Tareas con estado `pending`
 - Tareas con estado `in-progress`
@@ -93,9 +93,9 @@ Si `.temper/tasks.md` existe, contar:
 | File | Status |
 |---|---|
 | constitution.md | [Exists / Missing] |
-| spec.md | [Exists / Missing] |
+| specs/INDEX.md | [Exists / Missing] |
 | design.md | [Exists / Missing] |
-| tasks.md | [Exists / Missing] |
+| tasks/INDEX.md | [Exists / Missing] |
 | build-plan.md | [Exists / Missing] |
 
 ### Tasks
@@ -127,9 +127,9 @@ All phases of the SDD workflow have been completed.
 | File | Status |
 |---|---|
 | constitution.md | Exists |
-| spec.md | Exists |
+| specs/ | Exists |
 | design.md | Exists |
-| tasks.md | Exists (all done) |
+| tasks/ | Exists (all done) |
 | build-plan.md | Exists |
 | orchestrator-state.md | Exists (status: complete) |
 

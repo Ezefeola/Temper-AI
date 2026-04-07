@@ -128,11 +128,11 @@ Usuario escribe PRD.md
     ↓
 /temper-init → Lee PRD, hace preguntas, genera .temper/constitution.md
     ↓ (aprobación del usuario)
-/temper-spec → Genera .temper/spec.md (user stories, criterios)
+/temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
     ↓ (aprobación del usuario)
 /temper-design → Genera .temper/design.md (arquitectura, entidades, endpoints)
     ↓ (aprobación del usuario)
-/temper-tasks → Genera .temper/tasks.md (tareas atómicas con estado)
+/temper-tasks → Genera .temper/tasks/ (tareas atómicas por user story + INDEX.md)
     ↓ (aprobación del usuario)
 /temper-plan → Genera .temper/build-plan.md (grupos paralelos, agentes)
     ↓ (aprobación del usuario)
@@ -141,7 +141,7 @@ Usuario escribe PRD.md
     ├── Group 2 → nueva sesión → orchestrator lee state.md → spawnea agentes → actualiza state.md → termina
     └── Group N → ... → build completo
     ↓
-/temper-review → Valida código contra spec.md
+/temper-review → Valida código contra specs/
     ↓ (aprobación del usuario)
 /temper-docs → Genera README, API docs, decisiones de arquitectura
     ↓
@@ -406,15 +406,15 @@ description: >
 |---|---|---|---|
 | `temper-orchestrator.agent.md` | — | Orquestador principal — evalúa complejidad y decide path | ✅ Completo |
 | `temper-init.agent.md` | Fase 1 | Lee PRD, hace preguntas, genera `constitution.md` | ✅ Completo |
-| `temper-spec.agent.md` | Fase 2 | User stories, criterios de aceptación, `spec.md` | ✅ Completo |
+| `temper-spec.agent.md` | Fase 2 | User stories, criterios de aceptación, `specs/` | ✅ Completo |
 | `temper-design.agent.md` | Fase 3 | Arquitectura, entidades, endpoints, `design.md` | ✅ Completo |
-| `temper-tasks.agent.md` | Fase 4 | Rompe design en tareas atómicas, `tasks.md` | ✅ Completo |
+| `temper-tasks.agent.md` | Fase 4 | Rompe design en tareas atómicas por user story, `tasks/` | ✅ Completo |
 | `temper-plan.agent.md` | Fase 5 | Genera build-plan.md con grupos paralelos | ✅ Completo |
-| `temper-backend.agent.md` | Fase 5a | Genera código .NET 10 según tasks.md | ✅ Completo |
+| `temper-backend.agent.md` | Fase 5a | Genera código .NET 10 según task file asignado | ✅ Completo |
 | `temper-frontend.agent.md` | Fase 5b | Genera código Blazor | ✅ Completo |
 | `temper-tester.agent.md` | Fase 5c | Genera tests xUnit/bUnit | ✅ Completo |
 | `temper-devops.agent.md` | Fase 5d | Docker, GitHub Actions | ✅ Completo |
-| `temper-review.agent.md` | Fase 6 | Valida código contra spec.md | ✅ Completo |
+| `temper-review.agent.md` | Fase 6 | Valida código contra specs/ | ✅ Completo |
 | `temper-docs.agent.md` | Fase 7 | README, API docs, decisiones | ✅ Completo |
 
 ### Comandos slash
@@ -431,9 +431,14 @@ description: >
 tu-proyecto/
 └── .temper/
     ├── constitution.md        ← stack, arquitectura, estándares del proyecto
-    ├── spec.md                ← user stories, criterios de aceptación
+    ├── specs/                 ← user stories individuales
+    │   ├── INDEX.md           ← índice rápido de todas las user stories
+    │   └── US-001-*.md        ← cada user story en su propio archivo
     ├── design.md              ← entidades, endpoints, estructura de carpetas
-    ├── tasks.md               ← tareas atómicas con estado (pending/done)
+    ├── tasks/                 ← tareas atómicas organizadas por user story
+    │   ├── INDEX.md           ← índice rápido de todas las tareas
+    │   └── US-001/            ← tareas de la user story US-001
+    │       └── T001-*.md      ← cada tarea en su propio archivo
     ├── build-plan.md          ← plan de ejecución con grupos paralelos
     ├── orchestrator-state.md  ← estado persistente del orchestrator (checkpoint)
     ├── budget.md              ← tracking de uso de tokens por fase

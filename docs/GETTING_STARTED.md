@@ -139,7 +139,7 @@ After approving the constitution:
 @temper-spec
 ```
 
-This generates `.temper/spec.md` with user stories, acceptance criteria, and edge cases.
+This generates `.temper/specs/` with individual user story files and an `INDEX.md` for fast lookup.
 
 ### 3.4 Design the Architecture
 
@@ -155,7 +155,7 @@ This generates `.temper/design.md` with entity definitions, API endpoints, datab
 @temper-tasks
 ```
 
-This generates `.temper/tasks.md` with atomic, trackable implementation tasks.
+This generates `.temper/tasks/` with atomic, per-user-story task files and an `INDEX.md` for fast lookup.
 
 ### 3.5 Plan the Build
 

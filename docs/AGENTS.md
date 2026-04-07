@@ -36,10 +36,10 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 3. Define acceptance criteria for each story.
 4. Document edge cases and error cases.
 5. Define non-functional requirements.
-6. Generate `.temper/spec.md`.
+6. Generate `.temper/specs/` with individual user story files and `INDEX.md`.
 7. Request approval.
 
-**Output:** `.temper/spec.md`
+**Output:** `.temper/specs/INDEX.md` + `.temper/specs/US-XXX-*.md`
 
 ---
 
@@ -51,7 +51,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Design the complete architecture — entities, endpoints, database schema, components.
 
 **Workflow:**
-1. Read `constitution.md` and `spec.md`.
+1. Read `constitution.md` and `specs/`.
 2. Design domain entities with properties, relationships, factory methods.
 3. Design API endpoints with HTTP methods, routes, DTOs.
 4. Design database schema.
@@ -71,15 +71,15 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Break the design into atomic, trackable implementation tasks.
 
 **Workflow:**
-1. Read `constitution.md`, `spec.md`, and `design.md`.
+1. Read `constitution.md`, `specs/`, and `design.md`.
 2. Create atomic tasks (1-3 files each).
 3. Define dependencies between tasks.
 4. Assign each task to an agent (backend, frontend, tester, devops).
 5. Define completion criteria for each task.
-6. Generate `.temper/tasks.md`.
+6. Generate `.temper/tasks/` with per-story folders, individual task files, and `INDEX.md`.
 7. Request approval.
 
-**Output:** `.temper/tasks.md`
+**Output:** `.temper/tasks/INDEX.md` + `.temper/tasks/US-XXX/T###-*.md`
 
 ---
 
@@ -91,7 +91,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Analyze task dependencies, group tasks for parallel execution, and generate `.temper/build-plan.md`.
 
 **Workflow:**
-1. Read `tasks.md` and `design.md`.
+1. Read `tasks/INDEX.md` and `design.md`.
 2. Build dependency graph.
 3. Group independent tasks for parallel execution.
 4. Assign agents to each group (backend, frontend, tester, devops).
@@ -137,7 +137,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Implement backend code — entities, use cases, DTOs, repositories, controllers.
 
 **Workflow:**
-1. Read `tasks.md` and filter for pending backend tasks.
+1. Read `tasks/INDEX.md` and filter for pending backend tasks.
 2. Take ONE task at a time.
 3. Read `design.md` for the relevant section.
 4. Implement following TemperAI conventions strictly.
@@ -155,7 +155,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Implement Blazor components, pages, and services (Server or WebAssembly).
 
 **Workflow:**
-1. Read `tasks.md` and filter for pending frontend tasks.
+1. Read `tasks/INDEX.md` and filter for pending frontend tasks.
 2. Take ONE task at a time.
 3. Read `design.md` for the relevant component design.
 4. Implement following Blazor conventions strictly.
@@ -173,9 +173,9 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Write xUnit tests for backend code and bUnit tests for Blazor components.
 
 **Workflow:**
-1. Read `tasks.md` and filter for pending tester tasks.
+1. Read `tasks/INDEX.md` and filter for pending tester tasks.
 2. Take ONE task at a time.
-3. Read `spec.md` for acceptance criteria and edge cases.
+3. Read the corresponding user story spec for acceptance criteria and edge cases.
 4. Write tests following naming and structure conventions.
 5. Show tests and request approval.
 6. Mark task as `done`.
@@ -191,7 +191,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Generate Docker and CI/CD infrastructure files.
 
 **Workflow:**
-1. Read `tasks.md` and filter for pending devops tasks.
+1. Read `tasks/INDEX.md` and filter for pending devops tasks.
 2. Take ONE task at a time.
 3. Generate Dockerfiles, docker-compose, GitHub Actions workflows.
 4. Show files and request approval.
@@ -208,7 +208,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Review all generated code against TemperAI conventions and specification coverage.
 
 **Workflow:**
-1. Read `spec.md` and `design.md`.
+1. Read `specs/` and `design.md`.
 2. Scan all generated C# code for convention violations.
 3. Cross-reference code against acceptance criteria.
 4. Generate review report with pass/fail items.

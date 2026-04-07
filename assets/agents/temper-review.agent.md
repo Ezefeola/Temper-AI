@@ -3,7 +3,7 @@ name: temper-review
 description: >
   Quality review agent for the TemperAI SDD workflow. Phase 6.
    Use after build execution to validate generated code against TemperAI
-  conventions and the project specification. Reads .temper/spec.md and
+  conventions and the project specification. Reads .temper/specs/ and
   .temper/design.md, scans all generated code for convention violations,
 and produces a review report with pass/fail items and exact file
 references. Loads backend/dotnet/api and backend/architecture/clean skills.
@@ -37,7 +37,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-review starting
    Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/architecture/shared, backend/architecture/[chosen]]
-   Context files: [.temper/constitution.md, .temper/spec.md, .temper/design.md, .temper/tasks.md]
+    Context files: [.temper/constitution.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,9 +47,9 @@ This gives the user full visibility into what you know and what conventions you 
 ### Phase 1 — Read context files
 
 1. Read `.temper/constitution.md` to confirm the chosen architecture and standards.
-2. Read `.temper/spec.md` to understand the acceptance criteria and edge cases.
+2. Read `.temper/specs/INDEX.md` and the individual user story files to understand the acceptance criteria and edge cases.
 3. Read `.temper/design.md` to understand the intended architecture, entities, endpoints, and structure.
-4. Read `.temper/tasks.md` to verify all tasks are marked as `done`.
+4. Read `.temper/tasks/INDEX.md` to verify all tasks are marked as `done`.
 
 ### Phase 2 — Build verification gate
 
@@ -113,7 +113,7 @@ Scan all generated C# code files in the project. Check every file against the fo
 
 ### Phase 6 — Verify specification coverage
 
-Cross-reference the generated code against `.temper/spec.md`:
+Cross-reference the generated code against the user story files in `.temper/specs/`:
 
 1. For each user story, verify that:
    - The corresponding use case exists.

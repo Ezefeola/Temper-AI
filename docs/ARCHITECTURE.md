@@ -140,9 +140,9 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 ### What Gets Snapshotted
 
 - `constitution.md`
-- `spec.md`
+- `specs/` (entire directory)
 - `design.md`
-- `tasks.md`
+- `tasks/` (entire directory)
 - `budget.md`
 
 ### Rollback Process
@@ -167,17 +167,17 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 ### Dependency Graph
 
 ```
-constitution.md → spec.md → design.md → tasks.md → build → review → docs
+constitution.md → specs/ → design.md → tasks/ → build → review → docs
 ```
 
 ### Cascade Rules
 
 | Changed File | Phases That Need Re-running |
 |---|---|
-| `constitution.md` | spec → design → tasks → build → review → docs |
-| `spec.md` | design → tasks → build → review → docs |
+| `constitution.md` | specs → design → tasks → build → review → docs |
+| `specs/` | design → tasks → build → review → docs |
 | `design.md` | tasks → build → review → docs |
-| `tasks.md` | build → review → docs |
+| `tasks/` | build → review → docs |
 
 ---
 
@@ -185,7 +185,7 @@ constitution.md → spec.md → design.md → tasks.md → build → review → 
 
 ### How It Works
 
-1. Build orchestrator reads `tasks.md` and builds a dependency graph
+1. Build orchestrator reads `tasks/INDEX.md` and builds a dependency graph
 2. Groups tasks with no mutual dependencies
 3. Spawns sub-agents for each group simultaneously
 4. Waits for all tasks in the group to complete

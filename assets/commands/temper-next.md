@@ -45,12 +45,12 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 |---|---|---|---|
 | Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Inicializacion | `temper-init` |
 | Solo `constitution.md` | Fase 1 — Completada | Fase 2 — Especificacion | `temper-spec` |
-| `constitution.md` + `spec.md` | Fase 2 — Completada | Fase 3 — Diseno | `temper-design` |
-| `constitution.md` + `spec.md` + `design.md` | Fase 3 — Completada | Fase 4 — Tareas | `temper-tasks` |
-| `constitution.md` + `spec.md` + `design.md` + `tasks.md` | Fase 4 — Completada | Fase 5 — Plan | `temper-plan` |
+| `constitution.md` + `specs/INDEX.md` | Fase 2 — Completada | Fase 3 — Diseno | `temper-design` |
+| `constitution.md` + `specs/INDEX.md` + `design.md` | Fase 3 — Completada | Fase 4 — Tareas | `temper-tasks` |
+| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 4 — Completada | Fase 5 — Plan | `temper-plan` |
 | Todos los anteriores + `build-plan.md` | Fase 5 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
 | Todos los anteriores + codigo generado | Build completado | Fase 6 — Revision | `temper-review` |
-| Todos los anteriores + revision aprobada | Revision completada | Fase 7 — Documentacion | `temper-docs` |
+| Todos los archivos + revision aprobada | Revision completada | Fase 7 — Documentacion | `temper-docs` |
 | Todos los archivos + documentacion | Workflow completo | — | Informar al usuario |
 
 ## Instrucciones para el agente
@@ -97,9 +97,11 @@ El proyecto esta listo para desarrollo iterativo.
 
 Archivos generados:
 - .temper/constitution.md
-- .temper/spec.md
+- .temper/specs/INDEX.md
+- .temper/specs/US-XXX-*.md
 - .temper/design.md
-- .temper/tasks.md
+- .temper/tasks/INDEX.md
+- .temper/tasks/US-XXX/T###-*.md
 - .temper/build-plan.md
 - .temper/orchestrator-state.md
 - .temper/budget.md

@@ -261,9 +261,11 @@ Each project gets a `.temper/` directory that tracks the SDD workflow state:
 | File | Purpose |
 |---|---|
 | `constitution.md` | Project decisions — stack, architecture, standards |
-| `spec.md` | User stories, acceptance criteria, edge cases |
+| `specs/INDEX.md` | Fast-lookup index of all user stories |
+| `specs/US-XXX-*.md` | Individual user story files |
 | `design.md` | Architecture, entities, endpoints, database schema |
-| `tasks.md` | Atomic implementation tasks with dependencies |
+| `tasks/INDEX.md` | Fast-lookup index of all tasks |
+| `tasks/US-XXX/T###-*.md` | Individual task files grouped by user story |
 | `build-plan.md` | Build execution plan with parallel groups |
 | `orchestrator-state.md` | Persistent state for the ephemeral orchestrator |
 | `budget.md` | Token usage tracking per phase |

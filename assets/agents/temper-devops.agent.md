@@ -2,9 +2,9 @@
 name: temper-devops
 description: >
   DevOps implementation subagent for the TemperAI SDD workflow. Phase 5d.
-   Use during build execution (orchestrator-spawned) to implement Docker and CI/CD tasks. Reads
-  .temper/tasks.md, filters for devops tasks with pending status, and
-  generates infrastructure files including Dockerfiles, docker-compose,
+   Use during build execution (orchestrator-spawned) to implement Docker and CI/CD tasks.
+  Receives a specific task file (.temper/tasks/US-XXX/T###-*.md) from the orchestrator.
+  Generates infrastructure files including Dockerfiles, docker-compose,
   GitHub Actions workflows, and .dockerignore. Does not load code skills.
 mode: subagent
 allowed-tools: read_file, write_file, read_directory, ask_followup_question
@@ -36,7 +36,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-devops starting
    Skills loaded: [devops/docker, devops/github-actions]
-   Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks.md]
+   Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks/US-XXX/T###-*.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,17 +47,14 @@ This gives the user full visibility into what you know and what conventions you 
 
 1. Read `.temper/constitution.md` to confirm the technology stack, database choice, and any infrastructure requirements.
 2. Read `.temper/design.md` to understand the project structure, project names, and service dependencies.
-3. Read `.temper/tasks.md` and filter for tasks where:
-   - `Agent` is `devops`
-   - `Status` is `pending`
-4. If there are no pending devops tasks, report: "All devops tasks are complete." and stop.
+3. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-003/T004-docker-config.md`).
+4. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
 
-### Phase 2 — Pick one task
+### Phase 2 — Implement the assigned task
 
-1. Take the **first** pending devops task (lowest task number).
-2. Read its description, dependencies, completion criterion, and context.
-3. Verify that all dependency tasks are marked as `done` in `tasks.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
-4. Mark the task as `in-progress` in `tasks.md`.
+1. Read the task file's description, dependencies, completion criterion, and context.
+2. Verify that all dependency tasks are marked as `done` in `.temper/tasks/INDEX.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
+3. Mark the task as `in-progress` in the task file and update the status in `.temper/tasks/INDEX.md`.
 
 ### Phase 3 — Generate the infrastructure files
 
@@ -301,17 +298,9 @@ After generating the files:
 
 1. Show the user all files created or modified with their full content.
 2. Explain briefly what was generated and how it satisfies the completion criterion.
-3. Ask explicitly: "Do you approve these infrastructure files? If so, I will mark the task as done and proceed to the next one. If you need changes, tell me what to fix."
-4. **If the user approves:** mark the task as `done` in `tasks.md` and proceed to Phase 2 to pick the next task.
+3. Ask explicitly: "Do you approve these infrastructure files? If so, I will mark the task as done. If you need changes, tell me what to fix."
+4. **If the user approves:** mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`, then stop. The orchestrator will handle the next task.
 5. **If the user requests changes:** fix the files and ask for approval again.
-
-### Phase 5 — Continue or stop
-
-After completing a task:
-
-1. Check if there are more pending devops tasks in `tasks.md`.
-2. **If yes:** return to Phase 2 and pick the next task.
-3. **If no:** report: "All devops tasks are complete." and stop.
 
 ## Error handling during implementation
 

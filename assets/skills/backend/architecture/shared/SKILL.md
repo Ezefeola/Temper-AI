@@ -16,6 +16,8 @@ description: >
 
 ### Result pattern with HttpStatusCode
 
+**CRITICAL: This is the ONLY Result pattern allowed. NEVER create variations, alternatives, or simplified versions.**
+
 ```csharp
 public sealed class Result<TResponse>
 {
@@ -60,6 +62,24 @@ public sealed class Result<TResponse>
     }
 }
 ```
+
+**Usage rules — NEVER broken:**
+
+1. **HttpStatusCode is MANDATORY** — Every `Success()` and `Failure()` call MUST include an HttpStatusCode parameter.
+   - ✅ `Result<UserDto>.Success(HttpStatusCode.Created)`
+   - ✅ `Result<UserDto>.Failure(HttpStatusCode.NotFound)`
+   - ❌ `Result<UserDto>.Success()` — NEVER omit HttpStatusCode
+   - ❌ `Result<UserDto>.Success(201)` — NEVER use numeric codes
+
+2. **Common HttpStatusCode values:**
+   - `HttpStatusCode.Created` — New resource created
+   - `HttpStatusCode.OK` — Successful query/update
+   - `HttpStatusCode.BadRequest` — Validation errors
+   - `HttpStatusCode.NotFound` — Resource not found
+   - `HttpStatusCode.Conflict` — Business rule violation
+   - `HttpStatusCode.InternalServerError` — Unexpected error
+
+3. **Use case returns Result with HttpStatusCode. Controller calls `result.ToActionResult()`. NOTHING ELSE.**
 
 ### DTO conventions
 
@@ -106,6 +126,8 @@ public sealed record CreateProductRequestDto
 - Extension methods in `[Entity]MappingExtensions.cs`.
 - Method name: `To[DtoName]` — exact match with DTO name.
 - Located at the use case or feature level.
+- **Mappers ONLY transform data from one type to another. They NEVER check status codes, NEVER decide HTTP responses, NEVER contain conditional logic based on HttpStatusCode or Result state.**
+- **If a mapper needs to handle an error case, it should return null or throw — the calling code handles the Result pattern.**
 
 ```csharp
 public static class ProductMappingExtensions
@@ -123,6 +145,36 @@ public static class ProductMappingExtensions
 }
 ```
 
+**ANTI-PATTERNS — NEVER DO THIS:**
+
+```csharp
+// ❌ NEVER check status codes in mappers
+public static IActionResult MapToResponse(this Result<Product> result)
+{
+    if (result.HttpStatusCode == HttpStatusCode.NotFound)
+        return NotFound();
+    // ...
+}
+
+// ❌ NEVER create conditional mapping based on Result state
+public static object ToResponseDto(this Result<Product> result)
+{
+    if (!result.IsSuccess)
+        return new { error = result.Description };
+    return result.Payload.ToDto();
+}
+
+// ✅ CORRECT: Simple data transformation only
+public static ProductDto ToProductDto(this Product product)
+{
+    return new ProductDto
+    {
+        Id = product.Id,
+        Name = product.Name
+    };
+}
+```
+
 ### Use case naming
 
 - No `UseCase` suffix — `CreateProduct`, `UpdateProduct`.
@@ -135,6 +187,34 @@ public static class ProductMappingExtensions
 - Always explicit `[FromBody]`, `[FromRoute]`, `[FromQuery]`.
 - Always return `result.ToActionResult()` — never build responses manually.
 - Errors always as `ProblemDetails` with `errors` field.
+- **NEVER check `result.IsSuccess` to decide status codes — ResultExtensions.ToActionResult() handles this automatically.**
+- **NEVER create custom error mapping in controllers — the Result pattern with HttpStatusCode is the single source of truth.**
+- **NEVER use switch/if on HttpStatusCode in controllers — the extension method already handles all cases.**
+
+```csharp
+// ✅ CORRECT — minimal controller, delegates to ResultExtensions
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] CreateProductRequestDto request, [FromServices] ICreateProduct useCase, CancellationToken ct)
+{
+    Result<CreateProductResponseDto> result = await useCase.ExecuteAsync(request, ct);
+    return result.ToActionResult();
+}
+
+// ❌ NEVER DO THIS — manual status code checking
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] CreateProductRequestDto request, [FromServices] ICreateProduct useCase, CancellationToken ct)
+{
+    Result<CreateProductResponseDto> result = await useCase.ExecuteAsync(request, ct);
+    
+    if (result.HttpStatusCode == HttpStatusCode.NotFound)
+        return NotFound(result.Description);
+    
+    if (!result.IsSuccess)
+        return BadRequest(result.Errors);
+    
+    return Ok(result.Payload);
+}
+```
 
 ```csharp
 public static class ResultExtensions
@@ -180,6 +260,25 @@ public static class ResultExtensions
 }
 ```
 
+### Use case patterns
+
+- `sealed class` without `UseCase` suffix — `CreateProduct`, `UpdateProduct`.
+- Interface in the same folder — `ICreateProduct`, `IUpdateProduct`.
+- Explicit constructor injection — never primary constructor.
+- Domain events published explicitly after `CompleteAsync` — never automatic in SaveChanges.
+- **Result pattern with HttpStatusCode — ALWAYS use `Result<TResponse>.Success(HttpStatusCode.Created)` or `Result<TResponse>.Failure(HttpStatusCode.NotFound)`. NEVER omit the HttpStatusCode parameter.**
+- **NEVER create custom status code logic in use cases — the HttpStatusCode passed to Result.Success/Failure is the single source of truth for HTTP responses.**
+- **The use case returns a Result with HttpStatusCode. The controller calls `result.ToActionResult()`. That's it. No additional status code checks, no custom error mapping.**
+
+### Entity patterns
+
+- Entities are `sealed class` with `private` constructor.
+- Factory method returns `(List<string> Errors, Entity? Entity)`.
+- Update methods return `(List<string> Errors, bool Updated)`.
+- Nested `Rules` class with constraint constants.
+- `UpdatedAt` set explicitly on every update method.
+- Update methods validate invariants AND check if the value actually changed.
+
 ### DI conventions
 
 - Private methods per responsibility — `AddDatabase`, `AddRepositories`, `AddUnitOfWork`.
@@ -203,14 +302,7 @@ public static class ResultExtensions
 
 For all general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
 
-- Never `DataAnnotations` on entities or Value Objects.
-- Never `nvarchar(max)` or `varchar(max)` — always length from rules.
-- Never `.Update()` from EF Core — change tracker detects changes.
-- Never lazy loading — explicit includes always.
 - Never throw exceptions — use Result pattern for all error handling.
-- Always `varchar` for ASCII, `nvarchar` for Unicode.
-- Always one `IEntityTypeConfiguration<T>` per entity.
-- Always `GetByIdAsync` with tracking, `GetByIdAsNoTrackingAsync` without tracking.
 - **Never use hardcoded numbers in validators** — always reference `Entity.Rules` constants (e.g., `.MaximumLength(Product.Rules.NAME_MAX_LENGTH)`). This centralizes constraint management and prevents inconsistencies.
 
 ---

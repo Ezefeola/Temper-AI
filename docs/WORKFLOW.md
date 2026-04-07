@@ -6,11 +6,11 @@ The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases plus a 
 
 ```
 Phase 1: Init      → constitution.md
-Phase 2: Spec      → spec.md
+Phase 2: Spec      → specs/INDEX.md + specs/US-XXX-*.md
 Phase 3: Design    → design.md
-Phase 4: Tasks     → tasks.md
+Phase 4: Tasks     → tasks/INDEX.md + tasks/US-XXX/T###-*.md
 Phase 5: Plan      → build-plan.md
-         Build     → Generated code (orchestrator spawns sub-agents per group)
+          Build     → Generated code (orchestrator spawns sub-agents per group)
 Phase 6: Review    → Review report
 Phase 7: Docs      → README, ARCHITECTURE, API docs, CHANGELOG
 ```
@@ -51,7 +51,7 @@ Review the constitution and approve or request changes.
 ## Phase 2: Specification (`temper-spec`)
 
 **Input:** `.temper/constitution.md`
-**Output:** `.temper/spec.md`
+**Output:** `.temper/specs/INDEX.md` + `.temper/specs/US-XXX-*.md`
 **Skills loaded:** `prd-analyzer`
 
 ### What happens
@@ -74,7 +74,7 @@ Review the spec and approve or request changes.
 
 ## Phase 3: Design (`temper-design`)
 
-**Input:** `.temper/constitution.md` + `.temper/spec.md`
+**Input:** `.temper/constitution.md` + `.temper/specs/`
 **Output:** `.temper/design.md`
 **Skills loaded:** `architecture/[chosen]` + `backend/dotnet/api`
 
@@ -99,8 +99,8 @@ Review the design and approve or request changes.
 
 ## Phase 4: Task Breakdown (`temper-tasks`)
 
-**Input:** `.temper/constitution.md` + `.temper/spec.md` + `.temper/design.md`
-**Output:** `.temper/tasks.md`
+**Input:** `.temper/constitution.md` + `.temper/specs/` + `.temper/design.md`
+**Output:** `.temper/tasks/INDEX.md` + `.temper/tasks/US-XXX/T###-*.md`
 **Skills loaded:** None
 
 ### What happens
@@ -121,7 +121,7 @@ Review the task list and approve or request changes.
 
 ## Phase 5: Planning (`temper-plan`)
 
-**Input:** `.temper/tasks.md` + `.temper/design.md`
+**Input:** `.temper/tasks/INDEX.md` + `.temper/design.md`
 **Output:** `.temper/build-plan.md`
 **Skills loaded:** None
 
@@ -189,7 +189,7 @@ Each group's output is verified with `dotnet build` before proceeding to the nex
 
 ## Phase 6: Review (`temper-review`)
 
-**Input:** `.temper/spec.md` + `.temper/design.md` + generated code
+**Input:** `.temper/specs/` + `.temper/design.md` + generated code
 **Output:** Review report
 **Skills loaded:** `backend/dotnet/api` + `architecture/[chosen]`
 
@@ -208,7 +208,7 @@ Each group's output is verified with `dotnet build` before proceeding to the nex
    - No `nvarchar(max)` or `varchar(max)`
    - No lazy loading
    - No `throw` for business validations
-   - All acceptance criteria from spec.md are covered
+    - All acceptance criteria from the user story specs are covered
 3. It produces a report with:
    - Critical violations (must fix)
    - Warnings (should fix)
@@ -281,7 +281,7 @@ This compares current files against the last snapshot and identifies which phase
 | Changed file | Phases that need re-running |
 |---|---|
 | `constitution.md` | spec → design → tasks → plan → build → review → docs |
-| `spec.md` | design → tasks → plan → build → review → docs |
+| `specs/` | design → tasks → plan → build → review → docs |
 | `design.md` | tasks → plan → build → review → docs |
-| `tasks.md` | plan → build → review → docs |
+| `tasks/` | plan → build → review → docs |
 | `build-plan.md` | build → review → docs |

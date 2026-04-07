@@ -129,7 +129,11 @@ public sealed class MemSessionSummaryTool
         }
 
         var exportPath = Path.Combine(Directory.GetCurrentDirectory(), ".temper", "neural-export.md");
-        Directory.CreateDirectory(Path.GetDirectoryName(exportPath));
+        var exportDirectory = Path.GetDirectoryName(exportPath);
+        if (!string.IsNullOrEmpty(exportDirectory))
+        {
+            Directory.CreateDirectory(exportDirectory);
+        }
         await File.WriteAllTextAsync(exportPath, builder.ToString());
     }
 }

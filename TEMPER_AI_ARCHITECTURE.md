@@ -127,11 +127,14 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 |---|---|---|
 | `temper-init` | PRD.md (if exists) | Nothing else |
 | `temper-spec` | `.temper/constitution.md` | Design, tasks, code |
-| `temper-design` | `constitution.md` + `spec.md` | Tasks, code |
-| `temper-tasks` | `constitution.md` + `spec.md` + `design.md` | Code |
-| `temper-plan` | `tasks.md` + `design.md` | Code |
-| `temper-backend` | `tasks.md` + `design.md` + relevant files | Full codebase |
-| `temper-review` | `spec.md` + `design.md` + generated code | PRD, constitution |
+| `temper-design` | `constitution.md` + `specs/INDEX.md` + individual spec files | Tasks, code |
+| `temper-tasks` | `constitution.md` + `specs/` + `design.md` | Code |
+| `temper-plan` | `tasks/INDEX.md` + `design.md` | Code |
+| `temper-backend` | Specific task file + user story spec + relevant files | Full codebase, all tasks, all specs |
+| `temper-frontend` | Specific task file + relevant files | Full codebase, all tasks |
+| `temper-tester` | Specific task file + user story spec + relevant files | Full codebase, all tasks, all specs |
+| `temper-devops` | Specific task file + constitution | Full codebase, all tasks |
+| `temper-review` | `specs/` + `design.md` + generated code | PRD, constitution |
 | `temper-docs` | All `.temper/` files | Implementation details |
 
 ### Skill Loading Per Agent
@@ -243,6 +246,23 @@ Each phase has a quality gate:
 
 **No phase proceeds without passing its gate.**
 
+### Approval Protocol — MANDATORY
+
+The orchestrator MUST follow this protocol after EVERY phase output and EVERY sub-agent result:
+
+1. **Show summary** — present what was generated/changed in a concise format.
+2. **Ask explicitly** — "Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."
+3. **Wait** — do NOT proceed until the user explicitly approves.
+4. **On approval** — update state file and proceed to next phase.
+5. **On rejection** — spawn the appropriate agent with user feedback, show revised output, ask again.
+6. **On silence** — set `Status: awaiting-approval` in state file. Do NOT assume approval.
+
+**CRITICAL: Starting a new session or running `/temper-next` does NOT constitute approval.** The orchestrator must ask explicitly every single time. This applies to:
+- Phase outputs (spec, design, tasks, plan, review, docs)
+- Sub-agent results during build execution
+- Quick-path results
+- Recovery agent results
+
 ---
 
 ## Memory & State
@@ -250,9 +270,14 @@ Each phase has a quality gate:
 ### Persistent State (`.temper/` directory)
 
 - `constitution.md` — project decisions
-- `spec.md` — requirements
+- `specs/` — user stories directory
+  - `INDEX.md` — fast-lookup index of all user stories
+  - `US-001-[slug].md` — individual user story files
 - `design.md` — architecture
-- `tasks.md` — implementation tasks
+- `tasks/` — implementation tasks directory
+  - `INDEX.md` — fast-lookup index of all tasks
+  - `US-001/` — tasks for user story US-001
+    - `T001-[slug].md` — individual task files
 - `build-plan.md` — execution plan with parallel groups
 
 ### Ephemeral State (conversation context)

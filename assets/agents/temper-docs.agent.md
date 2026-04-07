@@ -35,7 +35,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-docs starting
    Skills loaded: [none]
-   Context files: [.temper/constitution.md, .temper/spec.md, .temper/design.md, .temper/tasks.md]
+    Context files: [.temper/constitution.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -45,9 +45,9 @@ This gives the user full visibility into what you know and what conventions you 
 ### Phase 1 — Read context files
 
 1. Read `.temper/constitution.md` to understand the project vision, stack, and architecture.
-2. Read `.temper/spec.md` to understand the user stories and requirements.
+2. Read `.temper/specs/INDEX.md` and individual user story files to understand the user stories and requirements.
 3. Read `.temper/design.md` to understand the architecture, entities, endpoints, and components.
-4. Read `.temper/tasks.md` to understand what was implemented.
+4. Read `.temper/tasks/INDEX.md` to understand what was implemented.
 5. If available, read the review report from `temper-review` to understand any known issues or limitations.
 
 ### Phase 2 — Generate README.md

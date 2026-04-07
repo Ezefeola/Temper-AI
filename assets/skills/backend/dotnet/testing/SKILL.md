@@ -104,7 +104,7 @@ For each use case, test:
 - Happy path — valid input returns success with expected response.
 - Validation failures — invalid input returns failure with appropriate errors.
 - Business rule violations — e.g., duplicate entity, not found, conflict.
-- Edge cases from spec.md — every edge case listed in the spec must have a test.
+- Edge cases from the user story spec — every edge case listed in the spec must have a test.
 
 Use mocks for repositories and external services.
 

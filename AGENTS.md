@@ -63,3 +63,32 @@ Skills are loaded on-demand. Never load all skills at once.
 - Only load files the current phase needs — never the entire codebase
 - Quick path for 1-2 file changes — full pipeline for 3+ files or architectural changes
 - Orchestrator decides — see TEMPER_AI_ARCHITECTURE.md for the decision matrix
+
+## Approval Rules — NEVER assume approval
+
+- **ALWAYS ask for explicit approval** after every phase output and every sub-agent result.
+- **NEVER assume the user approved** because they ran `/temper-next` or started a new session.
+- **Before proceeding to the next phase**, the orchestrator MUST:
+  1. Show the user a summary of what was generated/changed.
+  2. Ask explicitly: "Do you approve these changes? Reply 'yes' to proceed or describe what needs to change."
+  3. Wait for the user's explicit "yes" (or equivalent approval).
+  4. Only then update the state file and proceed.
+- **If the user requests changes**, the orchestrator must spawn the appropriate agent with the feedback, show the revised output, and ask for approval again.
+- **If the user does not explicitly approve**, the orchestrator MUST NOT proceed. Set `Status: awaiting-approval` in the state file.
+- This rule applies to: phase outputs (spec, design, tasks, plan, review, docs), sub-agent results during build, and quick-path results.
+
+## Recovery Rules — Continue from failure point
+
+- **If a sub-agent fails during build execution**, the orchestrator MUST attempt recovery before reporting to the user:
+  1. **Assess what was completed**: Check which files were created/modified by the failed agent before it errored.
+  2. **Identify the failure point**: Determine exactly which task or step failed and why.
+  3. **Spawn a recovery agent**: Spawn a new sub-agent (same type or different if appropriate) with:
+     - The original task file.
+     - The corresponding user story spec.
+     - The error message from the previous attempt.
+     - A clear instruction: "The previous attempt failed at [specific point]. Files already created: [list]. Continue from where it left off. Do NOT regenerate what already exists."
+     - All files that were successfully created by the previous attempt (so the recovery agent knows what's already done).
+  4. **If the recovery agent also fails**: Only then report to the user with full error details and recommended manual action.
+- **If a phase agent fails**, retry once with the error context. If it fails again, report to the user — do NOT attempt the phase yourself.
+- **Always preserve partial work**: Never discard files that were successfully created before a failure. The recovery agent must build on top of them.
+- **Update the state file** with recovery attempt details: `Last build status: recovery-attempted`, `Recovery error: [error]`, `Recovery attempt: N`.
