@@ -232,7 +232,7 @@ public static class ResultExtensions
         ProblemDetails problemDetails = new()
         {
             Status = (int)result.HttpStatusCode,
-            Title = ResolveTitle(result.HttpStatusCode),
+            Title = "One or more errors occurred.",
             Detail = result.Description
         };
 
@@ -264,6 +264,38 @@ public static class ResultExtensions
 - Nested `Rules` class with constraint constants.
 - `UpdatedAt` set explicitly on every update method.
 - Update methods validate invariants AND check if the value actually changed.
+
+### Null safety in use cases
+
+**CRITICAL: Never validate error count. Always validate nullability.**
+
+When a factory method returns `(List<string> errors, Entity? entity)`, the use case MUST check `if (entity is null)`, NOT `if (errors.Count > 0)`.
+
+```csharp
+// ❌ WRONG — validates error count, then uses ! (null-forgiving operator)
+(List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
+if (errors.Count > 0)
+{
+    return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
+}
+await _repo.AddAsync(item!, ct);  // ⚠️ DANGER — uses ! operator
+```
+
+```csharp
+// ✅ CORRECT — validates nullability of the entity
+(List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
+if (item is null)
+{
+    return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
+}
+await _repo.AddAsync(item, ct);
+```
+
+**Rules:**
+1. **Never use the null-forgiving operator (`!`)** — if you need it, your validation logic is wrong.
+2. **Always use `if (entity is null)`** — never `if (errors.Count > 0)`.
+3. **The factory method pattern** `(List<string> errors, T? entity)` requires checking the entity's nullability.
+4. **The `!` operator is a code smell** — it suppresses the compiler's warning about potential null references, hiding a bug rather than fixing it.
 
 ### DI conventions
 

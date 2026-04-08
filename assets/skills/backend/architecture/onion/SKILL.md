@@ -122,10 +122,11 @@ src/
 │   │   └── ProductsByPriceRangeSpecification.cs
 │   │
 │   ├── Contracts/
-│   │   ├── Repositories/
-│   │   │   ├── IProductRepository.cs
-│   │   │   └── IOrderRepository.cs
-│   │   └── IUnitOfWork.cs
+│   │   ├── Persistence/
+│   │   │   ├── Repositories/
+│   │   │   │   ├── IProductRepository.cs
+│   │   │   │   └── IOrderRepository.cs
+│   │   │   └── IUnitOfWork.cs
 │   │
 │   ├── Common/
 │   │   ├── ValueObjects/
@@ -166,7 +167,7 @@ Entities, Value Objects, Enums, Domain Events, Aggregates. Pure business logic w
 
 Repository interfaces, UnitOfWork interface, Specifications, Domain Services. These are contracts that outer circles must implement.
 
-**Key difference from Clean Architecture:** Repository interfaces live in `Domain/Contracts/Repositories/`, not in Application. The domain defines what it needs — infrastructure provides it.
+**Key difference from Clean Architecture:** Repository interfaces live in `Domain/Contracts/Persistence/Repositories/`, not in Application. The domain defines what it needs — infrastructure provides it.
 
 ### Circle 3 — Application Services
 
@@ -313,11 +314,11 @@ public sealed class ActiveProductsSpecification : ISpecification<Product>
 
 ### Repository contracts — in Domain, not Application
 
-**Key difference from Clean Architecture:** Repository interfaces are defined in `Domain/Contracts/Repositories/`. The domain defines what it needs — infrastructure implements it.
+**Key difference from Clean Architecture:** Repository interfaces are defined in `Domain/Contracts/Persistence/Repositories/`. The domain defines what it needs — infrastructure implements it. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
 
 ```csharp
-// Domain/Contracts/Repositories/IProductRepository.cs
-public interface IProductRepository
+// Domain/Contracts/Persistence/Repositories/IProductRepository.cs — MUST inherit from IGenericRepository
+public interface IProductRepository : IGenericRepository<Product>
 {
     Task<Product?> GetByIdAsync(
         Guid productId,
@@ -340,7 +341,7 @@ public interface IProductRepository
         CancellationToken cancellationToken = default);
 }
 
-// Domain/Contracts/IUnitOfWork.cs
+// Domain/Contracts/Persistence/IUnitOfWork.cs
 public interface IUnitOfWork : IDisposable
 {
     IProductRepository ProductRepository { get; }
@@ -358,6 +359,57 @@ public sealed class SaveResult
     public bool IsSuccess { get; init; }
     public int RowsAffected { get; init; }
     public string ErrorMessage { get; init; } = string.Empty;
+}
+```
+
+### Generic Repository
+
+For base repository operations, use `IGenericRepository` and `GenericRepository` in `Domain/Contracts/Persistence/Repositories/`:
+
+```csharp
+// IGenericRepository.cs — in Domain/Contracts/Persistence/Repositories/
+public interface IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    IQueryable<TEntity> Query();
+
+    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
+
+    void Add(TEntity entity);
+
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
+}
+
+// GenericRepository.cs — in Domain/Contracts/Persistence/Repositories/
+public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    protected readonly DbContext _context;
+    protected readonly DbSet<TEntity> _dbSet;
+
+    public GenericRepository(ApplicationDbContext context)
+    {
+        _context = context;
+        _dbSet = context.Set<TEntity>();
+    }
+
+    public IQueryable<TEntity> Query()
+    {
+        return _dbSet.AsQueryable();
+    }
+
+    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
+    {
+        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
+    }
+
+    public void Add(TEntity entity)
+    {
+        _dbSet.Add(entity);
+    }
+
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
+    {
+        await _dbSet.AddAsync(entity, cancellationToken);
+    }
 }
 ```
 
@@ -480,8 +532,8 @@ public static class DependencyInjection
 
 ### What lives here
 
-- **Repository implementations** — fulfill contracts defined in `Domain/Contracts/Repositories/`
-- **UnitOfWork implementation** — fulfills `IUnitOfWork` from `Domain/Contracts/`
+- **Repository implementations** — fulfill contracts defined in `Domain/Contracts/Persistence/Repositories/`
+- **UnitOfWork implementation** — fulfills `IUnitOfWork` from `Domain/Contracts/Persistence/`
 - **EF Core** — DbContext, configurations, migrations
 - **External service implementations** — email, messaging, third-party APIs
 
@@ -489,11 +541,13 @@ public static class DependencyInjection
 
 ```csharp
 // Infrastructure/Persistence/Repositories/ProductRepository.cs
-public sealed class ProductRepository : IProductRepository
+// ALL repositories MUST inherit from GenericRepository
+public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     private readonly AppDbContext _appDbContext;
 
     public ProductRepository(AppDbContext appDbContext)
+        : base(appDbContext)
     {
         _appDbContext = appDbContext;
     }
@@ -606,7 +660,7 @@ public static class DependencyInjection
 ## Rules specific to Onion Architecture
 
 - `Domain` zero external dependencies — pure C# only
-- **Repository interfaces live in `Domain/Contracts/Repositories/`** — not in Application. The domain defines what it needs.
+- **Repository interfaces live in `Domain/Contracts/Persistence/Repositories/`** — not in Application. The domain defines what it needs.
 - **UnitOfWork interface lives in `Domain/Contracts/`** — not in Application.
 - **Specifications live in `Domain/Specifications/`** — they encapsulate query logic in the domain layer.
 - **Aggregate roots** manage consistency within their boundary — no entity outside an aggregate references it directly.
@@ -618,6 +672,9 @@ public static class DependencyInjection
 - Domain Events are contracts only — `sealed record` with data, no behavior.
 - Event publication always explicit in the UseCase — never automatic in SaveChanges.
 - `UnitOfWork` is the single entry point to all repositories.
+- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
+- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
 - **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - Domain folder names must be **plural** and different from the class name — `Domain/Entities/Products/Product.cs`, never `Domain/Entities/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
 - For data access implementation details, load `backend/dotnet/ef-core`.

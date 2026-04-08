@@ -84,14 +84,17 @@ src/
 │   │   └── Errors/
 │   │
 │   ├── Contracts/
+│   │   ├── Persistence/
+│   │   │   ├── Repositories/
+│   │   │   │   ├── IProductRepository.cs
+│   │   │   │   └── IOrderRepository.cs
+│   │   │   └── IUnitOfWork.cs
 │   │   ├── Ports/
 │   │   │   ├── Input/
 │   │   │   │   ├── ICreateProduct.cs
 │   │   │   │   ├── IUpdateProduct.cs
 │   │   │   │   └── IGetProductById.cs
 │   │   │   └── Output/
-│   │   │       ├── IProductRepository.cs
-│   │   │       ├── IUnitOfWork.cs
 │   │   │       └── IEventPublisher.cs
 │   │   └── Dtos/
 │   │       ├── CreateProductRequestDto.cs
@@ -168,11 +171,11 @@ The Core is completely isolated. It has no idea what database, message broker, o
 
 ### Output Ports — what the Core needs
 
-Defined in `Core/Contracts/Ports/Output/`. These are the interfaces that driven adapters must implement.
+Defined in `Core/Contracts/Ports/Output/` (for external services) and `Core/Contracts/Persistence/` (for persistence).
 
-- `IProductRepository` — persistence
-- `IUnitOfWork` — transaction management
-- `IEventPublisher` — event dispatching
+- `IProductRepository` — in `Core/Contracts/Persistence/Repositories/`
+- `IUnitOfWork` — in `Core/Contracts/Persistence/`
+- `IEventPublisher` — in `Core/Contracts/Ports/Output/`
 
 ### Input Ports — what the Core offers
 
@@ -255,11 +258,11 @@ See `backend/dotnet/ddd` for the complete Domain Event implementation pattern.
 
 ### Output Ports — what the Core needs
 
-Defined in `Core/Contracts/Ports/Output/`.
+Defined in `Core/Contracts/Persistence/`. Repository interfaces in `Core/Contracts/Persistence/Repositories/`, UnitOfWork at root level. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
 
 ```csharp
-// IProductRepository.cs
-public interface IProductRepository
+// IProductRepository.cs — in Core/Contracts/Persistence/Repositories/
+public interface IProductRepository : IGenericRepository<Product>
 {
     // With tracking — for modification operations
     Task<Product?> GetByIdAsync(
@@ -280,7 +283,7 @@ public interface IProductRepository
         CancellationToken cancellationToken = default);
 }
 
-// IUnitOfWork.cs
+// IUnitOfWork.cs — in Core/Contracts/Persistence/
 public interface IUnitOfWork : IDisposable
 {
     IProductRepository ProductRepository { get; }
@@ -297,6 +300,57 @@ public sealed class SaveResult
     public bool IsSuccess { get; init; }
     public int RowsAffected { get; init; }
     public string ErrorMessage { get; init; } = string.Empty;
+}
+```
+
+### Generic Repository
+
+For base repository operations, use `IGenericRepository` and `GenericRepository` in `Core/Contracts/Persistence/Repositories/`:
+
+```csharp
+// IGenericRepository.cs — in Core/Contracts/Persistence/Repositories/
+public interface IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    IQueryable<TEntity> Query();
+
+    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
+
+    void Add(TEntity entity);
+
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
+}
+
+// GenericRepository.cs — in Core/Contracts/Persistence/Repositories/
+public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    protected readonly DbContext _context;
+    protected readonly DbSet<TEntity> _dbSet;
+
+    public GenericRepository(ApplicationDbContext context)
+    {
+        _context = context;
+        _dbSet = context.Set<TEntity>();
+    }
+
+    public IQueryable<TEntity> Query()
+    {
+        return _dbSet.AsQueryable();
+    }
+
+    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
+    {
+        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
+    }
+
+    public void Add(TEntity entity)
+    {
+        _dbSet.Add(entity);
+    }
+
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
+    {
+        await _dbSet.AddAsync(entity, cancellationToken);
+    }
 }
 ```
 
@@ -482,11 +536,13 @@ public class ProductsController : ControllerBase
 ```csharp
 // Adapter.SqlServer/Persistence/Repositories/ProductRepository.cs
 // Implements IProductRepository (an Output Port defined in Core)
-public sealed class ProductRepository : IProductRepository
+// ALL repositories MUST inherit from GenericRepository
+public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     private readonly AppDbContext _appDbContext;
 
     public ProductRepository(AppDbContext appDbContext)
+        : base(appDbContext)
     {
         _appDbContext = appDbContext;
     }
@@ -634,7 +690,8 @@ app.Run();
 - `Core` has zero external dependencies — pure C# only
 - Every adapter is a **separate project** — `Adapter.SqlServer`, `Adapter.RabbitMQ`, `Adapter.WebApi`
 - Adapters **never** depend on other adapters — only on `Core`
-- Output Ports in `Core/Contracts/Ports/Output/` — what the Core needs from the outside
+- Persistence contracts (repositories, UnitOfWork) in `Core/Contracts/Persistence/`
+- Output Ports in `Core/Contracts/Ports/Output/` — what the Core needs from the outside (external services)
 - Input Ports in `Core/Contracts/Ports/Input/` — what the Core offers to the outside
 - Driving adapters call Input Ports — they never call Output Ports directly
 - Driven adapters implement Output Ports — they are called by the Core through the ports
@@ -645,4 +702,7 @@ app.Run();
 - Domain Events are contracts only — `sealed record` with data, no behavior
 - Event publication always explicit in the UseCase — never automatic in SaveChanges
 - `UnitOfWork` is the single entry point to all repositories within a persistence adapter
+- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
+- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
 - For data access implementation details, load `backend/dotnet/ef-core`

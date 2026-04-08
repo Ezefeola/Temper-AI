@@ -68,11 +68,13 @@ src/
 │
 ├── YourProject.Application/
 │   ├── Contracts/
-│   │   ├── Services/
-│   │   │   └── IEventPublisher.cs
-│   │   └── Repositories/
-│   │       ├── IProductRepository.cs
-│   │       └── IUnitOfWork.cs
+│   │   ├── Persistence/
+│   │   │   ├── Repositories/
+│   │   │   │   ├── IProductRepository.cs
+│   │   │   │   └── IOrderRepository.cs
+│   │   │   └── IUnitOfWork.cs
+│   │   └── Services/
+│   │       └── IEventPublisher.cs
 │   ├── UseCases/
 │   │   └── Products/
 │   │       ├── ProductMappingExtensions.cs
@@ -188,11 +190,11 @@ See `backend/dotnet/ddd` for the complete Domain Event implementation pattern.
 
 ### Repository contracts
 
-Defined in `Application/Contracts/Repositories/`. These are the ports that Infrastructure implements.
+Defined in `Application/Contracts/Persistence/Repositories/`. These are the ports that Infrastructure implements. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
 
 ```csharp
-// IProductRepository.cs
-public interface IProductRepository
+// IProductRepository.cs — in Application/Contracts/Persistence/Repositories/
+public interface IProductRepository : IGenericRepository<Product>
 {
     // With tracking — for modification operations
     Task<Product?> GetByIdAsync(
@@ -213,7 +215,7 @@ public interface IProductRepository
         CancellationToken cancellationToken = default);
 }
 
-// IUnitOfWork.cs
+// IUnitOfWork.cs — in Application/Contracts/Persistence/
 public interface IUnitOfWork : IDisposable
 {
     IProductRepository ProductRepository { get; }
@@ -230,6 +232,57 @@ public sealed class SaveResult
     public bool IsSuccess { get; init; }
     public int RowsAffected { get; init; }
     public string ErrorMessage { get; init; } = string.Empty;
+}
+```
+
+### Generic Repository
+
+For base repository operations, use `IGenericRepository` and `GenericRepository` in `Application/Contracts/Persistence/Repositories/`:
+
+```csharp
+// IGenericRepository.cs — in Application/Contracts/Persistence/Repositories/
+public interface IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    IQueryable<TEntity> Query();
+
+    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
+
+    void Add(TEntity entity);
+
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
+}
+
+// GenericRepository.cs — in Application/Contracts/Persistence/Repositories/
+public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
+{
+    protected readonly DbContext _context;
+    protected readonly DbSet<TEntity> _dbSet;
+
+    public GenericRepository(ApplicationDbContext context)
+    {
+        _context = context;
+        _dbSet = context.Set<TEntity>();
+    }
+
+    public IQueryable<TEntity> Query()
+    {
+        return _dbSet.AsQueryable();
+    }
+
+    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
+    {
+        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
+    }
+
+    public void Add(TEntity entity)
+    {
+        _dbSet.Add(entity);
+    }
+
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
+    {
+        await _dbSet.AddAsync(entity, cancellationToken);
+    }
 }
 ```
 
@@ -379,4 +432,7 @@ public static class DependencyInjection
 - Domain Events are contracts only — `sealed record` with data, no behavior
 - Event publication always explicit in the UseCase — never automatic in SaveChanges
 - `UnitOfWork` is the single entry point to all repositories
+- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
+- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
 - For data access implementation details, load `backend/dotnet/ef-core`

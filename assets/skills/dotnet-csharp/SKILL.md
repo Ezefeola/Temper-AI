@@ -94,21 +94,57 @@ using TodoManagerApi.Domain.Entities.WorkItems;
 
 ---
 
+## Null Safety
+
+### 13. Never use the null-forgiving operator (`!`)
+
+The `!` operator (`null-forgiving operator`) **MUST NEVER BE USED**. It indicates the developer is forcing the compiler to ignore a potential nullable reference, which is a sign that the validation logic is incorrect.
+
+**Problematic case to avoid:**
+```csharp
+// ❌ WRONG — validates error count, then uses ! to suppress warnings
+(List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
+if (errors.Count > 0)
+{
+    return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
+}
+await _repo.AddAsync(item!, ct);  // ⚠️ Uses ! — DANGEROUS
+```
+
+**Correct pattern:**
+```csharp
+// ✅ RIGHT — validates the nullability of the object, not the error count
+(List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
+if (item is null)
+{
+    return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
+}
+await _repo.AddAsync(item, ct);
+```
+
+**Rules:**
+1. **Never use `!`** — if you need it, your validation logic is wrong.
+2. **Always validate `if (entity is null)`** — not `if (errors.Count > 0)`.
+3. **Factory methods returning `(List<string> errors, T? entity)`** must check the entity's nullability, not the error count.
+4. **The correct pattern** is: `if (entity is null) return failure;` before using the entity.
+
+---
+
 ## Async & Threading
 
-### 13. Never `async void`
+### 14. Never `async void`
 ❌ `public async void DoWork() { }`
 ✅ `public async Task DoWork() { }`
 
-### 14. Never `.Result` or `.Wait()`
+### 15. Never `.Result` or `.Wait()`
 ❌ `var product = _service.Get(id).Result;`
 ✅ `var product = await _service.Get(id);`
 
-### 15. Always `CancellationToken` on public async methods
+### 16. Always `CancellationToken` on public async methods
 ❌ `public async Task<Product> GetByIdAsync(Guid id) { }`
 ✅ `public async Task<Product> GetByIdAsync(Guid id, CancellationToken ct = default) { }`
 
-### 16. Never throw exceptions — use Result pattern instead
+### 17. Never throw exceptions — use Result pattern instead
 ❌ `if (!IsValid) throw new ValidationException("Invalid");`
 ✅ `if (!IsValid) return Result<T>.Failure(HttpStatusCode.BadRequest).WithErrors(["Invalid"]);`
 
@@ -122,6 +158,6 @@ using TodoManagerApi.Domain.Entities.WorkItems;
 
 ## DTOs & Patterns
 
-### 16. Always DTOs as `sealed record` with explicit properties and `Dto` suffix
+### 18. Always DTOs as `sealed record` with explicit properties and `Dto` suffix
 ❌ `public record CreateProductDto(string Name, decimal Price);`
 ✅ `public sealed record CreateProductRequestDto { public string Name { get; init; } = string.Empty; public decimal Price { get; init; } }`
