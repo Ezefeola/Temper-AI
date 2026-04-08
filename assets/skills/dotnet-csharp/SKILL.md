@@ -72,6 +72,17 @@ using TodoManagerApi.Domain.Entities.WorkItems;
 ❌ `public Projects.Enums.Status Status { get; set; }`
 ✅ `using Projects.Enums;\npublic Status Status { get; set; }`
 
+### 8.1 Never write namespace path in variable declarations
+❌ `FluentValidation.Results.ValidationResult result = ...;`
+✅ `using FluentValidation.Results;\nValidationResult result = ...;`
+
+**Same applies to:**
+- ❌ `System.Collections.Generic.List<string> list = ...;`
+- ✅ `List<string> list = ...;` (with proper using)
+
+- ❌ `Microsoft.Extensions.Logging.ILogger<Program> logger = ...;`
+- ✅ `ILogger<Program> logger = ...;` (with proper using)
+
 ---
 
 ## Naming & Conventions

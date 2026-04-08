@@ -5,21 +5,50 @@
 The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases plus a build execution step handled by the orchestrator. Each phase produces a specific artifact and requires user approval before proceeding.
 
 ```
-Phase 1: Init      → constitution.md
-Phase 2: Spec      → specs/INDEX.md + specs/US-XXX-*.md
-Phase 3: Design    → design.md
-Phase 4: Tasks     → tasks/INDEX.md + tasks/US-XXX/T###-*.md
-Phase 5: Plan      → build-plan.md
-          Build     → Generated code (orchestrator spawns sub-agents per group)
-Phase 6: Review    → Review report
-Phase 7: Docs      → README, ARCHITECTURE, API docs, CHANGELOG
+Phase 1: Discover  → Requirements clarification (questions)
+Phase 2: Constitution → constitution.md
+Phase 3: Spec       → specs/INDEX.md + specs/US-XXX-*.md
+Phase 4: Design     → design.md
+Phase 5: Tasks      → tasks/INDEX.md + tasks/US-XXX/T###-*.md
+Phase 6: Plan       → build-plan.md
+          Build      → Generated code (orchestrator spawns sub-agents per group)
+Phase 7: Review     → Review report
+Phase 8: Docs       → README, ARCHITECTURE, API docs, CHANGELOG
 ```
 
 ---
 
-## Phase 1: Initialization (`temper-init`)
+## Phase 1: Discovery (`temper-discover`)
 
-**Input:** User's project description (PRD or natural language)
+**Input:** User's project description (natural language or PRD)
+**Output:** Clarified project requirements (no files generated)
+**Skills loaded:** None
+
+### What happens
+
+1. The agent reads the user's project description.
+2. It identifies what it knows and what it doesn't know.
+3. It asks questions to clarify all ambiguities.
+4. It iterates until everything is clear.
+5. It reports back to the orchestrator with all gathered information.
+
+### Questions asked
+
+The discover agent asks about:
+- **Project basics:** What problem does it solve? Who are end users? What are core features?
+- **Architecture:** Clean, Hexagonal, Vertical Slice, Onion? (recommends if unclear)
+- **Technology:** Database, frontend type, authentication, messaging
+- **Infrastructure:** API docs (Scalar/Swagger), health checks
+
+### User action
+
+Answer the questions until everything is clear.
+
+---
+
+## Phase 2: Constitution (`temper-constitution`)
+
+**Input:** Clarified requirements from `temper-discover`
 **Output:** `.temper/constitution.md`
 **Skills loaded:** `prd-analyzer`
 
@@ -48,7 +77,7 @@ Review the constitution and approve or request changes.
 
 ---
 
-## Phase 2: Specification (`temper-spec`)
+## Phase 3: Specification (`temper-spec`)
 
 **Input:** `.temper/constitution.md`
 **Output:** `.temper/specs/INDEX.md` + `.temper/specs/US-XXX-*.md`
@@ -72,7 +101,7 @@ Review the spec and approve or request changes.
 
 ---
 
-## Phase 3: Design (`temper-design`)
+## Phase 4: Design (`temper-design`)
 
 **Input:** `.temper/constitution.md` + `.temper/specs/`
 **Output:** `.temper/design.md`
@@ -97,7 +126,7 @@ Review the design and approve or request changes.
 
 ---
 
-## Phase 4: Task Breakdown (`temper-tasks`)
+## Phase 5: Task Breakdown (`temper-tasks`)
 
 **Input:** `.temper/constitution.md` + `.temper/specs/` + `.temper/design.md`
 **Output:** `.temper/tasks/INDEX.md` + `.temper/tasks/US-XXX/T###-*.md`
@@ -119,7 +148,7 @@ Review the task list and approve or request changes.
 
 ---
 
-## Phase 5: Planning (`temper-plan`)
+## Phase 6: Planning (`temper-plan`)
 
 **Input:** `.temper/tasks/INDEX.md` + `.temper/design.md`
 **Output:** `.temper/build-plan.md`
@@ -187,7 +216,7 @@ Each group's output is verified with `dotnet build` before proceeding to the nex
 
 ---
 
-## Phase 6: Review (`temper-review`)
+## Phase 7: Review (`temper-review`)
 
 **Input:** `.temper/specs/` + `.temper/design.md` + generated code
 **Output:** Review report
@@ -221,7 +250,7 @@ If critical violations exist, fix them before proceeding. If approved, proceed t
 
 ---
 
-## Phase 7: Documentation (`temper-docs`)
+## Phase 8: Documentation (`temper-docs`)
 
 **Input:** All `.temper/` files
 **Output:** `README.md`, `ARCHITECTURE.md`, `API.md`, `CHANGELOG.md`

@@ -12,6 +12,38 @@ description: >
 
 > For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
 
+## Project root folder naming — CRITICAL
+
+**This is the ONLY correct structure for new projects:**
+
+```
+MyProjectApi/                    ← Folder root with "Api" suffix
+├── MyProjectApi.sln            ← Solution file named after folder
+├── src/
+│   ├── Core/
+│   ├── Adapter.WebApi/
+│   └── Adapter.SqlServer/
+└── tests/
+```
+
+**NEVER create this wrong structure:**
+
+```
+MyProjectApi/                    ← WRONG: extra folder inside
+├── src/
+│   └── MyProjectApi/           ← WRONG: duplicate folder
+│       ├── Domain/
+│       └── ...
+```
+
+**Rules:**
+1. Root folder name: `[ProjectName]Api/` for API projects
+2. Solution file: `[ProjectName]Api.sln` (same as folder name)
+3. `src/` folder contains all adapter projects directly — NO extra project folder inside src/
+4. Each adapter named with suffix: `Adapter.WebApi`, `Adapter.SqlServer`, etc.
+
+---
+
 ## When to use
 
 - Multiple input channels (REST API, gRPC, CLI, message queue)
@@ -682,6 +714,14 @@ app.MapControllers();
 
 app.Run();
 ```
+
+---
+
+## Code examples — never include namespace
+
+Code examples in skills show ONLY the class/interface code. Never include `namespace X.Y.Z;` — the folder structure shown in the skill defines the namespace implicitly. This prevents the model from making assumptions about where code should be placed.
+
+When generating actual code, the namespace MUST match the folder structure exactly. For example, a Product entity in `Core/Domain/Entities/Products/` must have `namespace YourProject.Core.Domain.Entities.Products;`.
 
 ---
 

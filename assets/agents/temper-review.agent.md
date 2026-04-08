@@ -8,7 +8,7 @@ description: >
 and produces a review report with pass/fail items and exact file
 references. Loads backend/dotnet/api and backend/architecture/clean skills.
 mode: subagent
-allowed-tools: read_file, read_directory, ask_followup_question
+allowed-tools: read_file, write_file, read_directory, ask_followup_question
 ---
 
 # temper-review — Quality Review Agent

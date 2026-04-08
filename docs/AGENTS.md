@@ -4,20 +4,41 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ---
 
-## temper-init
+## temper-discover
 
-**Phase:** 1 — Initialization
-**Skills:** `dotnet-csharp`, `prd-analyzer`
+**Phase:** 1 — Discovery
+**Skills:** None
 
-**Role:** Read or build the PRD, ask clarifying questions, generate `.temper/constitution.md`.
+**Role:** Analyze what the user wants to build, ask questions to clarify ambiguities, gather all necessary information. Does NOT generate any files.
 
 **Workflow:**
-1. Check if `PRD.md` exists.
-2. If yes, read and analyze for ambiguities.
-3. If no, build collaboratively with the user.
-4. Ask ALL necessary questions before writing any file.
-5. Generate `.temper/constitution.md`.
-6. Show summary and request approval.
+1. Read the user's project description.
+2. Identify what is known and what is NOT known.
+3. Ask questions to clarify all ambiguities.
+4. Iterate until everything is clear.
+5. Report back to the orchestrator with all gathered information.
+
+**Questions asked:**
+- Project basics (problem, end users, core features)
+- Architecture preference (Clean, Hexagonal, Vertical Slice, Onion)
+- Technology stack (database, frontend, authentication, messaging)
+- Infrastructure (API docs with Scalar, health checks)
+
+**Output:** Clear project requirements summary (no files)
+
+---
+
+## temper-constitution
+
+**Phase:** 2 — Constitution
+**Skills:** `prd-analyzer`
+
+**Role:** Generate `.temper/constitution.md` from the clarified requirements provided by `temper-discover`.
+
+**Workflow:**
+1. Read the clarified project information from the orchestrator.
+2. Generate `.temper/constitution.md` with all foundational decisions.
+3. Show summary and request approval.
 
 **Output:** `.temper/constitution.md`
 
@@ -25,7 +46,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-spec
 
-**Phase:** 2 — Specification
+**Phase:** 3 — Specification
 **Skills:** `dotnet-csharp`, `prd-analyzer`
 
 **Role:** Generate user stories, acceptance criteria, edge cases, and non-functional requirements.
@@ -45,7 +66,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-design
 
-**Phase:** 3 — Architecture Design
+**Phase:** 4 — Architecture Design
 **Skills:** `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api`
 
 **Role:** Design the complete architecture — entities, endpoints, database schema, components.
@@ -65,7 +86,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-tasks
 
-**Phase:** 4 — Task Breakdown
+**Phase:** 5 — Task Breakdown
 **Skills:** None
 
 **Role:** Break the design into atomic, trackable implementation tasks.
@@ -85,7 +106,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-plan
 
-**Phase:** 5 — Build Planner
+**Phase:** 6 — Build Planner
 **Skills:** None
 
 **Role:** Analyze task dependencies, group tasks for parallel execution, and generate `.temper/build-plan.md`.
@@ -105,7 +126,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## Build Execution (handled by `temper-orchestrator`)
 
-**Phase:** 5 (execution step)
+**Phase:** 6 (execution step)
 **Skills:** Varies by sub-agent
 
 **Role:** Execute the build plan by spawning sub-agents one group at a time, each in a separate conversation with clean context.
@@ -131,7 +152,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-backend
 
-**Phase:** 5a — Backend Implementation
+**Phase:** 6a — Backend Implementation
 **Skills:** `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]`
 
 **Role:** Implement backend code — entities, use cases, DTOs, repositories, controllers.
@@ -149,7 +170,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-frontend
 
-**Phase:** 5b — Frontend Implementation
+**Phase:** 6b — Frontend Implementation
 **Skills:** `dotnet-csharp` + `frontend/blazor`
 
 **Role:** Implement Blazor components, pages, and services (Server or WebAssembly).
@@ -167,7 +188,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-tester
 
-**Phase:** 5c — Test Implementation
+**Phase:** 6c — Test Implementation
 **Skills:** `dotnet-csharp` + `backend/dotnet/testing`
 
 **Role:** Write xUnit tests for backend code and bUnit tests for Blazor components.
@@ -185,7 +206,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-devops
 
-**Phase:** 5d — DevOps Implementation
+**Phase:** 6d — DevOps Implementation
 **Skills:** `devops/docker` + `devops/github-actions`
 
 **Role:** Generate Docker and CI/CD infrastructure files.
@@ -202,7 +223,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-review
 
-**Phase:** 6 — Code Review
+**Phase:** 7 — Code Review
 **Skills:** `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]`
 
 **Role:** Review all generated code against TemperAI conventions and specification coverage.
@@ -220,7 +241,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ## temper-docs
 
-**Phase:** 7 — Documentation
+**Phase:** 8 — Documentation
 **Skills:** None
 
 **Role:** Generate project documentation — README, ARCHITECTURE, API docs, CHANGELOG.

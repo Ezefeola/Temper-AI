@@ -47,7 +47,7 @@ public sealed class IncrementalUpdateServiceTests
     [Fact]
     public void AnalyzeChanges_ConstitutionChanged_ReturnsAffectedPhases()
     {
-        string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_init");
+        string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_constitution");
         Directory.CreateDirectory(snapshotDir);
         File.WriteAllText(Path.Combine(snapshotDir, "constitution.md"), "original");
         File.WriteAllText(Path.Combine(_testDirectory, "constitution.md"), "modified");
@@ -56,13 +56,13 @@ public sealed class IncrementalUpdateServiceTests
 
         Assert.True(result.RequiresRerun);
         Assert.Contains("constitution.md", result.ChangedFiles);
-        Assert.Contains("temper-init", result.AffectedPhases);
+        Assert.Contains("temper-constitution", result.AffectedPhases);
     }
 
     [Fact]
     public void AnalyzeChanges_CascadesCorrectly()
     {
-        string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_init");
+        string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_discover");
         Directory.CreateDirectory(snapshotDir);
         File.WriteAllText(Path.Combine(snapshotDir, "constitution.md"), "original");
         File.WriteAllText(Path.Combine(snapshotDir, "spec.md"), "original");
@@ -79,7 +79,7 @@ public sealed class IncrementalUpdateServiceTests
         IncrementalResult result = _service.AnalyzeChanges(_testDirectory);
 
         Assert.True(result.RequiresRerun);
-        Assert.Contains("temper-init", result.AffectedPhases);
+        Assert.Contains("temper-constitution", result.AffectedPhases);
         Assert.Contains("temper-spec", result.AffectedPhases);
         Assert.Contains("temper-design", result.AffectedPhases);
         Assert.Contains("temper-tasks", result.AffectedPhases);
@@ -108,7 +108,8 @@ public sealed class IncrementalUpdateServiceTests
         IncrementalResult result = _service.AnalyzeChanges(_testDirectory);
 
         Assert.True(result.RequiresRerun);
-        Assert.DoesNotContain("temper-init", result.AffectedPhases);
+        Assert.DoesNotContain("temper-discover", result.AffectedPhases);
+        Assert.DoesNotContain("temper-constitution", result.AffectedPhases);
         Assert.DoesNotContain("temper-spec", result.AffectedPhases);
         Assert.DoesNotContain("temper-design", result.AffectedPhases);
         Assert.Contains("temper-tasks", result.AffectedPhases);

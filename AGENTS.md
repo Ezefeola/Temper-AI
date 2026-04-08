@@ -19,7 +19,8 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 
 | User intention | Agent | Skills loaded |
 |---|---|---|
-| Start new project / analyze PRD | `temper-init` | `dotnet-csharp`, `prd-analyzer` |
+| Discover project requirements | `temper-discover` | None |
+| Generate project constitution | `temper-constitution` | `prd-analyzer` |
 | Generate user stories | `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
 | Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
 | Break into tasks | `temper-tasks` | None |

@@ -17,7 +17,7 @@ temper-ai install
 
 # 3. Open your AI assistant (OpenCode, Copilot, Claude Code)
 # 4. Start a new project
-@temper-init
+@temper-discover
 
 I want to build a task management system...
 ```
@@ -129,17 +129,18 @@ temper-ai/
 │   ├── agents/                     ← Agent definitions
 │   │   ├── README.md
 │   │   ├── temper-orchestrator.agent.md  ← Main orchestrator
-│   │   ├── temper-init.agent.md          ← Phase 1: PRD + Constitution
-│   │   ├── temper-spec.agent.md          ← Phase 2: User Stories
-│   │   ├── temper-design.agent.md        ← Phase 3: Architecture Design
-│   │   ├── temper-tasks.agent.md         ← Phase 4: Task Breakdown
-│   │   ├── temper-plan.agent.md          ← Phase 5: Build Planner
-│   │   ├── temper-backend.agent.md       ← Phase 5a: Backend Implementation
-│   │   ├── temper-frontend.agent.md      ← Phase 5b: Frontend Implementation
-│   │   ├── temper-tester.agent.md        ← Phase 5c: Test Implementation
-│   │   ├── temper-devops.agent.md        ← Phase 5d: DevOps Implementation
-│   │   ├── temper-review.agent.md        ← Phase 6: Code Review
-│   │   └── temper-docs.agent.md          ← Phase 7: Documentation
+│   │   ├── temper-discover.agent.md       ← Phase 1: Discovery (questions)
+│   │   ├── temper-constitution.agent.md   ← Phase 2: Constitution
+│   │   ├── temper-spec.agent.md           ← Phase 3: User Stories
+│   │   ├── temper-design.agent.md         ← Phase 4: Architecture Design
+│   │   ├── temper-tasks.agent.md          ← Phase 5: Task Breakdown
+│   │   ├── temper-plan.agent.md           ← Phase 6: Build Planner
+│   │   ├── temper-backend.agent.md       ← Phase 6a: Backend Implementation
+│   │   ├── temper-frontend.agent.md       ← Phase 6b: Frontend Implementation
+│   │   ├── temper-tester.agent.md         ← Phase 6c: Test Implementation
+│   │   ├── temper-devops.agent.md         ← Phase 6d: DevOps Implementation
+│   │   ├── temper-review.agent.md         ← Phase 7: Code Review
+│   │   └── temper-docs.agent.md           ← Phase 8: Documentation
 │   │
 │   ├── commands/                   ← Slash commands for AI agents
 │   │   ├── temper-init.md

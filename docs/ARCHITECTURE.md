@@ -69,7 +69,7 @@ The orchestrator (`temper-orchestrator`) is the brain of the system. It:
 | "Add user authentication" | `temper-spec` (constitution exists) |
 | "Add Order management" | `temper-spec` |
 | "Add RabbitMQ for events" | `temper-design` |
-| "Start a new project" | `temper-init` |
+| "Start a new project" | `temper-discover` |
 
 ---
 
@@ -87,7 +87,8 @@ Agent loads skills → Reads skill content → Applies rules to code generation
 
 | Agent | Skills |
 |---|---|
-| `temper-init` | `prd-analyzer` |
+| `temper-discover` | None |
+| `temper-constitution` | `prd-analyzer` |
 | `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/ddd` + `architecture/[chosen]` |
 | `temper-frontend` | `frontend/blazor` |
@@ -111,7 +112,8 @@ Each skill contains:
 
 | Phase | Max Tokens |
 |---|---|
-| `temper-init` | 7,000 |
+| `temper-discover` | 5,000 |
+| `temper-constitution` | 7,000 |
 | `temper-spec` | 9,000 |
 | `temper-design` | 14,000 |
 | `temper-tasks` | 14,000 |
@@ -119,7 +121,7 @@ Each skill contains:
 | Build (per group) | 5,000 |
 | `temper-review` | 18,000 |
 | `temper-docs` | 16,000 |
-| **Total** | **83,000** |
+| **Total** | **88,000** |
 
 ### Quick Path Savings
 

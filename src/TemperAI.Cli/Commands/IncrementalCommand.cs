@@ -153,7 +153,8 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
 
         string[] allPhases =
         [
-            "temper-init",
+            "temper-discover",
+            "temper-constitution",
             "temper-spec",
             "temper-design",
             "temper-tasks",
@@ -164,18 +165,20 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
 
         Dictionary<string, string[]> dependencies = new()
         {
-            ["temper-init"] = [],
-            ["temper-spec"] = ["temper-init"],
-            ["temper-design"] = ["temper-init", "temper-spec"],
-            ["temper-tasks"] = ["temper-init", "temper-spec", "temper-design"],
-            ["temper-plan"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks"],
-            ["temper-review"] = ["temper-init", "temper-spec", "temper-design", "temper-plan"],
-            ["temper-docs"] = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"]
+            ["temper-discover"] = [],
+            ["temper-constitution"] = ["temper-discover"],
+            ["temper-spec"] = ["temper-constitution"],
+            ["temper-design"] = ["temper-constitution", "temper-spec"],
+            ["temper-tasks"] = ["temper-constitution", "temper-spec", "temper-design"],
+            ["temper-plan"] = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks"],
+            ["temper-review"] = ["temper-constitution", "temper-spec", "temper-design", "temper-plan"],
+            ["temper-docs"] = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"]
         };
 
         Dictionary<string, string[]> files = new()
         {
-            ["temper-init"] = ["constitution.md"],
+            ["temper-discover"] = [],
+            ["temper-constitution"] = ["constitution.md"],
             ["temper-spec"] = ["spec.md"],
             ["temper-design"] = ["design.md"],
             ["temper-tasks"] = ["tasks.md"],

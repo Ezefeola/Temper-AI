@@ -125,7 +125,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Agent | Receives | Does NOT Receive |
 |---|---|---|
-| `temper-init` | PRD.md (if exists) | Nothing else |
+| `temper-discover` | User's project description | Nothing else |
+| `temper-constitution` | Clarified project info from discover | Design, tasks, code |
 | `temper-spec` | `.temper/constitution.md` | Design, tasks, code |
 | `temper-design` | `constitution.md` + `specs/INDEX.md` + individual spec files | Tasks, code |
 | `temper-tasks` | `constitution.md` + `specs/` + `design.md` | Code |
@@ -141,7 +142,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Agent | Skills Loaded |
 |---|---|
-| `temper-init` | `prd-analyzer` |
+| `temper-discover` | None |
+| `temper-constitution` | `prd-analyzer` |
 | `temper-spec` | `prd-analyzer` |
 | `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None (reads `.temper/` files) |
@@ -161,7 +163,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Phase | Input Tokens | Output Tokens | Total |
 |---|---|---|---|
-| `temper-init` | 2,000-4,000 | 1,500-3,000 | 3,500-7,000 |
+| `temper-discover` | 1,500-3,000 | 1,000-2,000 | 2,500-5,000 |
+| `temper-constitution` | 2,000-4,000 | 1,500-3,000 | 3,500-7,000 |
 | `temper-spec` | 1,500-3,000 | 3,000-6,000 | 4,500-9,000 |
 | `temper-design` | 3,000-6,000 | 4,000-8,000 | 7,000-14,000 |
 | `temper-tasks` | 5,000-10,000 | 2,000-4,000 | 7,000-14,000 |

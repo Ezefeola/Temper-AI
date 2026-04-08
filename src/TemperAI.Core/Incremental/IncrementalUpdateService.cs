@@ -6,52 +6,59 @@ public sealed class IncrementalUpdateService
 {
     private static readonly Dictionary<string, PhaseDependency> _phaseMap = new()
     {
-        ["temper-init"] = new PhaseDependency
+        ["temper-discover"] = new PhaseDependency
         {
-            PhaseName = "temper-init",
+            PhaseName = "temper-discover",
             DependsOn = [],
+            TrackedFiles = [],
+            Status = "unknown"
+        },
+        ["temper-constitution"] = new PhaseDependency
+        {
+            PhaseName = "temper-constitution",
+            DependsOn = ["temper-discover"],
             TrackedFiles = ["constitution.md"],
             Status = "unknown"
         },
         ["temper-spec"] = new PhaseDependency
         {
             PhaseName = "temper-spec",
-            DependsOn = ["temper-init"],
+            DependsOn = ["temper-constitution"],
             TrackedFiles = ["spec.md"],
             Status = "unknown"
         },
         ["temper-design"] = new PhaseDependency
         {
             PhaseName = "temper-design",
-            DependsOn = ["temper-init", "temper-spec"],
+            DependsOn = ["temper-constitution", "temper-spec"],
             TrackedFiles = ["design.md"],
             Status = "unknown"
         },
         ["temper-tasks"] = new PhaseDependency
         {
             PhaseName = "temper-tasks",
-            DependsOn = ["temper-init", "temper-spec", "temper-design"],
+            DependsOn = ["temper-constitution", "temper-spec", "temper-design"],
             TrackedFiles = ["tasks.md"],
             Status = "unknown"
         },
         ["temper-plan"] = new PhaseDependency
         {
             PhaseName = "temper-plan",
-            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-tasks"],
+            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks"],
             TrackedFiles = ["build-plan.md"],
             Status = "unknown"
         },
         ["temper-review"] = new PhaseDependency
         {
             PhaseName = "temper-review",
-            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-plan"],
+            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-plan"],
             TrackedFiles = [],
             Status = "unknown"
         },
         ["temper-docs"] = new PhaseDependency
         {
             PhaseName = "temper-docs",
-            DependsOn = ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"],
+            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"],
             TrackedFiles = [],
             Status = "unknown"
         }
@@ -141,7 +148,8 @@ public sealed class IncrementalUpdateService
 
         string[] executionOrder =
         [
-            "temper-init",
+            "temper-discover",
+            "temper-constitution",
             "temper-spec",
             "temper-design",
             "temper-tasks",
@@ -205,7 +213,8 @@ public sealed class IncrementalUpdateService
 
         string[][] cascadeRules =
         [
-            ["temper-init", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-discover", "temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
             ["temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
             ["temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
             ["temper-tasks", "temper-plan", "temper-review", "temper-docs"],

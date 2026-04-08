@@ -57,11 +57,13 @@ This gives the user full visibility into what you know and what conventions you 
 
 Each task must follow these rules:
 
+- **Task = Feature** — A task implements a complete feature (endpoint, handler, DTOs, validator, entity if needed). The agent loading the architecture skill knows how to organize files.
 - **Small enough to complete in a single focused session** — if a task would take more than 30-45 minutes of focused work, split it.
 - **Self-contained** — the assigned agent must have all the information needed to complete it without asking questions.
 - **Independently verifiable** — the completion criterion must be objectively checkable.
-- **Single responsibility** — one task does one thing. Do not combine "create entity and create endpoint" into one task.
-- **Ordered by dependency** — foundational tasks come first (entities, configurations), then use cases, then endpoints, then UI.
+- **Feature-centric, not component-centric** — tasks are "implement CreateTodo feature" not "create DTOs + create handler + create endpoint". All components of a feature are in one task.
+- **Shared entities are separate tasks** — If an entity is used by multiple features, create a separate task for the entity first (e.g., "Create TodoItem entity" before "CreateTodo feature", "ListTodos feature", "ToggleTodo feature").
+- **Ordered by dependency** — foundational tasks come first (entities, configurations), then features that depend on them.
 - **Descriptive, not prescriptive** — tasks describe WHAT to achieve, never HOW to implement. File paths, folder structure, and implementation patterns are determined by the architecture skills, not the task.
 
 ### Phase 2.1 — Extract Business Rules from Specifications
@@ -112,17 +114,16 @@ Create the `.temper/tasks/` directory with the following structure:
 .temper/tasks/
 ├── INDEX.md
 ├── US-001/
-│   ├── T001-create-product-entity.md
-│   ├── T002-create-product-repository.md
-│   ├── T003-create-product-use-cases.md
-│   └── T004-create-product-controller.md
+│   ├── T001-product-management-feature.md
+│   └── T002-product-list-feature.md
 ├── US-002/
-│   ├── T005-create-order-entity.md
-│   └── T006-create-order-use-cases.md
+│   ├── T003-order-creation-feature.md
+│   └── T004-order-list-feature.md
 └── US-003/
-    ├── T007-create-user-auth.md
-    └── T008-create-login-endpoint.md
+    └── T005-user-auth-feature.md
 ```
+
+**Note:** Tasks are organized by FEATURE, not by component. Each task includes everything needed for that feature (endpoint, handler, DTOs, validator, etc.). The architecture skill loaded by the implementing agent determines the folder structure.
 
 #### 5.1 Generate `.temper/tasks/INDEX.md`
 
@@ -248,19 +249,43 @@ After generating all files:
 ## Rules for writing tasks
 
 - **NEVER** create a task that cannot be verified objectively.
-- **NEVER** combine multiple responsibilities into a single task.
+- **NEVER** create tasks for individual components (entity, DTO, handler, endpoint separately) — each task is a complete feature.
 - **NEVER** create a task that does not trace to a user story or design element.
 - **NEVER** leave a task without a clear completion criterion.
 - **NEVER** assign a task to multiple agents — one task, one agent.
 - **ALWAYS** ensure dependency chains are correct — a task cannot depend on a task that comes after it.
 - **ALWAYS** include explicit Business Rules extracted from the user story's edge cases and error cases.
-- **ALWAYS** split tasks that involve more than one entity or one endpoint.
 - **ALWAYS** ask the user if the design lacks information needed to define a complete task.
 - **ALWAYS** create one file per task inside the appropriate user story folder.
 - **ALWAYS** create the `INDEX.md` file with the summary table.
 - **ALWAYS** group tasks under their parent user story folder.
 - **NEVER** prescribe file paths, folder structure, or implementation patterns — these are determined by the architecture skills.
 - **ALWAYS** describe WHAT to achieve, never HOW to implement.
+- **ALWAYS** make each task represent a complete feature: endpoint + handler + DTOs + validator (all components together)
+
+## REGLA ABSOLUTA: Las tareas NUNCA especifican ubicaciones
+
+Las tareas deben explicar QUÉ hacer y qué reglas de negocio aplican. NUNCA deben decir:
+- "Create X in folder Y"
+- "Put this in Application/DTOs/"
+- "File path: src/..."
+
+El agente que implemente (backend/frontend/tester/devops) debe usar sus propias skills de arquitectura para decidir la estructura de carpetas. La tarea solo dice qué resultado debe lograr, no dónde lograrlo.
+
+Ejemplo CORRECTO:
+```
+## Description
+Create the DTO for the CreateTodo request. The DTO must have a Title property (string, required).
+Follow DTO conventions from architecture-shared skill.
+```
+
+Ejemplo INCORRECTO (tarea dice DÓNDE crear):
+```
+## Description
+Create CreateTodoRequestDto.cs in Features/TodoItems/CreateTodo/ folder.
+```
+
+**La tarea NO debe decir "dónde" — debe decir solo "qué" crear.**
 
 ## Examples of good vs bad tasks
 
@@ -307,6 +332,46 @@ Product entity can be instantiated via factory method with validation. Validatio
 
 - Product entity (design.md §2.1)
 - Product creation (design.md §3.1)
+```
+
+### Bad — task splits components (DTOs separate from handler)
+```markdown
+# T001: Create Product DTOs
+
+**Description:** Create CreateProductRequestDto and CreateProductResponseDto.
+```
+
+### Good — task is a complete feature
+```markdown
+# T001: Implement CreateProduct Feature
+
+**User Story:** US-001
+**Agent:** backend
+**Status:** pending
+**Dependencies:** none
+
+## Description
+
+Implement the CreateProduct feature: endpoint, handler, DTOs, and validation.
+
+## Business Rules
+
+- [ ] Product name cannot be empty
+- [ ] Product name cannot exceed 100 characters
+- [ ] Product price must be greater than zero
+- [ ] Product name must be unique in the system
+- [ ] Product has Active status by default
+
+## Acceptance Criteria
+
+- [ ] POST /api/products returns 201 with the created product
+- [ ] Invalid data returns 400 with validation errors
+- [ ] Duplicate name returns 409 Conflict
+- [ ] Response includes generated Id and CreatedAt
+
+## Completion Criterion
+
+The CreateProduct endpoint is fully functional with request/response DTOs, validation, and proper HTTP status codes. Compiles without errors.
 ```
 
 ### Bad — vague completion criterion

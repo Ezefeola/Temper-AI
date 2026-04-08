@@ -124,9 +124,11 @@ Muestra opciones:
 ### El sistema multi-agente SDD (construido)
 
 ```
-Usuario escribe PRD.md
+Usuario describe lo que quiere construir
     ↓
-/temper-init → Lee PRD, hace preguntas, genera .temper/constitution.md
+/temper-discover → Hace preguntas hasta que todo está claro
+    ↓ (información aclarada)
+/temper-constitution → Genera .temper/constitution.md
     ↓ (aprobación del usuario)
 /temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
     ↓ (aprobación del usuario)
@@ -295,7 +297,7 @@ temper-ai/
 │   ├── agents/
 │   │   ├── README.md
 │   │   ├── temper-orchestrator.agent.md  ← Orquestador principal ✅
-│   │   ├── temper-init.agent.md          ← Fase 1: PRD + Constitución ✅
+│   │   ├── temper-discover.agent.md          ← Fase 1: PRD + Constitución ✅
 │   │   ├── temper-spec.agent.md          ← Fase 2: User Stories ✅
 │   │   ├── temper-design.agent.md        ← Fase 3: Arquitectura ✅
 │   │   ├── temper-tasks.agent.md         ← Fase 4: Tareas atómicas ✅
@@ -308,7 +310,7 @@ temper-ai/
 │   │   └── temper-docs.agent.md          ← Fase 7: Documentación ✅
 │   │
 │   ├── commands/
-│   │   ├── temper-init.md
+│   │   ├── temper-discover.md
 │   │   ├── temper-next.md
 │   │   └── temper-status.md
 │   │
@@ -405,7 +407,7 @@ description: >
 | Archivo | Fase | Descripción | Estado |
 |---|---|---|---|
 | `temper-orchestrator.agent.md` | — | Orquestador principal — evalúa complejidad y decide path | ✅ Completo |
-| `temper-init.agent.md` | Fase 1 | Lee PRD, hace preguntas, genera `constitution.md` | ✅ Completo |
+| `temper-discover.agent.md` | Fase 1 | Lee PRD, hace preguntas, genera `constitution.md` | ✅ Completo |
 | `temper-spec.agent.md` | Fase 2 | User stories, criterios de aceptación, `specs/` | ✅ Completo |
 | `temper-design.agent.md` | Fase 3 | Arquitectura, entidades, endpoints, `design.md` | ✅ Completo |
 | `temper-tasks.agent.md` | Fase 4 | Rompe design en tareas atómicas por user story, `tasks/` | ✅ Completo |
@@ -421,7 +423,7 @@ description: >
 
 | Comando | Acción |
 |---|---|
-| `/temper-init` | Arranca el workflow SDD |
+| `/temper-discover` | Arranca el workflow SDD |
 | `/temper-next` | Avanza a la siguiente fase |
 | `/temper-status` | Muestra en qué fase estás |
 
@@ -451,15 +453,15 @@ Para GitHub Copilot CLI, los agentes van en `~/.copilot/agents/` con extensión 
 
 ```markdown
 ---
-name: temper-init
+name: temper-discover
 description: >
   Agente de inicialización de TemperAI. Usar cuando el usuario
-  ejecuta /temper-init o quiere iniciar un nuevo proyecto desde un PRD.
+  ejecuta /temper-discover o quiere iniciar un nuevo proyecto desde un PRD.
 mode: agent
 allowed-tools: read_file, write_file, ask_followup_question
 ---
 
-# temper-init — Agente de Inicialización
+# temper-discover — Agente de Inicialización
 
 ## Tu rol
 Sos el primer agente del workflow SDD de TemperAI...
@@ -667,7 +669,7 @@ src/
 - [x] Skill `prd-analyzer/SKILL.md` — PRD Analysis
 - [x] Skill `token-budget/SKILL.md` — Token Budget
 - [x] Los 12 agentes SDD completos (orchestrator, init, spec, design, tasks, build, backend, frontend, tester, devops, review, docs)
-- [x] Comandos slash (temper-init, temper-next, temper-status)
+- [x] Comandos slash (temper-discover, temper-next, temper-status)
 - [x] Documentación completa (README, ARCHITECTURE, CONVENTIONS, CLI, AGENTS, SKILLS, WORKFLOW, GETTING_STARTED)
 - [x] `TemperAI.NeuralCore` — memoria persistente MCP en .NET con Clean Architecture
   - [x] Domain entities (Session, Observation)

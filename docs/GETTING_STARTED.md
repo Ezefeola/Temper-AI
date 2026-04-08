@@ -118,20 +118,29 @@ Open your preferred AI assistant (OpenCode, Copilot, or Claude Code) in an **emp
 Type in your AI assistant:
 
 ```
-@temper-init
+@temper-discover
 
 I want to build a [describe your project].
 
 [Describe the features, users, and requirements]
 ```
 
-The `temper-init` agent will:
+The `temper-discover` agent will:
 1. Analyze your description
-2. Ask clarifying questions
-3. Generate `.temper/constitution.md` with project decisions
-4. Ask for your approval
+2. Ask clarifying questions until everything is clear
+3. Pass the clarified information to `temper-constitution`
 
-### 3.3 Generate Specifications
+### 3.3 Generate Constitution
+
+After discovery is complete:
+
+```
+@temper-constitution
+```
+
+This generates `.temper/constitution.md` with all project decisions.
+
+### 3.4 Generate Specifications
 
 After approving the constitution:
 

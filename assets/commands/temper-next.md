@@ -27,7 +27,8 @@ Si `.temper/orchestrator-state.md` existe, usalo SIEMPRE. No necesitas inferir l
 | Campo en state.md | Accion |
 |---|---|
 | `Status: complete` + `Pending phases: none` | Informar al usuario que todo esta completo. No lanzar agentes. |
-| `Current phase: init` | Lanzar `temper-init` |
+| `Current phase: discover` | Lanzar `temper-discover` |
+| `Current phase: constitution` | Lanzar `temper-constitution` |
 | `Current phase: spec` | Lanzar `temper-spec` |
 | `Current phase: design` | Lanzar `temper-design` |
 | `Current phase: tasks` | Lanzar `temper-tasks` |
@@ -43,14 +44,15 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 
 | Archivos existentes | Fase detectada | Proximo paso | Agente a lanzar |
 |---|---|---|---|
-| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Inicializacion | `temper-init` |
-| Solo `constitution.md` | Fase 1 — Completada | Fase 2 — Especificacion | `temper-spec` |
-| `constitution.md` + `specs/INDEX.md` | Fase 2 — Completada | Fase 3 — Diseno | `temper-design` |
-| `constitution.md` + `specs/INDEX.md` + `design.md` | Fase 3 — Completada | Fase 4 — Tareas | `temper-tasks` |
-| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 4 — Completada | Fase 5 — Plan | `temper-plan` |
-| Todos los anteriores + `build-plan.md` | Fase 5 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
-| Todos los anteriores + codigo generado | Build completado | Fase 6 — Revision | `temper-review` |
-| Todos los archivos + revision aprobada | Revision completada | Fase 7 — Documentacion | `temper-docs` |
+| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Descubrimiento | `temper-discover` |
+| Ningun archivo + info de discover | Fase 1 — Descubrimiento | Fase 2 — Constitucion | `temper-constitution` |
+| Solo `constitution.md` | Fase 2 — Completada | Fase 3 — Especificacion | `temper-spec` |
+| `constitution.md` + `specs/INDEX.md` | Fase 3 — Completada | Fase 4 — Diseno | `temper-design` |
+| `constitution.md` + `specs/INDEX.md` + `design.md` | Fase 4 — Completada | Fase 5 — Tareas | `temper-tasks` |
+| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Completada | Fase 6 — Plan | `temper-plan` |
+| Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
+| Todos los anteriores + codigo generado | Build completado | Fase 7 — Revision | `temper-review` |
+| Todos los archivos + revision aprobada | Revision completada | Fase 8 — Documentacion | `temper-docs` |
 | Todos los archivos + documentacion | Workflow completo | — | Informar al usuario |
 
 ## Instrucciones para el agente
@@ -65,14 +67,15 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 
 ## Agentes del workflow
 
-- Fase 1 → `temper-init`
-- Fase 2 → `temper-spec`
-- Fase 3 → `temper-design`
-- Fase 4 → `temper-tasks`
-- Fase 5 → `temper-plan` (genera build-plan.md)
+- Fase 1 → `temper-discover`
+- Fase 2 → `temper-constitution`
+- Fase 3 → `temper-spec`
+- Fase 4 → `temper-design`
+- Fase 5 → `temper-tasks`
+- Fase 6 → `temper-plan` (genera build-plan.md)
 - Build → `temper-orchestrator` (lee state.md + build-plan.md, ejecuta UN grupo, actualiza state.md, termina)
-- Fase 6 → `temper-review`
-- Fase 7 → `temper-docs`
+- Fase 7 → `temper-review`
+- Fase 8 → `temper-docs`
 
 ## Mensaje al usuario
 

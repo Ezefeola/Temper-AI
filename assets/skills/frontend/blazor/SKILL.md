@@ -12,6 +12,40 @@ description: >
 
 TemperAI uses **Blazor WebAssembly** exclusively. The frontend runs entirely in the browser via WebAssembly and communicates with the backend API via HTTP.
 
+## Project root folder naming — CRITICAL
+
+**This is the ONLY correct structure for new frontend projects:**
+
+```
+MyProjectFront/                  ← Folder root with "Front" suffix
+├── MyProjectFront.sln          ← Solution file named after folder
+├── src/
+│   └── MyProjectFront/         ← Single Blazor project inside src/
+│       ├── Components/
+│       ├── Services/
+│       ├── wwwroot/
+│       └── Program.cs
+└── tests/
+```
+
+**NEVER create this wrong structure:**
+
+```
+MyProjectFront/                  ← WRONG: extra folder inside
+├── src/
+│   └── MyProjectFront/         ← WRONG: duplicate folder
+│       ├── Components/
+│       └── ...
+```
+
+**Rules:**
+1. Root folder name: `[ProjectName]Front/` for frontend projects
+2. Solution file: `[ProjectName]Front.sln` (same as folder name)
+3. `src/` folder contains the Blazor project directly — NO extra project folder inside src/
+4. Project named: `MyProjectFront`
+
+---
+
 ## API and Frontend separation — never in the same solution
 
 The API project and the Blazor Frontend project **must always be in separate solutions**. They are independent applications with independent lifecycles, build pipelines, and deployment targets.
