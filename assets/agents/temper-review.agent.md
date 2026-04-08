@@ -200,19 +200,27 @@ Produce a review report in the following format:
 [If not approved: "There are [count] critical violations that must be fixed before proceeding. Fix the items listed above and run /temper-review again."]
 ```
 
-### Phase 7 — Show report and recommend action
+### Phase 7 — Report completion to orchestrator
 
 After generating the review report:
 
-1. Show the user the full report.
-2. If there are critical violations:
-   - List the top 3 most urgent fixes.
-   - Recommend fixing them before proceeding.
-   - Do not approve the review.
-3. If there are only warnings and all acceptance criteria are covered:
-   - Recommend proceeding to `/temper-docs`.
-   - Approve the review.
-4. If the user asks for help fixing violations, offer guidance but do not write the code yourself — the backend or frontend subagent should fix the code.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 6 (Review) complete — quality review report generated
+   
+   Summary:
+   • Critical violations: [N]
+   • Warnings: [N]
+   • Acceptance criteria covered: [N]/[total]
+   • Edge cases covered: [N]/[total]
+   • Overall status: [PASS/FAIL]
+   • Top issues (if any): [list 2-3 most urgent]
+   • Files generated: .temper/review-report.md
+   
+   → [PROCEED to /temper-docs / FIX issues first]
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Absolute rules
 

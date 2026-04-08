@@ -159,15 +159,25 @@ public partial class ProductList
 - **Always** handle empty states — show a message when there is no data.
 - **Always** handle error states — show a user-friendly error message with a retry option.
 
-### Phase 5 — Show code and request approval
+### Phase 5 — Report completion to orchestrator
 
 After implementing the task:
 
-1. Show the user all files created or modified with their full content.
-2. Explain briefly what was implemented and how it satisfies the completion criterion.
-3. Ask explicitly: "Do you approve this implementation? If so, I will mark the task as done. If you need changes, tell me what to fix."
-4. **If the user approves:** mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`, then stop. The orchestrator will handle the next task.
-5. **If the user requests changes:** fix the code and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Task [T###] ([title]) complete — frontend implementation done
+   
+   Summary:
+   • Task: [brief description]
+   • User story: [US-XXX]
+   • Components created/modified: [list]
+   • Completion criterion met: [yes/no]
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
+3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
 
 ## Error handling during implementation
 

@@ -185,11 +185,25 @@ dotnet test --collect:"XPlat Code Coverage"
 [License information]
 ```
 
-### Phase 3 — Show README.md and request approval
+### Phase 3 — Report README.md completion
 
-1. Show the user the full `README.md` content.
-2. Ask: "Do you approve this README? If you need changes, tell me what to modify."
-3. If approved, proceed to Phase 4. If not, fix and re-ask.
+1. Report completion to the orchestrator:
+   ```
+   📄 README.md generated
+   
+   Summary:
+   • Project description
+   • Getting started guide
+   • Running locally / with Docker
+   • Project structure
+   • Architecture overview
+   • API documentation link
+   • Testing instructions
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ### Phase 4 — Generate ARCHITECTURE.md
 
@@ -303,11 +317,26 @@ See the TemperAI documentation for the complete list of conventions.
 [Describe deployment approach — Docker, GitHub Actions, etc.]
 ```
 
-### Phase 5 — Show ARCHITECTURE.md and request approval
+### Phase 5 — Report ARCHITECTURE.md completion
 
-1. Show the user the full `ARCHITECTURE.md` content.
-2. Ask: "Do you approve this architecture document? If you need changes, tell me what to modify."
-3. If approved, proceed to Phase 6. If not, fix and re-ask.
+1. Report completion to the orchestrator:
+   ```
+   📄 ARCHITECTURE.md generated
+   
+   Summary:
+   • Architecture pattern: [Clean/Hexagonal/etc.]
+   • Layer structure
+   • Dependency rules
+   • Domain design (entities, VOs, enums, events)
+   • Application layer (use cases, Result pattern)
+   • Infrastructure (database, repositories)
+   • API design conventions
+   • Code conventions
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ### Phase 6 — Generate API.md (if the project has a REST API)
 
@@ -468,12 +497,23 @@ All errors follow the `ProblemDetails` format:
 ```
 ```
 
-### Phase 7 — Show API.md and request approval
+### Phase 7 — Report API.md completion
 
-1. Show the user the full `API.md` content.
-2. Ask: "Do you approve this API documentation? If you need changes, tell me what to modify."
-3. If approved, proceed to Phase 8. If not, fix and re-ask.
-4. If the project does not have a REST API, skip to Phase 8.
+1. Report completion to the orchestrator:
+   ```
+   📄 API.md generated (if applicable)
+   
+   Summary:
+   • Base URL: [url]
+   • Authentication: [Yes/No]
+   • Endpoints documented: [N]
+   • Error format: ProblemDetails
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
+3. If the project does not have a REST API, skip to Phase 8.
 
 ### Phase 8 — Generate CHANGELOG.md
 
@@ -507,31 +547,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - [Any known limitations or items from the review report]
 ```
 
-### Phase 9 — Show CHANGELOG.md and request approval
+### Phase 9 — Report CHANGELOG.md completion
 
-1. Show the user the full `CHANGELOG.md` content.
-2. Ask: "Do you approve this changelog? If you need changes, tell me what to modify."
-3. If approved, proceed to Phase 10. If not, fix and re-ask.
+1. Report completion to the orchestrator:
+   ```
+   📄 CHANGELOG.md generated
+   
+   Summary:
+   • Version: [0.1.0]
+   • Date: [date]
+   • Initial release features documented
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
-### Phase 10 — Confirm completion
+### Phase 10 — Report completion to orchestrator
 
-After all documents are approved:
+After all documents are generated:
 
-1. Report: "All documentation is complete. The following files have been generated: README.md (root), Docs/ARCHITECTURE.md, Docs/API.md (if applicable), Docs/CHANGELOG.md."
-2. Inform the user that the SDD workflow is complete and the project is ready for development iteration.
-3. Suggest next steps:
-   - Run the project locally to verify everything works.
-   - Run the test suite.
-   - Commit the initial codebase.
-   - Begin iterativeative development on new features or refinements.
+1. Report completion to the orchestrator:
+   ```
+   ✅ Phase 7 (Docs) complete — all documentation generated
+   
+   Summary:
+   • README.md (project root)
+   • Docs/ARCHITECTURE.md
+   • Docs/API.md (if applicable)
+   • Docs/CHANGELOG.md
+   
+   🎉 SDD workflow complete. Project ready for development.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Absolute rules
 
 - **NEVER** write code in this phase.
 - **NEVER** invent information that is not in the `.temper/` files.
-- **NEVER** skip showing a document before requesting approval.
+- **NEVER** ask for user approval — report to the orchestrator only.
 - **ALWAYS** base all documentation on the actual content of the `.temper/` files.
-- **ALWAYS** show each document individually and wait for approval before proceeding.
 - **ALWAYS** use accurate file paths, endpoint routes, and entity names from the design document.
 
 ## Skills you load

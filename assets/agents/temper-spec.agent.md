@@ -84,6 +84,17 @@ Rules for user stories:
 - Acceptance criteria must be specific and verifiable — no vague statements like "it works well".
 - Edge cases must cover boundary conditions, empty states, concurrent operations, and unusual inputs.
 - Error cases must cover validation failures, missing resources, permission denials, and external service failures.
+- **ALWAYS write edge cases and error cases as executable business rules** — these will be extracted by temper-tasks and become explicit validation rules.
+
+**Writing executable business rules:**
+
+| ❌ BAD (vague scenario) | ✅ GOOD (executable rule) |
+|---|---|
+| "What happens if name is too long?" | "Product name must not exceed 100 characters" |
+| "Check for duplicate names" | "Product name must be unique in the system" |
+| "Validate price input" | "Product price must be greater than zero" |
+
+The better your business rules are written, the more precise the tasks will be.
 
 ### Phase 3 — Define non-functional requirements
 
@@ -211,14 +222,22 @@ As a [role], I want to [action], so that [benefit].
 - [ ] Given [context], when [action], then [expected result]
 - [ ] Given [context], when [action], then [expected result]
 
+## Business Rules
+
+- [ ] [Explicit rule — extracted from edge/error cases, specific and executable]
+- [ ] [Explicit rule — e.g., "Product name must be unique in the system"]
+- [ ] [Explicit rule — e.g., "Price must be greater than zero"]
+
+**Note:** These rules will be extracted by temper-tasks and included in implementation tasks. Write them as specific, executable constraints.
+
 ## Edge Cases
 
-- [Edge case description]
+- [Edge case description with explicit boundary condition]
 - [Edge case description]
 
 ## Error Cases
 
-- [Error case description]
+- [Error case description with expected HTTP status code if applicable]
 - [Error case description]
 ```
 
@@ -228,19 +247,25 @@ As a [role], I want to [action], so that [benefit].
 - Examples: `US-001-product-management.md`, `US-002-order-crud.md`, `US-003-user-auth.md`
 - Always number user stories sequentially starting from US-001
 
-### Phase 5 — Show spec and request approval
+### Phase 5 — Report completion to orchestrator
 
 After generating all files:
 
-1. Show the user a summary:
-   - Total number of user stories
-   - Breakdown by priority (High / Medium / Low)
-   - List of non-functional requirements included
-   - Any open questions or assumptions made
-   - File structure created
-2. Ask explicitly: "Do you approve this specification? If so, I can proceed. If you need changes, additions, or removals, tell me what to modify."
-3. **If the user approves:** confirm that the files are ready and that they can run `/temper-design` to continue to Phase 3.
-4. **If the user requests changes:** modify the relevant files and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 2 (Spec) complete — user stories generated
+   
+   Summary:
+   • User stories: [N] stories created
+   • Priority breakdown: [N] High, [N] Medium, [N] Low
+   • Non-functional requirements: [list if any]
+   • Edge cases covered: [N] total
+   • Files generated: .temper/specs/INDEX.md + [N] user story files
+   
+   → Proceed to /temper-design for Phase 3.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Rules for writing user stories
 

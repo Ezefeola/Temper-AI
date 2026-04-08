@@ -94,15 +94,50 @@ Write the code required to complete the task.
 
 Do NOT invent conventions. Do NOT deviate from the skills. If something is not covered by a skill, ask the user.
 
-### Phase 5 — Show code and request approval
+### Phase 4.1 — Using Business Rules from Tasks
+
+**CRITICAL: Read the Business Rules section FIRST before writing any code.**
+
+The task file's Business Rules section defines WHAT validations to implement. Your job is to determine HOW to implement them based on the architecture skills.
+
+**Workflow:**
+
+1. **Read Business Rules** — These are the source of truth for validation logic
+2. **Load architecture skills** — These determine the implementation pattern (where files go, how to structure code)
+3. **Implement validations** — Apply the rules from the task using the patterns from the skills
+4. **Do NOT invent new rules** — If a Business Rule is unclear, STOP and ask. Never assume.
+
+**Example:**
+
+```
+Task Business Rule: "Product name must be unique in the system"
+↓ Your implementation decision (based on architecture skills):
+  - Check uniqueness in use case before creating
+  - Return Result.Failure(HttpStatusCode.Conflict) if duplicate
+  - File location: determined by your loaded architecture skill
+```
+
+**NEVER follow literal path suggestions from tasks.** Tasks describe WHAT to achieve, not WHERE to put files. Your loaded architecture skill determines the folder structure.
+
+### Phase 5 — Report completion to orchestrator
 
 After implementing the task:
 
-1. Show the user all files created or modified with their full content.
-2. Explain briefly what was implemented and how it satisfies the completion criterion.
-3. Ask explicitly: "Do you approve this implementation? If so, I will mark the task as done. If you need changes, tell me what to fix."
-4. **If the user approves:** mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`, then stop. The orchestrator will handle the next task.
-5. **If the user requests changes:** fix the code and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Task [T###] ([title]) complete — backend implementation done
+   
+   Summary:
+   • Task: [brief description]
+   • User story: [US-XXX]
+   • Files created/modified: [list]
+   • Completion criterion met: [yes/no]
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
+3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
 
 ## Error handling during implementation
 

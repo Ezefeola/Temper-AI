@@ -204,18 +204,29 @@ Once this plan is approved, the orchestrator (`temper-orchestrator`) will:
 5. Proceed to Group 2, then Group 3, and so on.
 ```
 
-### Phase 5 — Show plan and request approval
+### Phase 5 — Report completion to orchestrator
 
 After generating `.temper/build-plan.md`:
 
-1. Show the user a summary:
-   - Total number of execution groups
-   - Tasks per group with agent assignments
-   - Estimated total token usage
-   - Execution order
-2. Ask explicitly: "Do you approve this build plan? If so, the orchestrator will begin executing Group 1. If you need groups added, removed, split, or reordered, tell me what to modify."
-3. **If the user approves:** confirm that the file is ready and that they can proceed with the orchestrator to execute Group 1.
-4. **If the user requests changes:** modify `.temper/build-plan.md` and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 5 (Plan) complete — build plan generated
+   
+   Summary:
+   • Execution groups: [N]
+   • Total tasks: [N]
+   • Group breakdown:
+     - Group 1: [N] tasks ([agents])
+     - Group 2: [N] tasks ([agents])
+     - Group 3: [N] tasks ([agents])
+   • Execution order: [sequential with verification steps]
+   • Estimated tokens: [total]
+   • Files generated: .temper/build-plan.md
+   
+   → Orchestrator ready to execute Group 1.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Parallel execution rules
 

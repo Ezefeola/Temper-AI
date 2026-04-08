@@ -292,15 +292,24 @@ Rules:
 - **Always** exclude test results and node modules.
 - **Always** exclude markdown files except `README.md`.
 
-### Phase 4 — Show files and request approval
+### Phase 4 — Report completion to orchestrator
 
 After generating the files:
 
-1. Show the user all files created or modified with their full content.
-2. Explain briefly what was generated and how it satisfies the completion criterion.
-3. Ask explicitly: "Do you approve these infrastructure files? If so, I will mark the task as done. If you need changes, tell me what to fix."
-4. **If the user approves:** mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`, then stop. The orchestrator will handle the next task.
-5. **If the user requests changes:** fix the files and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Task [T###] ([title]) complete — infrastructure generated
+   
+   Summary:
+   • Task: [brief description]
+   • Files generated: [list]
+   • Completion criterion met: [yes/no]
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
+3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
 
 ## Error handling during implementation
 

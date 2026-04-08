@@ -62,6 +62,26 @@ Each task must follow these rules:
 - **Independently verifiable** — the completion criterion must be objectively checkable.
 - **Single responsibility** — one task does one thing. Do not combine "create entity and create endpoint" into one task.
 - **Ordered by dependency** — foundational tasks come first (entities, configurations), then use cases, then endpoints, then UI.
+- **Descriptive, not prescriptive** — tasks describe WHAT to achieve, never HOW to implement. File paths, folder structure, and implementation patterns are determined by the architecture skills, not the task.
+
+### Phase 2.1 — Extract Business Rules from Specifications
+
+Before writing any task, extract business rules from the user story's edge cases and error cases:
+
+1. **Read each user story** in `.temper/specs/` — focus on the Edge Cases and Error Cases sections.
+2. **Convert them into explicit business rules** for the task.
+3. **If the spec doesn't have explicit rules**, note: "Rules should be inferred from context. Do NOT invent new business rules beyond what's documented."
+
+**Example transformation:**
+
+| User Story Edge/Error Case | Extracted Business Rule |
+|---|---|
+| "Empty product name should return error" | Product name cannot be empty |
+| "Product name exceeding 100 chars returns error" | Product name cannot exceed 100 characters |
+| "Duplicate product name returns 409 Conflict" | Product name must be unique in the system |
+| "Price must be positive" | Product price must be greater than zero |
+
+**The agent reading this task MUST know WHAT validations to implement, not just that "business logic exists."**
 
 ### Phase 3 — Categorize tasks by agent
 
@@ -162,31 +182,38 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 
 ## Description
 
-[Clear, specific description of what needs to be done. Be explicit about what to implement.]
+[WHAT to achieve — high-level description without prescribing implementation]
+
+## Business Rules
+
+- [ ] [Rule extracted from user story edge case or error case]
+- [ ] [Rule extracted from user story edge case or error case]
+- [ ] [Rule extracted from user story edge case or error case]
+
+**Note:** If the spec doesn't provide explicit rules, state: "Rules should be inferred from context. Do NOT invent new business rules."
 
 ## Acceptance Criteria
 
-- [ ] [Specific, verifiable condition that proves this task is done]
-- [ ] [Specific, verifiable condition that proves this task is done]
+- [ ] [Verifiable condition that proves the functionality works]
+- [ ] [Verifiable condition that proves the functionality works]
 
 ## Completion Criterion
 
-[Single, verifiable condition that proves this task is done. Example: "Product.cs exists with private constructor, Rules class, Create method returning (Errors, Product?), and update methods returning (Errors, bool Updated). Compiles without errors."]
+[Single, observable, verifiable result. Example: "A product can be created with valid data and returns 201 Created. Validation errors return 400 with error details. Duplicate names return 409 Conflict. Compiles without errors."]
 
-## Context
+## Related Design Elements
 
-- Related user story: US-[NNN] — [story title]
-- Related design section: [section reference in design.md]
-- Files to create/modify:
-  - `src/ProjectName.Domain/Entities/Products/Product.cs` (create)
-  - `src/ProjectName.Domain/Entities/Products/IProductRepository.cs` (create)
+- [Reference to design.md section — e.g., "Product entity (design.md §2.1)"]
+- [Reference to user story spec — e.g., "US-001-product-management.md"]
 
 ## Implementation Notes
 
-- [Specific TemperAI convention to follow]
-- [Specific pattern to use]
-- [Any relevant detail from the spec's edge cases or error cases]
+- [Convention to follow from architecture skills — DO NOT prescribe file paths]
+- [Note: Always load architecture skills before implementing to determine correct folder structure]
+- [Any specific pattern required — determined by architecture, not by the task]
 ```
+
+**CRITICAL: Do NOT include specific file paths or folder structures in tasks.** The architecture skills loaded by the implementing agent determine where files go based on the chosen architecture pattern (Clean, Hexagonal, Vertical Slice, Onion).
 
 **File naming rules:**
 - Always use the format `T[NNN]-[kebab-case-title].md`
@@ -195,20 +222,28 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 - Task numbers are sequential across ALL user stories (T001, T002, T003... not reset per story)
 - Each user story gets its own folder under `.temper/tasks/`
 
-### Phase 6 — Show tasks and request approval
+### Phase 6 — Report completion to orchestrator
 
 After generating all files:
 
-1. Show the user a summary:
-   - Total number of tasks
-   - Breakdown by agent (backend / frontend / tester / devops)
-   - Number of user stories covered
-   - Number of dependency chains
-   - Estimated complexity (based on task count)
-   - Directory structure created
-2. Ask explicitly: "Do you approve this task list? If so, I can proceed. If you need tasks added, removed, split, or reordered, tell me what to modify."
-3. **If the user approves:** confirm that the files are ready and that they can run `/temper-plan` to continue to Phase 5.
-4. **If the user requests changes:** modify the relevant files and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 4 (Tasks) complete — task breakdown generated
+   
+   Summary:
+   • Total tasks: [N]
+   • Backend tasks: [N]
+   • Frontend tasks: [N]
+   • Tester tasks: [N]
+   • DevOps tasks: [N]
+   • User stories covered: [N]
+   • Dependency chains: [N]
+   • Directory structure: .temper/tasks/
+   
+   → Proceed to /temper-plan for Phase 5.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Rules for writing tasks
 
@@ -218,25 +253,27 @@ After generating all files:
 - **NEVER** leave a task without a clear completion criterion.
 - **NEVER** assign a task to multiple agents — one task, one agent.
 - **ALWAYS** ensure dependency chains are correct — a task cannot depend on a task that comes after it.
-- **ALWAYS** include the file paths that the task will create or modify.
+- **ALWAYS** include explicit Business Rules extracted from the user story's edge cases and error cases.
 - **ALWAYS** split tasks that involve more than one entity or one endpoint.
 - **ALWAYS** ask the user if the design lacks information needed to define a complete task.
 - **ALWAYS** create one file per task inside the appropriate user story folder.
 - **ALWAYS** create the `INDEX.md` file with the summary table.
 - **ALWAYS** group tasks under their parent user story folder.
+- **NEVER** prescribe file paths, folder structure, or implementation patterns — these are determined by the architecture skills.
+- **ALWAYS** describe WHAT to achieve, never HOW to implement.
 
 ## Examples of good vs bad tasks
 
-### Bad — too broad
-```
-### T001: Create all Product functionality
-
-**Description:** Create the Product entity, use cases, endpoints, and tests.
-```
-
-### Good — atomic and specific
+### Bad — prescriptive (tells HOW to implement)
 ```markdown
-# T001: Create Product Entity with Factory and Update Methods
+# T001: Create Product Entity
+
+**Description:** Create the Product entity class with the Rules nested class, factory method Create(...), and update methods UpdateName and UpdatePrice.
+```
+
+### Good — descriptive (tells WHAT to achieve)
+```markdown
+# T001: Implement Product Entity with Business Validations
 
 **User Story:** US-001
 **Agent:** backend
@@ -245,25 +282,31 @@ After generating all files:
 
 ## Description
 
-Create the Product entity class with the Rules nested class, factory method Create(...), and update methods UpdateName and UpdatePrice.
+Create the Product entity with all required business validations.
+
+## Business Rules
+
+- [ ] Product name cannot be empty
+- [ ] Product name cannot exceed 100 characters
+- [ ] Product price must be greater than zero
+- [ ] Product name must be unique in the system
+- [ ] Product has Active status by default
 
 ## Acceptance Criteria
 
-- [ ] Product entity with Id, Name, Description, Price properties
-- [ ] Private constructor with factory method
-- [ ] Rules class with NAME_MAX_LENGTH, DESCRIPTION_MAX_LENGTH, etc.
-- [ ] UpdateName and UpdatePrice methods with change detection
+- [ ] A product can be created with valid name and price
+- [ ] Creating a product with empty name returns validation error
+- [ ] Creating a product with duplicate name returns conflict error
+- [ ] Product entity has CreatedAt timestamp
 
 ## Completion Criterion
 
-Product.cs exists with private constructor, Rules class, Create method returning (Errors, Product?), and update methods returning (Errors, bool Updated). Compiles without errors.
+Product entity can be instantiated via factory method with validation. Validation errors are returned as a list of strings. Duplicate name detection works.
 
-## Context
+## Related Design Elements
 
-- Related user story: US-001 — Product Management
-- Related design section: 2.1 Product
-- Files to create:
-  - `src/ProjectName.Domain/Entities/Products/Product.cs` (create)
+- Product entity (design.md §2.1)
+- Product creation (design.md §3.1)
 ```
 
 ### Bad — vague completion criterion
@@ -273,7 +316,22 @@ Product.cs exists with private constructor, Rules class, Create method returning
 
 ### Good — verifiable completion criterion
 ```
-**Completion criterion:** POST /api/products returns 201 with a valid CreateProductResponseDto on success, 400 with ProblemDetails on validation failure, and 409 when a duplicate name exists. Controller compiles and endpoint is registered in Program.cs.
+**Completion criterion:** POST /api/products returns 201 with CreateProductResponseDto on success, 400 with ProblemDetails on validation failure, and 409 when a duplicate name exists. Compiles without errors.
+```
+
+### Bad — prescriptive file paths
+```
+## Files to create:
+- `src/Project.Api/Controllers/ProductsController.cs`
+- `src/Project.Application/DTOs/CreateProductRequestDto.cs`
+```
+
+### Good — no file paths, let architecture decide
+```
+## Related Design Elements
+
+- Product API endpoints (design.md §4.1)
+- Product creation use case (design.md §3.1)
 ```
 
 ## Skills you load

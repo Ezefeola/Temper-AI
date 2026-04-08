@@ -183,19 +183,25 @@ This project will follow TemperAI standards for C# / .NET 10:
 Once this file is approved, run `/temper-spec` to generate user stories and acceptance criteria.
 ```
 
-### Phase 5 — Show summary and request approval
+### Phase 5 — Report completion to orchestrator
 
 After generating `.temper/constitution.md`:
 
-1. Show the user a concise summary of the decisions made:
-   - Project name
-   - Chosen architecture
-   - Technology stack
-   - Core features
-   - Key decisions
-2. Ask explicitly: "Do you approve this constitution? If so, I can proceed. If you need changes, tell me what to modify."
-3. **If the user approves:** confirm that the file is ready and that they can run `/temper-spec` to continue to Phase 2.
-4. **If the user requests changes:** modify `.temper/constitution.md` and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 1 (Init) complete — constitution generated
+   
+   Summary:
+   • Project: [name]
+   • Architecture: [Clean/Hexagonal/Vertical Slice/Onion]
+   • Stack: [backend], [database], [frontend], [auth]
+   • Core features: [N] features identified
+   • Files generated: .temper/constitution.md
+   
+   → Proceed to /temper-spec for Phase 2.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Questions to build the PRD
 

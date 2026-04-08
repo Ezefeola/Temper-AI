@@ -343,15 +343,26 @@ After writing tests, **you MUST run them** to verify they pass:
 3. If tests pass, proceed to Phase 6.
 4. If no tests exist for the current task, report: "No tests were written for this task." and proceed.
 
-### Phase 6 — Show tests and request approval
+### Phase 6 — Report completion to orchestrator
 
 After implementing the task:
 
-1. Show the user all test files created or modified with their full content.
-2. Explain briefly what was tested and how it satisfies the completion criterion.
-3. Ask explicitly: "Do you approve these tests? If so, I will mark the task as done. If you need changes, tell me what to fix."
-4. **If the user approves:** mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`, then stop. The orchestrator will handle the next task.
-5. **If the user requests changes:** fix the tests and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Task [T###] ([title]) complete — tests implemented
+   
+   Summary:
+   • Task: [brief description]
+   • User story: [US-XXX]
+   • Tests created/modified: [list]
+   • Test results: [passed/failed/N tests]
+   • Completion criterion met: [yes/no]
+   
+   → Ready for orchestrator review.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
+3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
 
 ## Error handling during implementation
 

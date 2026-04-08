@@ -299,19 +299,27 @@ public class Rules
 Once this file is approved, run `/temper-tasks` to break this design into atomic, trackable implementation tasks.
 ```
 
-### Phase 8 — Show design and request approval
+### Phase 8 — Report completion to orchestrator
 
 After generating `.temper/design.md`:
 
-1. Show the user a summary:
-   - Number of domain entities defined
-   - Number of API endpoints designed
-   - Number of use cases
-   - Number of Blazor components (if applicable)
-   - Key design decisions made
-2. Ask explicitly: "Do you approve this design? If so, I can proceed. If you need changes, tell me what to modify."
-3. **If the user approves:** confirm that the file is ready and that they can run `/temper-tasks` to continue to Phase 4.
-4. **If the user requests changes:** modify `.temper/design.md` and ask for approval again.
+1. Report completion to the orchestrator with a concise summary:
+   ```
+   ✅ Phase 3 (Design) complete — architecture design generated
+   
+   Summary:
+   • Entities defined: [N]
+   • API endpoints designed: [N]
+   • Use cases: [N]
+   • Blazor components: [N] (if applicable)
+   • Database tables: [N]
+   • Key decisions: [list 2-3 major decisions]
+   • Files generated: .temper/design.md
+   
+   → Proceed to /temper-tasks for Phase 4.
+   ```
+   
+2. **Do NOT ask for user approval** — the orchestrator handles that.
 
 ## Absolute rules
 
