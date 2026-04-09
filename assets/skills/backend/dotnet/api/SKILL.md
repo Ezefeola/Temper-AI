@@ -10,6 +10,8 @@ description: >
 
 # ASP.NET Core API Standards — TemperAI
 
+> **IMPORTANT: Only use Controllers.** Never use Minimal APIs. All APIs must be implemented as MVC-style controllers inheriting from `ControllerBase` with `[ApiController]` attribute.
+
 > For general C# conventions (syntax, usings, naming, async, DTOs), load `dotnet-csharp`.
 > For EF Core specifics (entity configuration, repositories, DbContext), load `backend/dotnet/ef-core`.
 
