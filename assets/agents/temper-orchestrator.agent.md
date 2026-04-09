@@ -265,7 +265,11 @@ temper-discover → temper-constitution → temper-spec → temper-design → te
    - Update `Next action` with instructions for the next orchestrator instance.
    - If all phases are complete, set `Status: complete`.
 6. **Report to user:**
-   - If more phases remain: "✅ Phase [X] complete. State saved. Start a new session and run `/temper-next` to continue to [next phase]. Context cleared — fresh session ready."
+   - If more phases remain: "✅ Phase [X] complete. State saved.
+
+💡 Tip: Clear the chat context before the next phase — this prevents context saturation and hallucinations.
+
+**To resume:** Open a new empty chat window and run `/temper-next` to continue to [next phase]. Context cleared — fresh session ready."
    - If all phases are complete: "🎉 Workflow complete. All phases finished successfully."
    - If blocked: Report the issue and recommend action.
 
@@ -307,8 +311,16 @@ During the build phase, you execute **one group per invocation**:
    - If build succeeds and more groups remain: Update → `Build group: N+1 of M`, `Last build status: ok`, `Next action: "Execute Group N+1"`.
    - If build succeeds and all groups complete: Update → `Current phase: review`, `Next action: "Spawn temper-review"`.
 7. **Report to user:**
-   - If more groups remain: "✅ Group [N] complete. State saved. Start a new session and run `/temper-next` to execute Group [N+1]. Context cleared — fresh session ready."
-   - If all groups complete: "✅ Build complete. State saved. Start a new session and run `/temper-next` to proceed to review. Context cleared — fresh session ready."
+   - If more groups remain: "✅ Group [N] complete. State saved.
+
+💡 Tip: Clear the chat context before the next group — this prevents context saturation and hallucinations.
+
+**To resume:** Open a new empty chat window and run `/temper-next` to execute Group [N+1]. Context cleared — fresh session ready."
+   - If all groups complete: "✅ Build complete. State saved.
+
+💡 Tip: Clear the chat context before moving to review — this prevents context saturation and hallucinations.
+
+**To resume:** Open a new empty chat window and run `/temper-next` to proceed to review. Context cleared — fresh session ready."
 
 ## Workflow — quick path (ephemeral execution)
 
@@ -374,7 +386,7 @@ When invoked, ALWAYS check if the workflow is already complete:
 - **Always give sub-agents minimal, focused context.**
 - **Always use the quick path when appropriate** — but quick path means spawning a specialized agent, NOT writing code yourself.
 - **Always update the state file before stopping.**
-- **Always tell the user to start a new session for the next phase.**
+- **Always tell the user to start a new session for the next phase, with a Tip about clearing context and clear To resume instructions.**
 - **Always spawn sub-agents in separate conversations** — each gets clean context.
 - **Always verify `dotnet build` between build groups.**
 - **Always check for completion before doing any work.**
@@ -565,7 +577,7 @@ This gives the user full visibility into what the orchestrator is doing and why.
 - **ALWAYS** prefer the quick path when the change is small and isolated — but quick path means spawning a specialized agent.
 - **ALWAYS** use the full pipeline when the change is complex or architectural.
 - **ALWAYS** update the state file before stopping.
-- **ALWAYS** tell the user to start a new session for the next phase.
+- **ALWAYS** tell the user to start a new session for the next phase, with a Tip about clearing context and clear To resume instructions.
 - **ALWAYS** keep prompts lean — precision over verbosity.
 - **ALWAYS** verify `dotnet build` between build groups.
 - **ALWAYS** check for completion before doing any work.

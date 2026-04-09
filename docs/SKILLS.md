@@ -271,3 +271,4 @@ Token budget tracking. Loaded for budget management.
 | `temper-devops` | `devops/docker` + `devops/github-actions` |
 | `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]` |
 | `temper-docs` | None |
+| `temper-orchestrator` | None (spawns sub-agents, does not load skills) |

@@ -372,11 +372,11 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
 
         List<MenuOption> options =
         [
-            new("status", "🔍  Verificar estado de NeuralCore y configuracion MCP", "status"),
-            new("test", "🧪  Ejecutar test de conectividad", "test"),
-            new("publish", "📦  Publicar NeuralCore como ejecutable", "publish"),
-            new("install", "⚙️   Instalar configuracion MCP en agentes AI", "install"),
-            new("logs", "📜  Ver logs del servidor", "logs"),
+            new("status", "Verificar si NeuralCore esta publicado y configurado en cada agente", "🔍"),
+            new("test", "Probar conectividad con el servidor MCP", "🧪"),
+            new("publish", "Publicar NeuralCore como ejecutable standalone", "📦"),
+            new("install", "Configurar MCP en agentes AI (OpenCode, Copilot, Claude)", "⚙️"),
+            new("logs", "Ver logs del servidor MCP", "📜"),
         ];
 
         List<string> displayNames = options.Select(o => o.DisplayName).ToList();

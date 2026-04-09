@@ -44,7 +44,7 @@ public sealed class InstallCommand : Command<InstallSettings>
         }
 
         bool installNeuralCore = settings.InstallNeuralCore ?? AnsiConsole.Confirm(
-            "¿Queres instalar NeuralCore para memoria persistente entre sesiones?",
+            "¿Queres instalar NeuralCore para memoria persistente entre sesiones?\n  → Esto publicara NeuralCore y configurara MCP en tus agentes AI",
             defaultValue: true);
 
         if (settings.DryRun)

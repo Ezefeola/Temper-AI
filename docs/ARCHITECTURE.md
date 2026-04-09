@@ -89,11 +89,17 @@ Agent loads skills → Reads skill content → Applies rules to code generation
 |---|---|
 | `temper-discover` | None |
 | `temper-constitution` | `prd-analyzer` |
-| `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
-| `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/ddd` + `architecture/[chosen]` |
-| `temper-frontend` | `frontend/blazor` |
-| `temper-tester` | `backend/dotnet/testing` |
+| `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
+| `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
+| `temper-tasks` | None |
+| `temper-plan` | None |
+| `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]` |
+| `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
+| `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
 | `temper-devops` | `devops/docker` + `devops/github-actions` |
+| `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]` |
+| `temper-docs` | None |
+| `temper-orchestrator` | None (spawns sub-agents, does not load skills) |
 
 ### Skill Structure
 

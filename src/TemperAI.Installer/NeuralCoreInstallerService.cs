@@ -251,7 +251,7 @@ public sealed class NeuralCoreInstallerService
         var neuralCoreServer = new Dictionary<string, object>
         {
             ["type"] = "local",
-            ["command"] = new List<string> { "dotnet", "run", "--project", neuralCoreExePath },
+            ["command"] = new List<string> { "temper-ai", "--mcp" },
             ["enabled"] = true
         };
 

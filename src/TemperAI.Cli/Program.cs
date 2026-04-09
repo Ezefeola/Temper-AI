@@ -138,10 +138,6 @@ app.Configure(config =>
           .WithDescription("Menu interactivo con todos los comandos")
           .WithExample("menu");
 
-    config.AddCommand<SetupCommand>("setup")
-          .WithDescription("Instala temper-ai.exe en el PATH global")
-          .WithExample("setup");
-
     config.AddCommand<NeuralCoreCommand>("neuralcore")
           .WithDescription("Gestiona NeuralCore MCP server (publish, install, status, test)")
           .WithExample("neuralcore", "--publish")
@@ -179,16 +175,15 @@ static int RunMenu()
 
         List<CommandOption> commands =
         [
-            new("install", "Instala skills y agentes en tu agente AI", "install"),
-            new("update", "Actualiza skills y agentes instalados", "update"),
-            new("status", "Muestra el estado de la instalacion actual", "status"),
-            new("neuralcore", "Gestiona NeuralCore MCP server (memoria persistente)", "neuralcore"),
-            new("budget", "Muestra el uso de tokens del proyecto", "budget"),
-            new("snapshot", "Gestiona snapshots para rollback automatico", "snapshot"),
-            new("incremental", "Detecta que fases necesitan re-ejecutarse", "incremental"),
-            new("skill", "Crea, instala y descubre skills personalizados", "skill"),
-            new("setup", "Instala temper-ai.exe en el PATH global", "setup"),
-            new("uninstall", "Desinstala TemperAI completamente", "uninstall")
+            new("install", "Instala skills y agentes en tu agente AI", "📦"),
+            new("update", "Actualiza skills y agentes instalados", "🔄"),
+            new("status", "Muestra el estado de la instalacion", "🔍"),
+            new("neuralcore", "Configura memoria persistente MCP", "🧠"),
+            new("budget", "Muestra el uso de tokens del proyecto", "💰"),
+            new("snapshot", "Gestiona snapshots para rollback", "📸"),
+            new("incremental", "Detecta fases que necesitan re-ejecutarse", "🔎"),
+            new("skill", "Crea y gestiona skills personalizados", "🛠️"),
+            new("uninstall", "Desinstala TemperAI completamente", "🗑️")
         ];
 
     List<string> displayNames = commands.Select(c => c.DisplayName).ToList();
