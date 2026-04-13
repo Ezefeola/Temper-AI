@@ -68,6 +68,22 @@ Each task must follow these rules:
 - **Ordered by dependency** — foundational tasks come first (entities, configurations), then features that depend on them.
 - **Descriptive, not prescriptive** — tasks describe WHAT to achieve, never HOW to implement. File paths, folder structure, and implementation patterns are determined by the architecture skills, not the task.
 
+### Task Granularity for CRUD Operations
+
+When a user story involves multiple operations (Create, Read, Update, Delete, List), **each operation MUST be a separate task**. Do NOT group multiple operations into a single task.
+
+**Correct:**
+- T001: Create Store (Create operation only)
+- T002: Update Store (Update operation only)
+- T003: Delete Store (Delete operation only)
+- T004: Get Store (Read operation only)
+- T005: List Stores (List operation only)
+
+**Incorrect:**
+- T001: Create Store Use Cases (Create, Update, Delete, Get, List all together)
+
+**Rule:** One operation = One task. Each task implements exactly one use case/endpoint.
+
 ### Phase 2.1 — Extract Business Rules from Specifications
 
 Before writing any task, extract business rules from the user story's edge cases and error cases:
@@ -107,6 +123,36 @@ Order tasks so that:
 3. **Application before API** — use cases and DTOs before controllers and endpoints.
 4. **Backend before frontend** — API endpoints must exist before Blazor components can consume them.
 5. **Implementation before tests** — tests come after the code they test exists (or can be written in parallel if the interface is stable).
+
+### Phase 4.1 — API Base Tasks (Architecture-dependent)
+
+When the architecture requires infrastructure patterns (Clean, Onion, Hexagonal), create a separate folder for base infrastructure tasks:
+
+```
+.temper/tasks/
+├── INDEX.md
+├── APIBASE/                    ← Infrastructure base tasks (first)
+│   ├── T001-result-pattern.md
+│   ├── T002-unit-of-work.md
+│   ├── T003-generic-repository.md
+│   └── T004-domain-primitives.md
+├── US-001/
+│   └── T005-create-store.md
+```
+
+**APIBASE tasks include:**
+- Result pattern
+- Unit of Work
+- Generic Repository
+- Domain primitives
+- Other infrastructure shared across features
+
+**Rules:**
+- APIBASE tasks are numbered first (T001, T002, etc.)
+- They have no User Story (leave that field empty or write "APIBASE")
+- They have no dependencies (can start immediately)
+- All feature tasks (US-XXX) depend on APIBASE tasks completing first
+- **Only create APIBASE folder if the architecture uses these patterns** (Clean, Onion, Hexagonal). For Vertical Slice, infrastructure is per-feature.
 
 ### Phase 5 — Generate .temper/tasks/ directory structure
 

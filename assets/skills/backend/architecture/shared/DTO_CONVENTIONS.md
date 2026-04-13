@@ -100,3 +100,26 @@ public static ProductDto ToProductDto(this Product product)
     };
 }
 ```
+
+## Nested types in DTOs
+
+When a DTO requires a nested type that is only used within that DTO, define the nested type **inside the same file** using a `sealed record`. Do NOT create a separate file for one-off nested types.
+
+Example:
+
+```csharp
+public sealed record CreateProductRequestDto
+{
+    public string Name { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string Sku { get; init; } = string.Empty;
+    public BarcodeInfoDto Barcode { get; init; } = null!;
+    
+    // Nested type defined within the same file
+    public sealed record BarcodeInfoDto
+    {
+        public string Code { get; init; } = string.Empty;
+        public BarcodeType Type { get; init; }
+    }
+}
+```
