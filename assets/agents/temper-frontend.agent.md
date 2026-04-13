@@ -7,7 +7,9 @@ description: >
   Implements the task following TemperAI Blazor conventions.
   Loads only the frontend/blazor skill — does not need backend knowledge.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-frontend — Frontend Implementation Subagent
@@ -38,7 +40,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-frontend starting
    Skills loaded: [dotnet-csharp, frontend/blazor]
-   Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks/US-XXX/T###-*.md]
+   Context files: [.temper/frontend-config.md, .temper/tasks/US-XXX/T###-*.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,10 +49,17 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/constitution.md` to confirm the frontend technology (Blazor Server or Blazor WebAssembly).
-2. Read `.temper/design.md` section on Blazor components to understand the pages, routes, and shared components needed.
-3. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-001/T003-product-list-page.md`).
-4. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
+1. **Read** `.temper/frontend-config.md`
+   - Confirm frontend framework type
+   - Extract backend URL for API calls
+   - **Output:** "📄 Frontend config loaded. Framework: [type]"
+
+2. **Read** the task file provided by the orchestrator
+   - Example: `.temper/tasks/US-001/T005-product-list-page.md`
+   - If no task file was provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
+   - **Output:** "📄 Task file loaded: [task ID] - [task title]"
+
+**That's it. Only 2 files.**
 
 ### Phase 2 — Implement the assigned task
 

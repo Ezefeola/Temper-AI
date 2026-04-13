@@ -458,7 +458,10 @@ description: >
   Agente de inicialización de TemperAI. Usar cuando el usuario
   ejecuta /temper-discover o quiere iniciar un nuevo proyecto desde un PRD.
 mode: agent
-allowed-tools: read_file, write_file, ask_followup_question
+tools:
+  read_file: true
+  write_file: true
+  ask_followup_question: true
 ---
 
 # temper-discover — Agente de Inicialización

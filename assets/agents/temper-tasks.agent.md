@@ -7,7 +7,9 @@ description: >
   .temper/specs/, and .temper/design.md and produces .temper/tasks/ with
   per-user-story folders, individual task files, and an INDEX.md for fast lookup.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-tasks — Task Breakdown Agent
@@ -175,6 +177,7 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 
 **User Story:** US-[NNN]
 **Agent:** [backend | frontend | tester | devops]
+**Architecture:** [architecture from constitution §8]
 **Group:** [will be assigned by temper-plan]
 **Status:** pending
 **Dependencies:** [T001, T002 / none]
@@ -193,6 +196,21 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 
 **Note:** If the spec doesn't provide explicit rules, state: "Rules should be inferred from context. Do NOT invent new business rules."
 
+## Technical Details
+
+[Extracted from design.md — information needed by the implementer]
+
+### [Entity/DTO Name]
+
+| Property | Type | Required | Constraints |
+|---|---|---|---|
+| [property1] | [type] | yes/no | [constraints] |
+| [property2] | [type] | yes/no | [constraints] |
+
+[For endpoints: HTTP method, route, request/response DTOs]
+
+[For use cases: input/output, dependencies]
+
 ## Acceptance Criteria
 
 - [ ] [Verifiable condition that proves the functionality works]
@@ -209,9 +227,9 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 
 ## Implementation Notes
 
-- [Convention to follow from architecture skills — DO NOT prescribe file paths]
-- [Note: Always load architecture skills before implementing to determine correct folder structure]
-- [Any specific pattern required — determined by architecture, not by the task]
+- [Only notes specific to THIS task that are not in skills]
+- [Do not include file locations — the skill knows that]
+- [Do not include patterns — the skill knows that]
 ```
 
 **CRITICAL: Do NOT include specific file paths or folder structures in tasks.** The architecture skills loaded by the implementing agent determine where files go based on the chosen architecture pattern (Clean, Hexagonal, Vertical Slice, Onion).
@@ -262,6 +280,7 @@ After generating all files:
 - **NEVER** prescribe file paths, folder structure, or implementation patterns — these are determined by the architecture skills.
 - **ALWAYS** describe WHAT to achieve, never HOW to implement.
 - **ALWAYS** make each task represent a complete feature: endpoint + handler + DTOs + validator (all components together)
+- **NEVER** include a "Skills to Load" section in tasks — the implementing agent decides which skills to load based on what it will create/modify, using its own decision table.
 
 ## REGLA ABSOLUTA: Las tareas NUNCA especifican ubicaciones
 

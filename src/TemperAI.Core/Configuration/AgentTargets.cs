@@ -38,7 +38,7 @@ public static class AgentTargets
                 Id = "opencode",
                 Name = "OpenCode",
                 SkillsPath = Path.Combine(homeDirectory, ".config", "opencode", "skills"),
-                AgentsPath = Path.Combine(homeDirectory, ".config", "opencode", "agent"),
+                AgentsPath = Path.Combine(homeDirectory, ".config", "opencode", "agents"),
                 ConfigPath = Path.Combine(homeDirectory, ".config", "opencode"),
                 McpConfigFile = Path.Combine(homeDirectory, ".config", "opencode", "opencode.json"),
                 McpConfigFormat = "opencode",

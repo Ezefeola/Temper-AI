@@ -7,7 +7,9 @@ description: >
   with a complete execution strategy. This agent does NOT write code — it
   only plans and documents the build order.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-plan — Build Planner

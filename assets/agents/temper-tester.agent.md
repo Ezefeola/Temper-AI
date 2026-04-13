@@ -8,7 +8,9 @@ description: >
   Implements tests using xUnit for backend tests and bUnit for Blazor component tests.
   Loads the backend/dotnet/testing skill to understand xUnit and Moq conventions for writing tests.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-tester — Testing Implementation Subagent

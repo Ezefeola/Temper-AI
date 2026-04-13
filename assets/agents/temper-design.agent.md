@@ -8,7 +8,9 @@ description: >
   with architecture, folder structure, domain entities, API endpoints,
   database schema, and Blazor components if applicable.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-design — Design Agent

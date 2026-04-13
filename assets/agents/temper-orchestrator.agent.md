@@ -9,7 +9,12 @@ description: >
   Handles both SDD-managed projects and external/hand-made projects.
   NEVER writes implementation code under any circumstance — ALWAYS delegates.
 mode: primary
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  task: allow
+  question: allow
 ---
 
 # temper-orchestrator — Ephemeral Orchestrator
@@ -280,10 +285,12 @@ During the build phase, you execute **one group per invocation**:
 1. **Read `.temper/orchestrator-state.md`** → confirm `Current phase: build`, read `Build group: N of M`.
 2. **Read `.temper/build-plan.md`** → get the tasks for the current group.
 3. **For each agent in the current group:**
-   - Spawn the sub-agent in a separate conversation (Task tool).
-   - Provide ONLY: the specific task file (`.temper/tasks/US-XXX/T###-[slug].md`), the corresponding user story spec file (`.temper/specs/US-XXX-[slug].md`), relevant design sections, required skills, TemperAI conventions.
-   - **IMPORTANT:** Do NOT add code templates or skeletons that are NOT in the task file. The task file is the source of truth. If it contains only requirements (Business Rules, Acceptance Criteria), pass only those — do NOT add code structure. The sub-agent knows how to implement based on the skills it loads.
-   - **Critical instruction:** "Execute ONLY this task. Do NOT read the tasks index to find more work. Stop immediately after completing this task."
+    - Spawn the sub-agent in a separate conversation (Task tool).
+    - Provide ONLY:
+      - Task: `.temper/tasks/US-XXX/T###-[slug].md`
+      - User Story: `.temper/specs/US-XXX-[slug].md`
+      - Skills: [list of skills needed]
+    - **Critical instruction:** "Execute ONLY this task. Do NOT read tasks index. Stop after completing."
    - Wait for completion.
    - **If the sub-agent fails — RECOVERY PROTOCOL:**
      1. **Assess what was completed:** Check which files were created/modified by the failed agent before it errored.
@@ -328,8 +335,11 @@ Quick path means spawning a specialized agent directly — NOT writing code your
 
 1. **Read `.temper/orchestrator-state.md`** — if `Quick path: yes`, spawn the quick path agent.
 2. **If no state file exists (external project):** Ask the user for minimum context, read relevant files, then spawn the agent.
-3. **Spawn the appropriate specialized agent** (temper-backend, temper-frontend, temper-tester, temper-devops) with minimal context (only relevant files and the specific request).
-   - **IMPORTANT:** Do NOT add code templates or skeletons that are NOT in the source files. Pass only what exists in the files — the agent knows how to implement based on the skills it loads.
+3. **Spawn the agent** with:
+   - Files to read: [only the specific file(s) asked about]
+   - Skills: [only what's needed]
+   - Task: [what to do, one line]
+   - **Do NOT add code structure or examples**
 4. **Wait for completion.**
    - **If the agent fails — RECOVERY PROTOCOL:**
      1. **Assess what was completed:** Check which files were created/modified before the error.
@@ -395,18 +405,27 @@ When invoked, ALWAYS check if the workflow is already complete:
 
 When spawning a sub-agent, provide ONLY:
 
-1. **The specific task** — one clear instruction, not a novel.
-2. **The files it needs** — paths to relevant files, not the entire project.
-3. **The skills it needs** — only the skills relevant to its task.
-4. **The constraints** — TemperAI conventions that apply to this specific task.
+1. **Files to read** — paths to the task file, user story spec, and constitution (if needed).
+2. **Skills to load** — only the skills relevant to this task.
+3. **One-line task** — "Execute T###. Stop after completing."
 
 Do NOT provide:
 
 - The entire PRD
 - All previous phase outputs
 - Unrelated code files
-- Skills the sub-agent does not need
-- **Code templates or skeletons that are NOT in the task file** — the task file is the source of truth. If the task file does not contain code, do NOT add it. The sub-agent knows how to implement based on the skills it loads.
+- **Code templates or skeletons** — structure, folder layouts, or implementation details that are NOT in the task file.
+- **Code examples** — sample code that shows "how to" implement something.
+
+The task file is the source of truth. The skills provide the architectural knowledge. Your prompt provides neither.
+
+### Why this matters
+
+- **Task files** contain requirements (what to build)
+- **Skills** contain knowledge (how to build it)
+- **Your prompt** should contain only file paths and skill names
+
+If your prompt has structure, folder layouts, or "how to" examples → you're duplicating what skills already provide → the prompt grows unnecessarily → the agent gets conflicting signals about what's authoritative.
 
 ## Example decisions
 
@@ -446,9 +465,21 @@ Note: Even for trivial changes, ALWAYS spawn the specialized agent. NEVER write 
 ```
 State file: Current phase: build, Build group: 2 of 3, Last build status: ok.
 Decision: Execute Group 2 — spawn temper-backend (T002), temper-frontend (T006).
-Context per agent: Only the tasks for that agent + relevant design sections.
+
+Spawn temper-backend:
+- Task: .temper/tasks/US-002/T002-create-endpoints.md
+- User Story: .temper/specs/US-002-create-endpoints.md
+- Skills: dotnet-csharp, dotnet-api, architecture-shared, vertical-slice-architecture
+- "Execute T002. Stop after completing."
+
+Spawn temper-frontend:
+- Task: .temper/tasks/US-006/T006-create-todo-form.md
+- User Story: .temper/specs/US-006-create-todo-form.md
+- Skills: blazor
+- "Execute T006. Stop after completing."
+
 Verification: dotnet build after group completes.
-Next: Update state file → Build group: 3 of 3. Tell user to start new session.
+Next: Update state → Build group: 3 of 3. Tell user to start new session.
 ```
 
 ### Example 5: User runs /temper-next but workflow is already complete

@@ -215,22 +215,106 @@ temper-ai neuralcore --install --agent opencode  # Install for OpenCode only
 
 ---
 
+### `temper-ai doctor`
+
+Diagnostica problemas de instalación y ofrece reparaciones automatizadas.
+
+**Opciones:**
+| Flag | Descripción |
+|---|---|
+| `--fix` | Aplica las reparaciones automáticamente |
+| `--check` | Solo muestra el diagnóstico sin reparar |
+
+**Qué verifica:**
+- Archivos de skills faltantes o corruptos
+- Archivos de agentes faltantes o corruptos
+- Configuración de NeuralCore MCP
+- Ejecutable del CLI instalado
+- PATH del sistema
+
+**Ejemplos:**
+```cmd
+temper-ai doctor              # Menú interactivo
+temper-ai doctor --check      # Solo mostrar diagnóstico
+temper-ai doctor --fix      # Reparar automáticamente
+```
+
+---
+
+### `temper-ai neural`
+
+Guarda y recupera observaciones del proyecto usando NeuralCore MCP.
+
+**Opciones:**
+| Flag | Descripción |
+|---|---|
+| `--save` | Guardar una observación |
+| `--recall` | Buscar observaciones |
+| `--session` | Crear resumen de sesión |
+| `--title` | Título de la observación |
+| `--content` | Contenido de la observación |
+| `--type` | Tipo (Bugfix, Feature, Decision, etc.) |
+| `--limit` | Límite de resultados |
+| `--topic-filter` | Filtrar por tema |
+
+**Ejemplos:**
+```cmd
+temper-ai neural --save --title "Fix null ref" --content "Fixed..." --type Bugfix
+temper-ai neural --recall --limit 20
+temper-ai neural --recall --topic-filter "null-ref-fix"
+temper-ai neural --session --project MyProject
+```
+
+---
+
+### `temper-ai menu`
+
+Abre un menú interactivo con todos los comandos disponibles.
+
+**Ejemplo:**
+```cmd
+temper-ai menu
+```
+
+Muestra una interfaz interactiva donde podés navegar con flechas, escribir para filtrar, y presionar Enter para seleccionar.
+
+---
+
+### `temper-ai uninstall`
+
+Desinstala TemperAI completamente (CLI, NeuralCore, skills, agentes).
+
+**Opciones:**
+| Flag | Descripción |
+|---|---|
+| `--dry-run` | Simula la desinstalación sin escribir archivos |
+| `--force` | Desinstala sin pedir confirmación |
+
+**Ejemplos:**
+```cmd
+temper-ai uninstall             # Desinstalación interactiva
+temper-ai uninstall --dry-run  # Simular
+temper-ai uninstall --force      # Sin confirmación
+```
+
+---
+
 ### `temper-ai setup`
 
-Installs the CLI executable to the global PATH and configures NeuralCore MCP.
+Instala el CLI ejecutable al PATH global y configura NeuralCore MCP.
 
-**What it does:**
-1. Copies the current executable to `%LOCALAPPDATA%\Programs\TemperAI\temper-ai.exe`
-   - If the file is locked (running), uses a deferred PowerShell script to copy after the process exits.
-2. Adds that directory to the user's PATH environment variable.
-3. Configures NeuralCore MCP in OpenCode and Copilot CLI configuration files.
-4. Publishes NeuralCore as a standalone executable (if not already published).
+**Qué hace:**
+1. Copia el ejecutable actual a `%LOCALAPPDATA%\Programs\TemperAI\temper-ai.exe`
+   - Si el archivo está en uso (ejecutándose), usa un script diferido de PowerShell para copiar después de que el proceso termine.
+2. Agrega ese directorio a la variable PATH del usuario.
+3. Configura NeuralCore MCP en los archivos de configuración de OpenCode y Copilot CLI.
+4. Publica NeuralCore como ejecutable separado (si no está ya publicado).
 
-**Self-update handling:** If you run `temper-ai setup` from the installed version, it detects that the file is in use and schedules the update via a temporary PowerShell script that runs after the process exits.
+**Manejo de auto-actualización:** Si ejecutás `temper-ai setup` desde la versión instalada, detecta que el archivo está en uso y programa la actualización via un script temporal de PowerShell que se ejecuta después de que el proceso termine.
 
-**After running:** Close and reopen your terminal for PATH changes to take effect.
+**Después de ejecutar:** Cerrá y reabri tu terminal para que los cambios en el PATH surtan efecto.
 
-**Recommendation:** For a clean installation, use `.\install.ps1` from the repository root instead of `temper-ai setup`.
+**Recomendación:** Para una instalación limpia, usá `.\install.ps1` desde la raíz del repositorio en lugar de `temper-ai setup`.
 
 ---
 

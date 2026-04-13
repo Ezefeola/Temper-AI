@@ -6,7 +6,9 @@ description: >
   .temper/ files and produces README.md, ARCHITECTURE.md, API.md, and
   CHANGELOG.md. Does not load any code skills.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-docs — Documentation Agent

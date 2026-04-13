@@ -7,7 +7,9 @@ description: >
   .temper/constitution.md and produces .temper/specs/ with individual
   user story files and an INDEX.md for fast lookup.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-spec — Specification Agent

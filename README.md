@@ -24,6 +24,25 @@ I want to build a task management system...
 
 ---
 
+## Development Workflow
+
+After making changes to the CLI, agents, or skills:
+
+```powershell
+# From the source directory (temper-ai)
+cd C:\Users\...\Projects\AI\temper-ai
+
+# Run install.ps1
+.\install.ps1
+
+# Now you're ready to continue working
+temper-ai update   # Updates agents with latest changes
+```
+
+The CLI automatically detects when you're in the source directory and warns if the installed version is outdated:
+
+---
+
 ## Core Philosophy
 
 ### The Problem
@@ -325,10 +344,14 @@ TemperAI installs skills and agents into:
 | `temper-ai update` | Update installed skills and agents |
 | `temper-ai status` | Show installation status |
 | `temper-ai neuralcore` | Manage NeuralCore MCP server (publish, install, status, test) |
+| `temper-ai neural` | Save/recall observations with NeuralCore |
+| `temper-ai doctor` | Diagnose and repair installation issues |
 | `temper-ai budget` | View token usage tracking |
 | `temper-ai snapshot` | Manage snapshots for rollback |
 | `temper-ai incremental` | Detect which phases need re-running |
 | `temper-ai skill` | Create, install, and discover custom skills |
+| `temper-ai menu` | Interactive menu with all commands |
+| `temper-ai uninstall` | Uninstall completely |
 | `temper-ai setup` | Install CLI to global PATH |
 
 ---

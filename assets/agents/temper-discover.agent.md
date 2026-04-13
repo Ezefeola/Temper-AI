@@ -7,7 +7,9 @@ description: >
   orchestrator with a complete picture. Does NOT generate any files —
   only gathers and clarifies requirements through iterative questions.
 mode: primary
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  question: allow
 ---
 
 # temper-discover — Discovery Agent

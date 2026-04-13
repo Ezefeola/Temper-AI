@@ -7,7 +7,9 @@ description: >
   Generates infrastructure files including Dockerfiles, docker-compose,
   GitHub Actions workflows, and .dockerignore. Does not load code skills.
 mode: subagent
-allowed-tools: read_file, write_file, read_directory, ask_followup_question
+permission:
+  read: allow
+  edit: allow
 ---
 
 # temper-devops — DevOps Implementation Subagent

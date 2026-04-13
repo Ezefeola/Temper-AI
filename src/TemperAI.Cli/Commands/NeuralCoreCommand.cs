@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using TemperAI.Cli.Services;
 using TemperAI.Core.Configuration;
 using TemperAI.Core.Models;
 using TemperAI.Installer;
@@ -17,6 +18,22 @@ public sealed class NeuralCoreSettings : CommandSettings
     [CommandOption("--test")]
     [Description("Ejecuta un test de conectividad end-to-end")]
     public bool Test { get; init; }
+
+    [CommandOption("--start")]
+    [Description("Inicia el servidor NeuralCore")]
+    public bool Start { get; init; }
+
+    [CommandOption("--stop")]
+    [Description("Detiene el servidor NeuralCore")]
+    public bool Stop { get; init; }
+
+    [CommandOption("--restart")]
+    [Description("Reinicia el servidor NeuralCore")]
+    public bool Restart { get; init; }
+
+    [CommandOption("--health")]
+    [Description("Ejecuta un health check completo de NeuralCore")]
+    public bool Health { get; init; }
 
     [CommandOption("--install")]
     [Description("Instala la configuracion MCP en los agentes seleccionados")]
@@ -44,6 +61,26 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
             return PublishNeuralCore();
         }
 
+        if (settings.Start)
+        {
+            return StartNeuralCore();
+        }
+
+        if (settings.Stop)
+        {
+            return StopNeuralCore();
+        }
+
+        if (settings.Restart)
+        {
+            return RestartNeuralCore();
+        }
+
+        if (settings.Health)
+        {
+            return RunHealthCheck();
+        }
+
         if (settings.Install)
         {
             return InstallMcpConfig(settings);
@@ -66,6 +103,138 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
 
         ShowMenu();
         return 0;
+    }
+
+    private static int StartNeuralCore()
+    {
+        PrintHeader();
+        AnsiConsole.MarkupLine("[bold]Iniciando NeuralCore...[/]");
+        AnsiConsole.WriteLine();
+
+        var service = new NeuralCoreService();
+        NeuralCoreStartResult result = service.Start();
+
+        if (result.Success)
+        {
+            AnsiConsole.MarkupLine($"[green]✓[/] [bold]NeuralCore iniciado correctamente[/]");
+            AnsiConsole.MarkupLine($"  [dim]PID:[/] {result.ProcessId}");
+            AnsiConsole.MarkupLine($"  [dim]Logs:[/] {result.LogPath}");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[dim]Presiona [bold]Ctrl+C[/] para detener.[/]");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"[red]✗ Error:[/] {result.ErrorMessage}");
+            AnsiConsole.WriteLine();
+            return 1;
+        }
+
+        Console.ReadLine();
+        return 0;
+    }
+
+    private static int StopNeuralCore()
+    {
+        PrintHeader();
+        AnsiConsole.MarkupLine("[bold]Deteniendo NeuralCore...[/]");
+        AnsiConsole.WriteLine();
+
+        var service = new NeuralCoreService();
+        NeuralCoreStopResult result = service.Stop();
+
+        if (result.Success)
+        {
+            if (result.KilledProcessId.HasValue)
+            {
+                AnsiConsole.MarkupLine($"[green]✓[/] [bold]NeuralCore detenido[/]");
+                AnsiConsole.MarkupLine($"  [dim]PID detenido:[/] {result.KilledProcessId}");
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[yellow]NeuralCore no estaba en ejecución.[/]");
+            }
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"[red]✗ Error:[/] {result.ErrorMessage}");
+            AnsiConsole.WriteLine();
+            return 1;
+        }
+
+        AnsiConsole.WriteLine();
+        return 0;
+    }
+
+    private static int RestartNeuralCore()
+    {
+        PrintHeader();
+        AnsiConsole.MarkupLine("[bold]Reiniciando NeuralCore...[/]");
+        AnsiConsole.WriteLine();
+
+        var service = new NeuralCoreService();
+        NeuralCoreStartResult result = service.Restart();
+
+        if (result.Success)
+        {
+            AnsiConsole.MarkupLine($"[green]✓[/] [bold]NeuralCore reiniciado correctamente[/]");
+            AnsiConsole.MarkupLine($"  [dim]Nuevo PID:[/] {result.ProcessId}");
+            AnsiConsole.WriteLine();
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"[red]✗ Error:[/] {result.ErrorMessage}");
+            AnsiConsole.WriteLine();
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static int RunHealthCheck()
+    {
+        PrintHeader();
+        AnsiConsole.MarkupLine("[bold]Health Check de NeuralCore[/]");
+        AnsiConsole.WriteLine();
+
+        var service = new NeuralCoreService();
+        NeuralCoreHealthCheckResult result = service.HealthCheck();
+
+        Table table = new Table();
+        table.AddColumn(new TableColumn("[bold]Check[/]"));
+        table.AddColumn(new TableColumn("[bold]Estado[/]"));
+
+        table.AddRow("Executable existe", result.Exists ? "[green]✓[/]" : "[red]✗[/]");
+        table.AddRow("Puede iniciar", result.CanStart ? "[green]✓[/]" : "[red]✗[/]");
+        table.AddRow("Base de datos accesible", result.DatabaseAccessible ? "[green]✓[/]" : "[red]✗[/]");
+        table.AddRow("MCP configurado", result.McpConfigured ? "[green]✓[/]" : "[red]✗[/]");
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
+
+        if (result.IsHealthy)
+        {
+            AnsiConsole.MarkupLine("[green]✓ NeuralCore está saludable[/]");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[yellow]⚠ Se detectaron problemas:[/]");
+
+            foreach (string issue in result.Issues)
+            {
+                AnsiConsole.MarkupLine($"  [yellow]•[/] {issue}");
+            }
+
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[bold]Recomendaciones:[/]");
+
+            foreach (string rec in result.Recommendations)
+            {
+                AnsiConsole.MarkupLine($"  [dim]▶[/] {rec}");
+            }
+        }
+
+        AnsiConsole.WriteLine();
+        return result.IsHealthy ? 0 : 1;
     }
 
     private static int PublishNeuralCore()
@@ -123,7 +292,7 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
             AnsiConsole.MarkupLine($"  [dim]Path:[/] {exePath}");
             AnsiConsole.MarkupLine($"  [dim]Size:[/] {sizeStr}");
             AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("[dim]Ahora ejecutá [bold]temper-ai install[/] o [bold]temper-ai neuralcore --install[/][/]");
+            AnsiConsole.MarkupLine("[dim]Ahora ejecutá [bold]temper-ai install[/] o [bold]temper-ai neuralcore --install[/]");
         }
         else
         {
@@ -206,8 +375,8 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
         AnsiConsole.MarkupLine("[bold]Estado de NeuralCore[/]");
         AnsiConsole.WriteLine();
 
-        string neuralCoreExe = NeuralCoreInstallerService.GetNeuralCoreExePath();
-        bool exeExists = NeuralCoreInstallerService.IsPublished();
+        var service = new NeuralCoreService();
+        NeuralCoreStatus status = service.GetStatus();
 
         Table table = new Table();
         table.AddColumn(new TableColumn("[bold]Componente[/]"));
@@ -215,37 +384,36 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
         table.AddColumn(new TableColumn("[bold]Detalle[/]"));
 
         table.AddRow(
-            "NeuralCore ejecutable",
-            exeExists ? "[green]Publicado[/]" : "[red]No publicado[/]",
-            exeExists ? $"{neuralCoreExe} ({new FileInfo(neuralCoreExe).Length / 1_000_000} MB)" : "Ejecutá: temper-ai neuralcore --publish");
+            "Executable",
+            status.IsPublished ? "[green]Publicado[/]" : "[red]No publicado[/]",
+            status.IsPublished ? $"{status.FileSizeDisplay}" : "Ejecutá --publish");
 
-        IReadOnlyList<AgentTarget> supportedTargets = AgentTargets.Supported();
+        table.AddRow(
+            "Ejecución",
+            status.IsRunning ? "[green]Ejecutando[/]" : "[yellow]Detenido[/]",
+            status.IsRunning ? $"PID: {status.ProcessId}, {status.RunningDurationDisplay}" : "Ejecutá --start");
 
-        foreach (AgentTarget target in supportedTargets)
-        {
-            string mcpFile = target.McpConfigFile;
-            bool mcpConfigured = File.Exists(mcpFile) && IsNeuralCoreInConfig(mcpFile);
+        table.AddRow(
+            "MCP: OpenCode",
+            status.IsConfiguredForOpenCode ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
+            status.IsConfiguredForOpenCode ? "Listo" : "Ejecutá --install");
 
-            table.AddRow(
-                $"MCP: {target.Name}",
-                mcpConfigured ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
-                mcpConfigured ? mcpFile : $"Ejecutá: temper-ai neuralcore --install --agent {target.Id}");
-        }
+        table.AddRow(
+            "MCP: Copilot",
+            status.IsConfiguredForCopilot ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
+            status.IsConfiguredForCopilot ? "Listo" : "Ejecutá --install");
+
+        table.AddRow(
+            "MCP: Claude",
+            status.IsConfiguredForClaude ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
+            status.IsConfiguredForClaude ? "Listo" : "Ejecutá --install");
 
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
 
-        bool allConfigured = exeExists && supportedTargets.All(t =>
-            File.Exists(t.McpConfigFile) && IsNeuralCoreInConfig(t.McpConfigFile));
-
-        if (allConfigured)
+        if (status.SuggestedAction is not null)
         {
-            AnsiConsole.MarkupLine("[green]✓ NeuralCore esta completamente configurado.[/]");
-            AnsiConsole.MarkupLine("[dim]Se iniciara automaticamente cuando abras tu agente AI.[/]");
-        }
-        else
-        {
-            AnsiConsole.MarkupLine("[yellow]⚠ NeuralCore necesita configuracion adicional.[/]");
+            AnsiConsole.MarkupLine($"[dim]💡 {status.SuggestedAction}[/]");
         }
 
         AnsiConsole.WriteLine();
@@ -258,66 +426,28 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
         AnsiConsole.MarkupLine("[bold]Test de conectividad NeuralCore[/]");
         AnsiConsole.WriteLine();
 
-        if (!NeuralCoreInstallerService.IsPublished())
+        var service = new NeuralCoreService();
+        NeuralCoreHealthCheckResult result = service.HealthCheck();
+
+        AnsiConsole.MarkupLine("[dim]Ejecutando test...[/]");
+        AnsiConsole.WriteLine();
+
+        if (result.IsHealthy)
         {
-            AnsiConsole.MarkupLine("[red]NeuralCore no esta publicado.[/]");
-            AnsiConsole.MarkupLine("[dim]Ejecutá: temper-ai neuralcore --publish[/]");
-            return 1;
-        }
-
-        AnsiConsole.MarkupLine("[dim]Iniciando NeuralCore en modo test...[/]");
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = NeuralCoreInstallerService.GetNeuralCoreExePath(),
-            Arguments = "--test-ping",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-
-        using var process = Process.Start(startInfo);
-
-        if (process is null)
-        {
-            AnsiConsole.MarkupLine("[red]No se pudo iniciar NeuralCore.[/]");
-            return 1;
-        }
-
-        bool completed = process.WaitForExit(10000);
-
-        if (!completed)
-        {
-            process.Kill(true);
-            AnsiConsole.MarkupLine("[yellow]⚠ NeuralCore no respondio en 10 segundos.[/]");
-            AnsiConsole.MarkupLine("[dim]Puede que este funcionando correctamente (los servidores MCP son de larga duracion).[/]");
+            AnsiConsole.MarkupLine($"[green]✓[/] [bold]NeuralCore está funcionando correctamente[/]");
         }
         else
         {
-            int exitCode = process.ExitCode;
+            AnsiConsole.MarkupLine($"[red]✗[/] [bold]NeuralCore tiene problemas:[/]");
 
-            if (exitCode == 0)
+            foreach (string issue in result.Issues)
             {
-                AnsiConsole.MarkupLine("[green]✓[/] [bold]NeuralCore respondio correctamente.[/]");
-                string output = process.StandardOutput.ReadToEnd();
-
-                if (!string.IsNullOrWhiteSpace(output))
-                {
-                    AnsiConsole.MarkupLine($"[dim]{output.Trim()}[/]");
-                }
-            }
-            else
-            {
-                string error = process.StandardError.ReadToEnd();
-                AnsiConsole.MarkupLine("[red]✗ NeuralCore fallo al iniciar.[/]");
-                AnsiConsole.MarkupLine($"[red]{error}[/]");
-                return 1;
+                AnsiConsole.MarkupLine($"  [red]•[/] {issue}");
             }
         }
 
         AnsiConsole.WriteLine();
-        return 0;
+        return result.IsHealthy ? 0 : 1;
     }
 
     private static int ShowLogs()
@@ -372,10 +502,14 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
 
         List<MenuOption> options =
         [
-            new("status", "Verificar si NeuralCore esta publicado y configurado en cada agente", "🔍"),
+            new("status", "Verificar estado de NeuralCore", "🔍"),
+            new("health", "Ejecutar health check completo", "🩺"),
+            new("start", "Iniciar NeuralCore", "▶️"),
+            new("stop", "Detener NeuralCore", "⏹️"),
+            new("restart", "Reiniciar NeuralCore", "🔄"),
             new("test", "Probar conectividad con el servidor MCP", "🧪"),
             new("publish", "Publicar NeuralCore como ejecutable standalone", "📦"),
-            new("install", "Configurar MCP en agentes AI (OpenCode, Copilot, Claude)", "⚙️"),
+            new("install", "Configurar MCP en agentes AI", "⚙️"),
             new("logs", "Ver logs del servidor MCP", "📜"),
         ];
 
@@ -384,7 +518,7 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
         string? selection = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("[bold]Selecciona una opcion:[/]")
-                .PageSize(6)
+                .PageSize(10)
                 .AddChoices(displayNames));
 
         if (string.IsNullOrEmpty(selection))

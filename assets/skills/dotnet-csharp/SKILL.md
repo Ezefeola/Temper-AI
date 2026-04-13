@@ -7,6 +7,17 @@ description: >
 ---
 
 # C# Universal Standards — TemperAI
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+The following rules have **ZERO tolerance for violations**. Code that breaks ANY of these will be **rejected immediately**:
+
+1. **DTOs MUST be `sealed record` with explicit properties** — NEVER `class`, NEVER primary constructors
+2. **NEVER magic strings** — use enums or constants for ALL repeated strings
+3. **NEVER named usings** (`using X = Y;`) — rename the type instead
+4. **NEVER `!` null-forgiving operator** — fix your validation logic
+5. **NEVER `async void`** — always return `Task`
+
+If you're unsure about a rule, ASK before writing code. Do NOT assume "it's probably fine."
 
 > These standards apply to ALL C# code in TemperAI projects: backend, frontend, and tests.
 > Never duplicate these rules in architecture-specific or layer-specific skills.
@@ -39,30 +50,52 @@ description: >
 ❌ `using static System.Console; WriteLine("Hi");`
 ✅ `using System; Console.WriteLine("Hi");`
 
-### 6. Never named usings (aliases)
-❌ `using TodoTask = Domain.Task; TodoTask t = new();`
-❌ `using DomainTask = Domain.Entities.Tasks.Task;`
-✅ `using Domain.Entities.Tasks;` then use the class by its real name.
+### 6. NEVER use named usings (aliases) — rename the type instead
 
-**If a name collision occurs (e.g., `Task` vs `System.Threading.Tasks.Task`):**
-- **NEVER** use an alias to work around it.
-- **ALWAYS** rename the file and the class itself to avoid the collision at the source.
-- This applies to ANY type: entities, DTOs, services, value objects, enums, etc.
-- The new name must be descriptive and unique within the project.
-- The file name must always match the class name.
+**NEVER use `using X = Y;` to create aliases.** If you have a name collision, **rename the conflicting class itself**, don't work around it with an alias.
 
+**❌ NEVER use aliases:**
 ```csharp
-// BAD — alias to avoid collision
-using DomainTask = TodoManagerApi.Domain.Entities.Tasks.Task;
+using ProductEntity = MyApp.Domain.Entities.Product;  // ⚠️ WRONG
+using DomainTask = TodoApp.Domain.Task;  // ⚠️ WRONG
 
-// GOOD — rename the type itself
-// File: Domain/Entities/WorkItems/WorkItem.cs
-public sealed class WorkItem : Entity<Guid> { ... }
-
-// Then in the consumer:
-using TodoManagerApi.Domain.Entities.WorkItems;
-// No collision — WorkItem doesn't clash with System.Threading.Tasks.Task
+ProductEntity product = new();  // Confusing — what is ProductEntity?
 ```
+
+**✅ ALWAYS use normal imports:**
+```csharp
+using MyApp.Domain.Entities;
+
+Product product = new();  // Clear — it's a Product
+```
+
+**If there's a name collision (e.g., `Task` vs `System.Threading.Tasks.Task`):**
+1. **Rename your domain type** — `WorkItem` instead of `Task`
+2. **Change the file name** — `WorkItem.cs` instead of `Task.cs`
+3. **Update all references** — no aliases needed
+
+**Example collision resolution:**
+```csharp
+// BEFORE (collision with System.Threading.Tasks.Task):
+// Domain/Tasks/Task.cs
+public class Task { ... }  // ⚠️ Collides with System.Threading.Tasks.Task
+
+// AFTER (resolved by renaming):
+// Domain/WorkItems/WorkItem.cs
+public class WorkItem { ... }  // ✅ No collision
+
+// Usage:
+using TodoApp.Domain.WorkItems;
+using System.Threading.Tasks;
+
+WorkItem item = new();  // ✅ Clear
+Task asyncTask = Task.Run(...);  // ✅ Clear
+```
+
+**Rules:**
+1. **ZERO named usings allowed** — not even "just this once"
+2. **Rename conflicting types** at the source
+3. **File names must match class names** exactly
 
 ### 7. Never global usings
 ❌ `global using System;`
@@ -103,11 +136,42 @@ using TodoManagerApi.Domain.Entities.WorkItems;
 ❌ `public class ProductRepository { }`
 ✅ `public sealed class ProductRepository { }`
 
+### 13. NEVER magic strings — ALWAYS use constants or enums
+
+**NEVER hardcode string literals** in your code. ANY repeated string value must be a constant or enum.
+
+**❌ NEVER hardcode strings:**
+```csharp
+if (product.Status == "active") { ... }  // ⚠️ WRONG — magic string
+string connection = Configuration["ConnectionStrings:Default"];  // ⚠️ WRONG — magic string
+```
+
+**✅ ALWAYS use enums for fixed states:**
+```csharp
+public enum ProductStatus { Active, Inactive, Pending }
+if (product.Status == ProductStatus.Active) { ... }
+```
+
+**✅ ALWAYS use constants for configuration keys:**
+```csharp
+public static class ConfigKeys
+{
+    public const string DefaultConnection = "ConnectionStrings:Default";
+}
+string connection = Configuration[ConfigKeys.DefaultConnection];
+```
+
+**Rules:**
+1. **If it's a state/status/type** → Use enum
+2. **If it's a config key/route/constant** → Use const string
+3. **If you write the same string twice** → Extract to constant
+4. **ZERO tolerance for magic strings** — code will be rejected if any are found
+
 ---
 
 ## Null Safety
 
-### 13. Never use the null-forgiving operator (`!`)
+### 14. Never use the null-forgiving operator (`!`)
 
 The `!` operator (`null-forgiving operator`) **MUST NEVER BE USED**. It indicates the developer is forcing the compiler to ignore a potential nullable reference, which is a sign that the validation logic is incorrect.
 
@@ -143,19 +207,19 @@ await _repo.AddAsync(item, ct);
 
 ## Async & Threading
 
-### 14. Never `async void`
+### 15. Never `async void`
 ❌ `public async void DoWork() { }`
 ✅ `public async Task DoWork() { }`
 
-### 15. Never `.Result` or `.Wait()`
+### 16. Never `.Result` or `.Wait()`
 ❌ `var product = _service.Get(id).Result;`
 ✅ `var product = await _service.Get(id);`
 
-### 16. Always `CancellationToken` on public async methods
+### 17. Always `CancellationToken` on public async methods
 ❌ `public async Task<Product> GetByIdAsync(Guid id) { }`
 ✅ `public async Task<Product> GetByIdAsync(Guid id, CancellationToken ct = default) { }`
 
-### 17. Never throw exceptions — use Result pattern instead
+### 18. Never throw exceptions — use Result pattern instead
 ❌ `if (!IsValid) throw new ValidationException("Invalid");`
 ✅ `if (!IsValid) return Result<T>.Failure(HttpStatusCode.BadRequest).WithErrors(["Invalid"]);`
 
@@ -169,6 +233,15 @@ await _repo.AddAsync(item, ct);
 
 ## DTOs & Patterns
 
-### 18. Always DTOs as `sealed record` with explicit properties and `Dto` suffix
-❌ `public record CreateProductDto(string Name, decimal Price);`
-✅ `public sealed record CreateProductRequestDto { public string Name { get; init; } = string.Empty; public decimal Price { get; init; } }`
+### 19. DTOs must be sealed records with explicit properties and `Dto` suffix
+
+DTOs follow specific conventions defined in `backend/architecture/shared/DTO_CONVENTIONS.md`.
+
+**Quick rules (for complete rules and examples, load the skill):**
+- Always `sealed record` with explicit properties — NEVER `class`, NEVER primary constructors
+- Always `Dto` suffix — `CreateProductRequestDto`, `ProductResponseDto`
+- Request DTOs use `{ get; init; }` — allows object initializers
+- String properties default to `string.Empty` — never nullable strings in DTOs
+- File name must match DTO name — `CreateProductRequestDto.cs`
+
+For complete DTO rules, naming conventions, mapping patterns, and anti-patterns, load `backend/architecture/shared/DTO_CONVENTIONS.md`.

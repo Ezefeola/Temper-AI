@@ -2,17 +2,17 @@ using System.Diagnostics;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using TemperAI.Cli.Commands;
+using TemperAI.Installer;
 
 // Check for MCP server trigger (hidden flag used by AI agents)
 // We use --mcp to avoid conflicting with the 'neuralcore' management command
 if (args.Contains("--mcp"))
 {
-    var neuralCoreDir = Path.GetDirectoryName(Environment.ProcessPath);
-    var neuralCoreExe = Path.Combine(neuralCoreDir, "TemperAI.NeuralCore.exe");
+    string neuralCoreExe = NeuralCoreInstallerService.GetNeuralCoreExePath();
 
     if (!File.Exists(neuralCoreExe))
     {
-        Console.Error.WriteLine("NeuralCore MCP server not found. Run 'temper-ai setup' to install.");
+        Console.Error.WriteLine("NeuralCore MCP server not found. Run 'temper-ai neuralcore --publish' to install.");
         return 1;
     }
 
@@ -157,6 +157,10 @@ app.Configure(config =>
           .WithExample("uninstall")
           .WithExample("uninstall", "--dry-run")
           .WithExample("uninstall", "--force");
+
+    config.AddCommand<DoctorCommand>("doctor")
+          .WithDescription("Diagnostica problemas de instalación y ofrece reparaciones")
+          .WithExample("doctor");
 });
 
 return app.Run(args);
@@ -179,6 +183,7 @@ static int RunMenu()
             new("update", "Actualiza skills y agentes instalados", "🔄"),
             new("status", "Muestra el estado de la instalacion", "🔍"),
             new("neuralcore", "Configura memoria persistente MCP", "🧠"),
+            new("doctor", "Diagnostica y repara problemas", "🩺"),
             new("budget", "Muestra el uso de tokens del proyecto", "💰"),
             new("snapshot", "Gestiona snapshots para rollback", "📸"),
             new("incremental", "Detecta fases que necesitan re-ejecutarse", "🔎"),
