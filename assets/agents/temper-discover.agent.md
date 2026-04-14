@@ -6,7 +6,7 @@ description: >
   ambiguities, gathers all necessary information, and reports back to the
   orchestrator with a complete picture. Does NOT generate any files —
   only gathers and clarifies requirements through iterative questions.
-mode: primary
+mode: subagent
 permission:
   read: allow
   question: allow
