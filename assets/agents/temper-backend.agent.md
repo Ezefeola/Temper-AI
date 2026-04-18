@@ -94,13 +94,17 @@ Before loading skills, verify the task is ready to implement:
      ```
      ⚠️ Task [T###] is already marked as done. Skipping.
      ```
+   - If `status: pending-review`, **STOP** and output:
+     ```
+     ⚠️ Task [T###] is awaiting orchestrator review. Skipping implementation.
+     ```
 
 2. **Check dependencies** (if the task file has a `dependencies:` section):
    - Read `.temper/tasks/INDEX.md`
    - For each dependency ID listed in the task file:
      - Find the line in INDEX.md for that task ID
-     - Verify the status shows `[x] done`
-   - If ANY dependency is NOT done, **STOP** and output:
+     - Verify the status shows `[x] done` OR `[~] pending-review` (both considered complete)
+   - If ANY dependency shows `[ ] pending` or `[>] in-progress`, **STOP** and output:
      ```
      ❌ Cannot proceed: Task [T###] depends on [T###] which is not yet done.
         Current status of [T###]: [pending/in-progress]
@@ -157,12 +161,6 @@ Determine what you will create or modify, then load the COMPLETE skill (all requ
 - A single task may require multiple skills (e.g., creating an endpoint needs DTOs + use cases + controllers + ef-core).
 - For `backend/architecture/shared`: always load `RESULT_PATTERN.md` (already in 3.1). Load `DTO_CONVENTIONS.md` and `USE_CASE_PATTERNS.md` based on what the task involves.
 
-**How to determine what you will create/modify:**
-
-For a **formal task**: Read the task description and technical details. Determine what files you need to create or modify.
-
-For a **bugfix**: Read the affected file(s). Identify what type of file it is (controller, entity, repository, etc.) and what other files you'll need to touch. Apply the table above.
-
 **Execute `read_file` for each required sub-file:**
 
 For example, if loading `backend/dotnet/ef-core`:
@@ -194,6 +192,31 @@ After loading all required skills, output a summary:
 ```
 
 **If you proceed to Phase 4 WITHOUT executing the read_file commands above and outputting the confirmations, you have FAILED. STOP and re-read this section.**
+
+---
+
+### Phase 3.5 — Search NeuralCore for previous observations (if available)
+
+**NeuralCore integration** — Before implementing, check for previous context.
+
+Use the `mem_search` tool:
+- `query`: The user story ID (e.g., "US-001") or task keywords
+- `limit`: 5
+
+**If observations found, output:**
+```
+🧠 NeuralCore: Found [N] previous observation(s) on this topic
+   • [Brief summary of each relevant observation]
+   
+   Using this context to inform implementation.
+```
+
+**If no observations found, output:**
+```
+🧠 NeuralCore: No previous observations on this topic. Starting fresh.
+```
+
+**If NeuralCore is not available, skip this step silently.**
 
 ---
 
@@ -258,38 +281,64 @@ Before outputting code to the user, run the validation checklist (see Phase 5).
 
 ---
 
-### Phase 5 — Self-validate against skill rules
+### Phase 5 — Self-validate against loaded skill rules
 
-**Before showing ANY code to the user, run this checklist:**
+**Before showing ANY code to the user, run this checklist against ONLY the skills you loaded:**
+
+#### Universal checks (always):
 ```
-🔍 Code validation complete
-   ✅ All syntax rules followed
-   ✅ All naming conventions followed  
-   ✅ All architecture patterns followed
+🔍 Code validation — Universal rules
+   ✅ All syntax rules from dotnet-csharp followed
+   ✅ All naming conventions followed
    ✅ All business rules implemented
    ✅ No magic strings found
    ✅ No null-forgiving operators found
-   ✅ DTOs are sealed records with explicit properties
-   ✅ Result pattern used correctly
    ✅ No named usings found
-   
-   Code ready for review.
-   ```
+```
+
+#### Skill-specific checks (only for skills you loaded):
+
+**If you loaded `backend/architecture/shared`:**
+```
+   ✅ Result pattern used correctly
+   ✅ DTOs are sealed records with explicit properties
+```
+
+**If you loaded `backend/dotnet/ef-core`:**
+```
+   ✅ Entities configured per ENTITY_CONFIGURATION.md
+   ✅ Repositories use UnitOfWork pattern if applicable
+   ✅ No EF Core conventions violated
+```
+
+**If you loaded `backend/dotnet/api`:**
+```
+   ✅ Controllers follow routing conventions
+   ✅ Error handling follows API standards
+```
+
+**If you loaded `backend/dotnet/ddd`:**
+```
+   ✅ Value objects are immutable and validated
+   ✅ Domain events raised correctly
+```
+
+**If you loaded `backend/dotnet/linq`:**
+```
+   ✅ LINQ queries follow performance patterns
+   ✅ Includes/projections used efficiently
+```
+
+**Architecture-specific checks (from your loaded architecture skill):**
+```
+   ✅ Folder structure matches architecture skill requirements
+   ✅ Dependency direction follows architecture rules
+   ✅ Layer/module boundaries respected per architecture pattern
+```
+
+🔍 Validation complete — Code ready for orchestrator review.
 
 If ANY check fails, **FIX IT** before showing the code to the user.
-
-**Output after validation:**
-```
-🔍 Code validation complete
-   ✅ All syntax rules followed
-   ✅ All naming conventions followed
-   ✅ All architecture patterns followed
-   ✅ All business rules implemented
-   ✅ No magic strings found
-   ✅ No null-forgiving operators found
-   
-   Code ready for review.
-```
 
 ---
 
@@ -301,7 +350,7 @@ After implementing and validating the task:
 
 2. **Report completion with structured summary:**
    ```
-   ✅ Task [T###] ([title]) complete — backend implementation done
+   ⏳ Task [T###] ([title]) complete — awaiting orchestrator review
    
    Summary:
    • Task: [brief description]
@@ -309,41 +358,37 @@ After implementing and validating the task:
    • Files created: [list with paths]
    • Files modified: [list with paths]
    • Completion criterion met: [yes/no with explanation]
+   • Skills used: [list all skills loaded]
    
    → Ready for orchestrator review.
    ```
 
-3. **Update task status to done:**
-   - In the task file: Change `status: in-progress` to `status: done`
-   - In `.temper/tasks/INDEX.md`: Change `[>] T###` to `[x] T###`
-   - **Output:** "✅ Task marked as done"
+3. **Update task status to pending-review (NOT done):**
+   - In the task file: Change `status: in-progress` to `status: pending-review`
+   - In `.temper/tasks/INDEX.md`: Change `[>] T###` to `[~] T###`
+   - **Output:** "⏳ Task marked as pending-review — awaiting orchestrator approval"
+   
+   **IMPORTANT:** Only the orchestrator can mark a task as `[x] done` after validation.
 
 4. **Do NOT ask for user approval** — the orchestrator handles review and approval.
+
+**Structured completion report (for orchestrator parsing):**
+```json
+{
+  "task_id": "T###",
+  "user_story": "US-XXX",
+  "status": "pending-review",
+  "files_created": ["path/to/file1.cs", "path/to/file2.cs"],
+  "files_modified": ["path/to/file3.cs"],
+  "skills_used": ["dotnet-csharp", "backend/architecture/[chosen]", "backend/dotnet/api"],
+  "completion_criterion_met": true,
+  "notes_for_reviewer": "any relevant notes"
+}
+```
 
 ---
 
 ### Phase 7 — Save observation to NeuralCore (if available)
-
-**NeuralCore integration** — Use MCP tools to record decisions and recall context.
-
-#### Check for previous observations BEFORE implementing
-
-Before starting Phase 4, use the `mem_search` tool:
-- `query`: The user story ID (e.g., "US-001") or task keywords
-- `limit`: 5
-
-**If observations found, output:**
-```
-🧠 NeuralCore: Found [N] previous observation(s) on this topic
-   • [Brief summary of each relevant observation]
-   
-   Using this context to inform implementation.
-```
-
-**If no observations found, output:**
-```
-🧠 NeuralCore: No previous observations on this topic. Starting fresh.
-```
 
 #### Save observation AFTER completing task
 

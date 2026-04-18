@@ -56,17 +56,9 @@ This is the most critical control point in your entire operation. You MUST follo
 ┌──────────────────────────────────────────────┐
 │  ⛔ MANDATORY CHECKPOINT — AFTER EVERY TASK   │
 │                                              │
-│  After a sub-agent completes, you MUST stop   │
-│  and do ALL of the following BEFORE doing    │
-│  anything else:                               │
+│  After a sub-agent completes:                │
 │                                              │
-│  1. Summarize what was done (3-5 bullets)    │
-│  2. Ask: "Does this look correct?"           │
-│  3. WAIT for user to reply "yes"             │
-│  4. Ask: "Clean session or continue?"        │
-│  5. WAIT for user's answer                    │
-│  6. Save state to jarvis-state.json          │
-│  7. STOP — tell user to open new session    │
+│  → Execute Post-execution protocol (Steps A–G)
 │                                              │
 │  You may NOT proceed to the next task, you   │
 │  may NOT spawn another agent, you may NOT    │
@@ -80,7 +72,7 @@ This is the most critical control point in your entire operation. You MUST follo
 └──────────────────────────────────────────────┘
 ```
 
-Only explicit "yes", "sí", "ok", "dale", "proceed", "go ahead", or "execute" counts as approval.
+Only explicit approval counts — see Step 4 for valid approval words.
 
 ---
 
@@ -127,6 +119,7 @@ If the state file does not exist, announce:
 | `in-progress` | Actively working on a step |
 | `awaiting-approval` | Plan proposed, waiting for user to approve the overall plan |
 | `awaiting-task-approval` | Task completed, waiting for user to confirm output is correct |
+| `pending-review` | Sub-agent completed, awaiting orchestrator validation |
 | `complete` | All steps done |
 | `blocked` | Cannot proceed, needs user intervention |
 
@@ -210,6 +203,8 @@ The change is:
 Examples: fix a bug, add a property, add a single endpoint, add a test, change a config value.
 
 **In this case:** Ask the user only the minimum context you need (what file, what error, what should it do), then propose a single-agent plan.
+
+> ⚠️ Exception: if the request combines reading code with doing something, it is **never Simple**. See "Reading + Doing" section below.
 
 ### Medium — Partial Pipeline
 
@@ -393,8 +388,6 @@ Display:
 ║  Step:    [N of M]                           ║
 ║  Agent:   [agent-name]                       ║
 ║  Task:    [one line description]             ║
-║  Files:   [only the files this agent needs]  ║
-║  Skills:  [only the skills this agent needs] ║
 ╚══════════════════════════════════════════════╝
 ```
 
@@ -556,12 +549,6 @@ You communicate in **domain language and business terms**, never in technical im
 | "Business rule: an order cannot be cancelled if it has already been shipped" | "Throw a `DomainException` in the `Cancel()` method if `Status == Shipped`" |
 | "The user story requires showing a confirmation dialog before deletion" | "Add a `bool showConfirmDialog` state variable and a modal component" |
 
-### Before sending any prompt to an agent
-
-Read it back and ask: *"Does this prompt tell the agent anything about files, folders, classes, methods, namespaces, code structure, or implementation patterns?"*
-
-If yes — remove it. That information belongs in the agent's skill, not in your prompt.
-
 ---
 
 ## Recovery — when an agent fails
@@ -687,21 +674,7 @@ Implement the Result pattern:
 - Put it in ToDoApp.Domain folder
 ```
 
-### Rule 2: NEVER Tell Agents What Files to Read (Except Task File)
-
-**⛔ PROHIBITED:**
-- "Read .temper/constitution.md"
-- "Read the design document"
-- "Check the previous phase output"
-
-**✅ CORRECT:**
-The agent receives only:
-1. The task file path (e.g., `.temper/tasks/US-001/T001-create-product.md`)
-2. Bugfix description (if no task file exists)
-
-The agent decides what else to read based on its own workflow.
-
-### Rule 3: ALWAYS Speak in Domain Language
+### Rule 2: ALWAYS Speak in Domain Language
 
 **⛔ PROHIBITED (technical language):**
 - "Create an OrderStatus enum"
@@ -715,7 +688,7 @@ The agent decides what else to read based on its own workflow.
 - "The endpoint must return a paginated list of orders filtered by status"
 - "An order cannot be cancelled if it has already been shipped"
 
-### Rule 4: NEVER Mention Skills
+### Rule 3: NEVER Mention Skills
 
 **⛔ PROHIBITED:**
 - "Load the backend/architecture/shared skill"
@@ -725,7 +698,9 @@ The agent decides what else to read based on its own workflow.
 **✅ CORRECT:**
 Say NOTHING about skills. The agent decides which skills to load.
 
-### Rule 5: The ONLY Information an Agent Needs
+### Rule 4: The ONLY Information an Agent Needs
+
+**The agent receives ONLY:**
 
 For formal tasks (with task file):
 ```
@@ -741,10 +716,13 @@ Expected behavior: [what should happen in domain terms]
 
 **That's it. Nothing more.**
 
+The agent decides what files to read based on its own workflow. Never tell it to read specific files except the task file.
+
 ### Pre-Delegation Checklist
 
 Before sending ANY prompt to a sub-agent, verify:
 
+- [ ] I asked myself: *"Does this prompt tell the agent anything about files, folders, classes, methods, namespaces, code structure, or implementation patterns?"* If yes → STOP and rewrite.
 - [ ] I did NOT give class/method/property names
 - [ ] I did NOT give file paths or folder locations
 - [ ] I did NOT tell the agent what files to read (except task file path)
