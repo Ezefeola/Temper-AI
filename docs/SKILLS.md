@@ -261,12 +261,12 @@ Token budget tracking. Loaded for budget management.
 |---|---|
 | `temper-discover` | None |
 | `temper-constitution` | `prd-analyzer` |
-| `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
+| `temper-spec` | `prd-analyzer` |
 | `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
 | `temper-plan` | None |
 | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]` |
-| `temper-frontend` | `dotnet-csharp` + `frontend/blazor` |
+| `temper-frontend` | `dotnet-csharp` + (`frontend/blazor` if wasm) or (`frontend/blazor-server` if server) |
 | `temper-tester` | `dotnet-csharp` + `backend/dotnet/testing` |
 | `temper-devops` | `devops/docker` + `devops/github-actions` |
 | `temper-review` | `dotnet-csharp` + `backend/dotnet/api` + `architecture/[chosen]` |

@@ -171,9 +171,10 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 ## temper-frontend
 
 **Phase:** 6b — Frontend Implementation
-**Skills:** `dotnet-csharp` + `frontend/blazor`
+**Skills:** `dotnet-csharp` + (`frontend/blazor` if wasm) or (`frontend/blazor-server` if server)
 
 **Role:** Implement Blazor components, pages, and services (Server or WebAssembly).
+**Note:** Reads `.temper/frontend-config.md` to determine `blazorType` and loads the appropriate skill.
 
 **Workflow:**
 1. Read `tasks/INDEX.md` and filter for pending frontend tasks.

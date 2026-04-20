@@ -2,13 +2,16 @@
 name: blazor
 description: >
   Blazor WebAssembly component and application standards for .NET 10 projects.
+  (For Blazor Server, use 'frontend/blazor-server' skill instead.)
   Covers component structure, code-behind separation, state management, forms,
   routing, API consumption, JavaScript interop, performance optimization,
   accessibility, security, and testing. Use when creating or modifying any
-  Blazor component, page, or frontend service.
+  Blazor WebAssembly component, page, or frontend service.
 ---
 
 # Blazor WebAssembly — TemperAI Standards
+
+**IMPORTANT:** This skill is for Blazor WebAssembly (WASM). Use `frontend/blazor-server` instead if `blazorType` is `server` in `.temper/frontend-config.md`.
 
 TemperAI uses **Blazor WebAssembly** exclusively. The frontend runs entirely in the browser via WebAssembly and communicates with the backend API via HTTP.
 

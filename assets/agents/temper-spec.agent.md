@@ -284,4 +284,10 @@ After generating all files:
 
 ## Skills you load
 
-This agent only needs the `prd-analyzer` skill active. It does not need to know details of .NET, Blazor, or architecture patterns — it only needs to analyze requirements and write clear specifications.
+This agent loads:
+- `prd-analyzer` — PRD analysis skill to structure requirements into user stories
+
+This skill enables the agent to:
+- Analyze the constitution and extract user stories with proper structure
+- Write acceptance criteria in Gherkin format (Given/When/Then)
+- Identify edge cases and error cases as executable business rules

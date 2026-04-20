@@ -39,7 +39,8 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-frontend starting
-   Skills loaded: [dotnet-csharp, frontend/blazor]
+   Skills loaded: [dotnet-csharp, frontend/blazor] OR [dotnet-csharp, frontend/blazor-server]
+   Blazor type: [wasm/server] — determined from .temper/frontend-config.md
    Context files: [.temper/frontend-config.md, .temper/tasks/US-XXX/T###-*.md]
 ```
 
@@ -50,11 +51,16 @@ This gives the user full visibility into what you know and what conventions you 
 ### Phase 1 — Read context files
 
 1. **Read** `.temper/frontend-config.md`
-   - Confirm frontend framework type
+   - Confirm `blazorType` (wasm or server)
    - Extract backend URL for API calls
-   - **Output:** "📄 Frontend config loaded. Framework: [type]"
+   - **Output:** "📄 Frontend config loaded. Blazor type: [wasm/server]"
 
-2. **Read** the task file provided by the orchestrator
+2. **Load the correct Blazor skill**
+   - If `blazorType` is `wasm`: load `frontend/blazor`
+   - If `blazorType` is `server`: load `frontend/blazor-server`
+   - **This is critical** — both skills have different conventions
+
+3. **Read** the task file provided by the orchestrator
    - Example: `.temper/tasks/US-001/T005-product-list-page.md`
    - If no task file was provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
    - **Output:** "📄 Task file loaded: [task ID] - [task title]"
@@ -240,6 +246,9 @@ If no previous observations exist, say:
 
 This agent loads the following skills:
 - `dotnet-csharp` — Universal C# / .NET 10 standards (syntax, usings, naming, async, DTOs)
-- `frontend/blazor` — Blazor WebAssembly component standards
+
+**Based on `blazorType` in `.temper/frontend-config.md`:**
+- If `wasm`: `frontend/blazor` — Blazor WebAssembly component standards
+- If `server`: `frontend/blazor-server` — Blazor Server component standards (SignalR, circuits, cookies)
 
 It does not load backend or architecture skills — it only needs to know how to build Blazor components following TemperAI conventions.

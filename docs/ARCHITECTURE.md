@@ -89,7 +89,7 @@ Agent loads skills → Reads skill content → Applies rules to code generation
 |---|---|
 | `temper-discover` | None |
 | `temper-constitution` | `prd-analyzer` |
-| `temper-spec` | `dotnet-csharp`, `prd-analyzer` |
+| `temper-spec` | `prd-analyzer` |
 | `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
 | `temper-plan` | None |
