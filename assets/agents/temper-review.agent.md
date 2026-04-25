@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-review starting
    Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/architecture/shared, backend/architecture/[chosen]]
-    Context files: [.temper/constitution.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
+    Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,7 +47,7 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/constitution.md` to confirm the chosen architecture and standards.
+1. Read `.temper/backend-config.md` to confirm the chosen architecture and standards.
 2. Read `.temper/specs/INDEX.md` and the individual user story files to understand the acceptance criteria and edge cases.
 3. Read `.temper/design.md` to understand the intended architecture, entities, endpoints, and structure.
 4. Read `.temper/tasks/INDEX.md` to verify all tasks are marked as `done`.

@@ -240,7 +240,7 @@ PRD analysis skill. Loaded when reading or building PRDs.
 - How to identify the right technology stack
 - How to identify domain entities from requirements
 - How to detect Clean Architecture vs Vertical Slice
-- How to generate constitution.md
+- How to generate config files (backend-config.md, frontend-config.md)
 - Token-efficient constitution generation
 
 ### `token-budget`
@@ -259,8 +259,8 @@ Token budget tracking. Loaded for budget management.
 
 | Agent | Skills Loaded |
 |---|---|
-| `temper-discover` | None |
-| `temper-constitution` | `prd-analyzer` |
+| `temper-analyst` | None |
+| `temper-architect` | None |
 | `temper-spec` | `prd-analyzer` |
 | `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |

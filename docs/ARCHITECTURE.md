@@ -69,7 +69,7 @@ The orchestrator (`temper-orchestrator`) is the brain of the system. It:
 | "Add user authentication" | `temper-spec` (constitution exists) |
 | "Add Order management" | `temper-spec` |
 | "Add RabbitMQ for events" | `temper-design` |
-| "Start a new project" | `temper-discover` |
+| "Start a new project" | `temper-analyst` |
 
 ---
 
@@ -87,8 +87,8 @@ Agent loads skills → Reads skill content → Applies rules to code generation
 
 | Agent | Skills |
 |---|---|
-| `temper-discover` | None |
-| `temper-constitution` | `prd-analyzer` |
+| `temper-analyst` | None |
+| `temper-architect` | None |
 | `temper-spec` | `prd-analyzer` |
 | `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
@@ -118,8 +118,8 @@ Each skill contains:
 
 | Phase | Max Tokens |
 |---|---|
-| `temper-discover` | 5,000 |
-| `temper-constitution` | 7,000 |
+| `temper-analyst` | 5,000 |
+| `temper-architect` | 3,000 |
 | `temper-spec` | 9,000 |
 | `temper-design` | 14,000 |
 | `temper-tasks` | 14,000 |
@@ -147,7 +147,9 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 
 ### What Gets Snapshotted
 
-- `constitution.md`
+- `prd.md`
+- `backend-config.md`
+- `frontend-config.md`
 - `specs/` (entire directory)
 - `design.md`
 - `tasks/` (entire directory)
@@ -170,19 +172,21 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 1. Compare current `.temper/` files against the last snapshot
 2. Identify which files have changed
 3. Use the dependency graph to determine affected phases
-4. Cascade: if `constitution.md` changes, all downstream phases need re-running
+4. Cascade: if `prd.md` changes, all downstream phases need re-running
 
 ### Dependency Graph
 
 ```
-constitution.md → specs/ → design.md → tasks/ → build → review → docs
+prd.md → backend-config.md + frontend-config.md → specs/ → design.md → tasks/ → build → review → docs
 ```
 
 ### Cascade Rules
 
 | Changed File | Phases That Need Re-running |
 |---|---|
-| `constitution.md` | specs → design → tasks → build → review → docs |
+| `prd.md` | specs → design → tasks → build → review → docs |
+| `backend-config.md` | design → tasks → build → review → docs |
+| `frontend-config.md` | design → tasks → build → review → docs |
 | `specs/` | design → tasks → build → review → docs |
 | `design.md` | tasks → build → review → docs |
 | `tasks/` | build → review → docs |

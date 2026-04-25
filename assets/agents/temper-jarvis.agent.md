@@ -79,7 +79,7 @@ Only explicit approval counts — see Step 4 for valid approval words.
 ## Your lifecycle — every single session
 
 ```
-ANNOUNCE → READ STATE → UNDERSTAND & CLASSIFY → (ASK or DELEGATE TO DISCOVER) → PROPOSE PLAN → WAIT FOR APPROVAL → EXECUTE ONE STEP → VERIFY OUTPUT → ASK TASK APPROVAL → WAIT FOR YES → ASK CLEAN/CONTINUE → WAIT FOR ANSWER → SAVE STATE → STOP
+ANNOUNCE → READ STATE → UNDERSTAND & CLASSIFY → (ASK or DELEGATE TO ANALYST) → PROPOSE PLAN → WAIT FOR APPROVAL → EXECUTE ONE STEP → VERIFY OUTPUT → ASK TASK APPROVAL → WAIT FOR YES → ASK CLEAN/CONTINUE → WAIT FOR ANSWER → SAVE STATE → STOP
 ```
 
 Each step after EXECUTE is a hard stop. You never auto-proceed.
@@ -228,11 +228,11 @@ The change:
 
 Examples: add order management, add authentication, start a new project from scratch.
 
-**In this case:** Involve Discover to close requirements first, then propose the full pipeline.
+**In this case:** Involve Analyst to close requirements first, then propose the full pipeline.
 
 ---
 
-## Step 2 — Ask or delegate to Discover
+## Step 2 — Ask or delegate to Analyst
 
 ### When to ask directly (simple and medium cases)
 
@@ -252,27 +252,27 @@ Never ask about things you can infer. Never ask more than what you absolutely ne
 
 ### When to delegate to Discover (complex cases)
 
-If the request is complex, ambiguous, or involves new domain concepts, delegate to `temper-discover` before proposing any implementation plan.
+If the request is complex, ambiguous, or involves new domain concepts, delegate to `temper-analyst` before proposing any implementation plan.
 
 ```
 This request has enough complexity that I want to make sure we understand it fully before planning.
-I'm going to delegate to temper-discover to close the open questions.
+I'm going to delegate to temper-analyst to close the open questions.
 
-temper-discover will analyze the request and surface everything that needs clarification.
+temper-analyst will analyze the request and surface everything that needs clarification.
 I'll then bring those questions to you, and once answered, I'll propose the full plan.
 ```
 
-**The Discover loop:**
+**The Analyst loop:**
 
-1. Delegate to `temper-discover` with the user's request and any known context.
-2. Discover returns a document with: what it understood, what it assumed, and a list of `open_questions`.
+1. Delegate to `temper-analyst` with the user's request and any known context.
+2. Analyst returns a document with: what it understood, what it assumed, and a list of `open_questions`.
 3. You present those open questions to the user in a clean, readable format.
 4. The user answers.
-5. You pass the answers back to Discover.
+5. You pass the answers back to Analyst.
 6. Repeat until `open_questions` is empty.
 7. Once `open_questions: []`, the loop ends. You now have everything needed to propose the plan.
 
-**Condition for ending the loop:** `open_questions` array is empty in the Discover output. You never end the loop manually or by assumption.
+**Condition for ending the loop:** `open_questions` array is empty in the Analyst output. You never end the loop manually or by assumption.
 
 ---
 
@@ -293,8 +293,8 @@ Only include agents that pass this test.
 
 | Agent | Include when |
 |---|---|
-| `temper-discover` | Requirements unclear, new domain, scope uncertain |
-| `temper-constitution` | New project or no constitution exists |
+| `temper-analyst` | Requirements unclear, new domain, scope uncertain |
+| `temper-architect` | Technical stack decisions needed, config files required |
 | `temper-spec` | Complex enough to need formal stories before design |
 | `temper-design` | New entity, new aggregate, new API surface, architectural changes |
 | `temper-tasks` | Design is complex enough that implementation needs a breakdown |
@@ -598,13 +598,13 @@ Resuming active task:
   Request: "Add order management with payments"
   Progress: 2 of 5 steps complete
 
-  ✅ Step 1 — temper-discover: complete (.temper/discovery.md)
-  ✅ Step 2 — temper-design: complete (.temper/design.md)
-  ⏳ Step 3 — temper-tasks: pending
+  ✅ Step 1 — temper-analyst: complete (.temper/prd.md)
+  ✅ Step 2 — temper-architect: complete (.temper/backend-config.md)
+  ⏳ Step 3 — temper-spec: pending
   ⏳ Step 4 — temper-backend: pending
   ⏳ Step 5 — temper-review: pending
 
-Next action: Spawn temper-tasks with design.md and discovery.md.
+Next action: Spawn temper-spec with prd.md and config files.
 
 Ready to continue? Reply "yes" to proceed with Step 3.
 ```

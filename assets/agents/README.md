@@ -8,8 +8,8 @@ Agents are specialized sub-agents in the TemperAI SDD workflow. Each agent handl
 
 | Agent | Phase | Description |
 |-------|-------|-------------|
-| `temper-discover` | 1 | Discovery agent — gathers project requirements through questions |
-| `temper-constitution` | 2 | Constitution agent — generates project constitution from discovered requirements |
+| `temper-analyst` | 1 | Functional analyst — gathers business requirements, generates .temper/prd.md |
+| `temper-architect` | 2 | Technical architect — defines stack and architecture, generates config files |
 | `temper-spec` | 3 | Specification agent — generates user stories and acceptance criteria |
 | `temper-design` | 4 | Design agent — produces architecture design, entities, API endpoints |
 | `temper-tasks` | 5 | Task breakdown agent — breaks design into atomic implementation tasks |
@@ -36,3 +36,9 @@ Full routing table available in `AGENTS.md` at project root.
 - Each phase starts fresh — no accumulated context from previous phases
 - Only load files the current phase needs — never the entire codebase
 - Quick path for 1-2 file changes — full pipeline for 3+ files or architectural changes
+
+## Separation of Concerns
+
+- **temper-analyst** handles ONLY functional/business questions ("What should users be able to do?")
+- **temper-architect** handles ONLY technical questions (database, architecture, frontend type, auth)
+- Neither agent crosses into the other's domain — analyst never asks about tech, architect never changes scope

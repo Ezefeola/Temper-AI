@@ -19,8 +19,8 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 
 | User intention | Agent | Skills loaded |
 |---|---|---|
-| Discover project requirements | `temper-discover` | None |
-| Generate project constitution | `temper-constitution` | `prd-analyzer` |
+| Gather functional requirements | `temper-analyst` | None |
+| Define technical architecture | `temper-architect` | None |
 | Generate user stories | `temper-spec` | `prd-analyzer` |
 | Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
 | Break into tasks | `temper-tasks` | None |

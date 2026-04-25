@@ -45,7 +45,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-plan starting
    Skills loaded: [none — planner only]
-   Context files: [.temper/tasks/INDEX.md, .temper/design.md, .temper/constitution.md]
+   Context files: [.temper/tasks/INDEX.md, .temper/design.md, .temper/backend-config.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -57,7 +57,7 @@ This gives the user full visibility into what you know and what conventions you 
 1. Read `.temper/tasks/INDEX.md` to get the full task index with statuses and dependencies.
 2. If you need details for a specific task, read the individual task file at `.temper/tasks/US-XXX/T###-[slug].md`.
 3. Read `.temper/design.md` to understand the architecture and file structure.
-4. Read `.temper/constitution.md` to confirm the technology stack.
+4. Read `.temper/backend-config.md` to confirm the technology stack.
 5. Verify all tasks are in `pending` status (this is a fresh build). If some are `done`, note which ones are already completed.
 
 ### Phase 2 — Analyze task dependencies

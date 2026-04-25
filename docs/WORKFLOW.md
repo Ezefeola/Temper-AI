@@ -5,40 +5,41 @@
 The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases plus a build execution step handled by the orchestrator. Each phase produces a specific artifact and requires user approval before proceeding.
 
 ```
-Phase 1: Discover  → Requirements clarification (questions)
-Phase 2: Constitution → constitution.md
+Phase 1: Analyst   → .temper/prd.md (functional requirements)
+Phase 2: Architect → backend-config.md + frontend-config.md (technical decisions)
 Phase 3: Spec       → specs/INDEX.md + specs/US-XXX-*.md
 Phase 4: Design     → design.md
 Phase 5: Tasks      → tasks/INDEX.md + tasks/US-XXX/T###-*.md
 Phase 6: Plan       → build-plan.md
-          Build      → Generated code (orchestrator spawns sub-agents per group)
+           Build      → Generated code (orchestrator spawns sub-agents per group)
 Phase 7: Review     → Review report
 Phase 8: Docs       → README, ARCHITECTURE, API docs, CHANGELOG
 ```
 
 ---
 
-## Phase 1: Discovery (`temper-discover`)
+## Phase 1: Functional Analysis (`temper-analyst`)
 
-**Input:** User's project description (natural language or PRD)
-**Output:** Clarified project requirements (no files generated)
+**Input:** User's project description (natural language)
+**Output:** `.temper/prd.md`
 **Skills loaded:** None
 
 ### What happens
 
 1. The agent reads the user's project description.
-2. It identifies what it knows and what it doesn't know.
-3. It asks questions to clarify all ambiguities.
-4. It iterates until everything is clear.
-5. It reports back to the orchestrator with all gathered information.
+2. It asks functional questions only: what users should be able to DO, scope boundaries, business rules.
+3. It NEVER asks about technology, architecture, database, or frontend type.
+4. It iterates until all functional requirements are clear.
+5. It generates `.temper/prd.md` with functional scope, business rules, and status workflows.
 
 ### Questions asked
 
-The discover agent asks about:
-- **Project basics:** What problem does it solve? Who are end users? What are core features?
-- **Architecture:** Clean, Hexagonal, Vertical Slice, Onion? (recommends if unclear)
-- **Technology:** Database, frontend type, authentication, messaging
-- **Infrastructure:** API docs (Scalar/Swagger), health checks
+The analyst agent asks about:
+- **Project purpose:** What problem does it solve? Who are end users?
+- **Functional capabilities:** What should users be able to DO? (in functional terms, not CRUD)
+- **Scope boundaries:** What's explicitly out of scope? What's the MVP?
+- **Business rules:** Validation rules, status workflows, constraints
+- **External integrations:** Third-party services from a user perspective
 
 ### User action
 
@@ -46,40 +47,39 @@ Answer the questions until everything is clear.
 
 ---
 
-## Phase 2: Constitution (`temper-constitution`)
+## Phase 2: Technical Architecture (`temper-architect`)
 
-**Input:** Clarified requirements from `temper-discover`
-**Output:** `.temper/constitution.md`
-**Skills loaded:** `prd-analyzer`
+**Input:** `.temper/prd.md`
+**Output:** `.temper/backend-config.md` + `.temper/frontend-config.md`
+**Skills loaded:** None
 
 ### What happens
 
-1. The agent reads the user's project description.
-2. It identifies domain entities, relationships, and business rules.
-3. It asks clarifying questions grouped by category (vision, features, technical, standards).
-4. It recommends an architecture based on complexity.
-5. It generates `constitution.md` with:
-   - Project summary
-   - Problem statement
-   - End users
-   - Scope (core features + out of scope)
-   - Business rules
-   - External integrations
-   - Technology stack
-   - Architecture choice with justification
-   - Code standards
-   - Decisions made
-   - Pending questions
+1. The agent reads `.temper/prd.md` to understand functional scope.
+2. It asks technical questions ONLY: architecture pattern, database, frontend type, authentication, API documentation.
+3. It NEVER changes, adds, or removes functional scope.
+4. It recommends based on PRD complexity when the user doesn't know.
+5. It generates config files with project-specific technical decisions.
+
+### Technical decisions
+
+The architect agent asks about:
+- **Architecture pattern:** Clean, Hexagonal, Vertical Slice, or Onion
+- **Database engine:** SQL Server, PostgreSQL, SQLite
+- **Frontend type:** Blazor WebAssembly, Blazor Server, API Only, None
+- **Authentication:** JWT, Identity, OAuth, None
+- **API documentation:** Scalar, Swagger, None
+- **Additional:** Health checks, messaging, caching, logging
 
 ### User action
 
-Review the constitution and approve or request changes.
+Review the technical decisions and approve or request changes.
 
 ---
 
 ## Phase 3: Specification (`temper-spec`)
 
-**Input:** `.temper/constitution.md`
+**Input:** `.temper/prd.md`
 **Output:** `.temper/specs/INDEX.md` + `.temper/specs/US-XXX-*.md`
 **Skills loaded:** `prd-analyzer`
 
@@ -103,7 +103,7 @@ Review the spec and approve or request changes.
 
 ## Phase 4: Design (`temper-design`)
 
-**Input:** `.temper/constitution.md` + `.temper/specs/`
+**Input:** `.temper/prd.md` + `.temper/specs/` + `.temper/backend-config.md`
 **Output:** `.temper/design.md`
 **Skills loaded:** `architecture/[chosen]` + `backend/dotnet/api`
 
@@ -128,7 +128,7 @@ Review the design and approve or request changes.
 
 ## Phase 5: Task Breakdown (`temper-tasks`)
 
-**Input:** `.temper/constitution.md` + `.temper/specs/` + `.temper/design.md`
+**Input:** `.temper/prd.md` + `.temper/specs/` + `.temper/design.md`
 **Output:** `.temper/tasks/INDEX.md` + `.temper/tasks/US-XXX/T###-*.md`
 **Skills loaded:** None
 
@@ -309,7 +309,9 @@ This compares current files against the last snapshot and identifies which phase
 
 | Changed file | Phases that need re-running |
 |---|---|
-| `constitution.md` | spec → design → tasks → plan → build → review → docs |
+| `prd.md` | spec → design → tasks → plan → build → review → docs |
+| `backend-config.md` | design → tasks → plan → build → review → docs |
+| `frontend-config.md` | design → tasks → build → review → docs |
 | `specs/` | design → tasks → plan → build → review → docs |
 | `design.md` | tasks → plan → build → review → docs |
 | `tasks/` | plan → build → review → docs |

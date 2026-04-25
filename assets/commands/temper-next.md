@@ -27,8 +27,8 @@ Si `.temper/orchestrator-state.md` existe, usalo SIEMPRE. No necesitas inferir l
 | Campo en state.md | Accion |
 |---|---|
 | `Status: complete` + `Pending phases: none` | Informar al usuario que todo esta completo. No lanzar agentes. |
-| `Current phase: discover` | Lanzar `temper-discover` |
-| `Current phase: constitution` | Lanzar `temper-constitution` |
+| `Current phase: analyst` | Lanzar `temper-analyst` |
+| `Current phase: architect` | Lanzar `temper-architect` |
 | `Current phase: spec` | Lanzar `temper-spec` |
 | `Current phase: design` | Lanzar `temper-design` |
 | `Current phase: tasks` | Lanzar `temper-tasks` |
@@ -44,12 +44,12 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 
 | Archivos existentes | Fase detectada | Proximo paso | Agente a lanzar |
 |---|---|---|---|
-| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Descubrimiento | `temper-discover` |
-| Ningun archivo + info de discover | Fase 1 — Descubrimiento | Fase 2 — Constitucion | `temper-constitution` |
-| Solo `constitution.md` | Fase 2 — Completada | Fase 3 — Especificacion | `temper-spec` |
-| `constitution.md` + `specs/INDEX.md` | Fase 3 — Completada | Fase 4 — Diseno | `temper-design` |
-| `constitution.md` + `specs/INDEX.md` + `design.md` | Fase 4 — Completada | Fase 5 — Tareas | `temper-tasks` |
-| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Completada | Fase 6 — Plan | `temper-plan` |
+| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Analisis funcional | `temper-analyst` |
+| Solo `prd.md` | Fase 1 — Completada | Fase 2 — Arquitectura tecnica | `temper-architect` |
+| `prd.md` + `backend-config.md` | Fase 2 — Completada | Fase 3 — Especificacion | `temper-spec` |
+| `prd.md` + config files + `specs/INDEX.md` | Fase 3 — Completada | Fase 4 — Diseno | `temper-design` |
+| `prd.md` + config files + `specs/` + `design.md` | Fase 4 — Completada | Fase 5 — Tareas | `temper-tasks` |
+| `prd.md` + config files + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Completada | Fase 6 — Plan | `temper-plan` |
 | Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
 | Todos los anteriores + codigo generado | Build completado | Fase 7 — Revision | `temper-review` |
 | Todos los archivos + revision aprobada | Revision completada | Fase 8 — Documentacion | `temper-docs` |
@@ -61,17 +61,17 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 2. **Si existe:** Usar los campos `Status`, `Current phase`, `Build group`, y `Pending phases` para determinar la accion.
 3. **Si no existe:** Usar la tabla de fallback para detectar la fase por archivos presentes.
 4. **Si el workflow esta completo** (todas las fases hechas), informar al usuario:
-   > "✅ El workflow SDD esta completo. El proyecto tiene constitucion, especificacion, diseno, tareas implementadas, plan de build, revision de calidad y documentacion. No hay fases pendientes."
+   > "✅ El workflow SDD esta completo. El proyecto tiene PRD, configuracion tecnica, especificacion, diseno, tareas implementadas, plan de build, revision de calidad y documentacion. No hay fases pendientes."
 5. **Si hay trabajo pendiente:** Lanzar el agente correspondiente.
 6. **Siempre:** Recordar al usuario que cada fase se ejecuta en una sesion nueva para mantener el contexto limpio.
 
 ## Agentes del workflow
 
-- Fase 1 → `temper-discover`
-- Fase 2 → `temper-constitution`
-- Fase 3 → `temper-spec`
-- Fase 4 → `temper-design`
-- Fase 5 → `temper-tasks`
+- Fase 1 → `temper-analyst` (analisis funcional, genera prd.md)
+- Fase 2 → `temper-architect` (decisiones tecnicas, genera config files)
+- Fase 3 → `temper-spec` (user stories)
+- Fase 4 → `temper-design` (arquitectura)
+- Fase 5 → `temper-tasks` (tareas atomicas)
 - Fase 6 → `temper-plan` (genera build-plan.md)
 - Build → `temper-orchestrator` (lee state.md + build-plan.md, ejecuta UN grupo, actualiza state.md, termina)
 - Fase 7 → `temper-review`
@@ -99,7 +99,9 @@ Todas las fases del SDD workflow han sido ejecutadas exitosamente.
 El proyecto esta listo para desarrollo iterativo.
 
 Archivos generados:
-- .temper/constitution.md
+- .temper/prd.md
+- .temper/backend-config.md
+- .temper/frontend-config.md (si aplica)
 - .temper/specs/INDEX.md
 - .temper/specs/US-XXX-*.md
 - .temper/design.md

@@ -17,7 +17,7 @@ temper-ai install
 
 # 3. Open your AI assistant (OpenCode, Copilot, Claude Code)
 # 4. Start a new project
-@temper-discover
+@temper-analyst
 
 I want to build a task management system...
 ```
@@ -82,8 +82,8 @@ Traditional AI coding assistants accumulate context across long conversations. B
               └─────┬──────┘       └──────┬──────┘
                     │                     │
                ┌─────▼──────┐      ┌──────▼──────────┐
-               │ Direct     │      │ init → spec →   │
-               │ execution  │      │ design → tasks → │
+               │ Direct     │      │ analyst → architect → │
+               │ execution  │      │ spec → design → tasks → │
                │            │      │ plan → [orch.  │
                │            │      │  executes] →    │
                └────────────┘      │ review → docs   │
@@ -148,11 +148,11 @@ temper-ai/
 │   ├── agents/                     ← Agent definitions
 │   │   ├── README.md
 │   │   ├── temper-orchestrator.agent.md  ← Main orchestrator
-│   │   ├── temper-discover.agent.md       ← Phase 1: Discovery (questions)
-│   │   ├── temper-constitution.agent.md   ← Phase 2: Constitution
-│   │   ├── temper-spec.agent.md           ← Phase 3: User Stories
-│   │   ├── temper-design.agent.md         ← Phase 4: Architecture Design
-│   │   ├── temper-tasks.agent.md          ← Phase 5: Task Breakdown
+│   │   ├── temper-analyst.agent.md       ← Phase 1: Functional analysis
+│   │   ├── temper-architect.agent.md     ← Phase 2: Technical architecture
+│   │   ├── temper-spec.agent.md          ← Phase 3: User Stories
+│   │   ├── temper-design.agent.md        ← Phase 4: Architecture Design
+│   │   ├── temper-tasks.agent.md         ← Phase 5: Task Breakdown
 │   │   ├── temper-plan.agent.md           ← Phase 6: Build Planner
 │   │   ├── temper-backend.agent.md       ← Phase 6a: Backend Implementation
 │   │   ├── temper-frontend.agent.md       ← Phase 6b: Frontend Implementation
@@ -280,7 +280,9 @@ Each project gets a `.temper/` directory that tracks the SDD workflow state:
 
 | File | Purpose |
 |---|---|
-| `constitution.md` | Project decisions — stack, architecture, standards |
+| `prd.md` | Functional requirements — scope, business rules, capabilities |
+| `backend-config.md` | Technical decisions — architecture, database, auth |
+| `frontend-config.md` | Frontend decisions — Blazor type, API URL |
 | `specs/INDEX.md` | Fast-lookup index of all user stories |
 | `specs/US-XXX-*.md` | Individual user story files |
 | `design.md` | Architecture, entities, endpoints, database schema |

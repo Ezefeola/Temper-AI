@@ -33,7 +33,9 @@ Si `.temper/orchestrator-state.md` existe, extraer:
 ### Paso 2 — Fallback: verificar archivos .temper/ existentes
 
 Si `.temper/orchestrator-state.md` NO existe, listar:
-- `.temper/constitution.md`
+- `.temper/prd.md`
+- `.temper/backend-config.md`
+- `.temper/frontend-config.md` (si aplica)
 - `.temper/specs/INDEX.md`
 - `.temper/design.md`
 - `.temper/tasks/INDEX.md`
@@ -44,14 +46,15 @@ Si `.temper/orchestrator-state.md` NO existe, listar:
 | Archivos existentes | Fase |
 |---|---|
 | Ninguno | Fase 0 — Sin iniciar |
-| Solo `constitution.md` | Fase 1 — Inicializacion completada |
-| `constitution.md` + `specs/INDEX.md` | Fase 2 — Especificacion completada |
-| `constitution.md` + `specs/` + `design.md` | Fase 3 — Diseno completado |
-| `constitution.md` + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 4 — Tareas definidas |
-| Todos los anteriores + `build-plan.md` | Fase 5 — Plan completado |
+| Solo `prd.md` | Fase 1 — Analisis funcional completado |
+| `prd.md` + `backend-config.md` | Fase 2 — Arquitectura tecnica completada |
+| `prd.md` + config files + `specs/INDEX.md` | Fase 3 — Especificacion completada |
+| `prd.md` + config files + `specs/` + `design.md` | Fase 4 — Diseno completado |
+| `prd.md` + config files + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Tareas definidas |
+| Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado |
 | Todos + codigo generado | Build Execution — En progreso o completado |
-| Todos + revision aprobada | Fase 6 — Revision completada |
-| Todos + documentacion | Fase 7 — Workflow completo |
+| Todos + revision aprobada | Fase 7 — Revision completada |
+| Todos + documentacion | Fase 8 — Workflow completo |
 
 ### Paso 4 — Analizar tareas (si existe tasks/INDEX.md)
 
@@ -92,7 +95,9 @@ Si `.temper/tasks/INDEX.md` existe, contar:
 ### Files
 | File | Status |
 |---|---|
-| constitution.md | [Exists / Missing] |
+| prd.md | [Exists / Missing] |
+| backend-config.md | [Exists / Missing] |
+| frontend-config.md | [Exists / Missing / N/A] |
 | specs/INDEX.md | [Exists / Missing] |
 | design.md | [Exists / Missing] |
 | tasks/INDEX.md | [Exists / Missing] |
@@ -126,7 +131,9 @@ All phases of the SDD workflow have been completed.
 ### Files
 | File | Status |
 |---|---|
-| constitution.md | Exists |
+| prd.md | Exists |
+| backend-config.md | Exists |
+| frontend-config.md | Exists (or N/A) |
 | specs/ | Exists |
 | design.md | Exists |
 | tasks/ | Exists (all done) |

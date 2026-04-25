@@ -125,11 +125,11 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Agent | Receives | Does NOT Receive |
 |---|---|---|
-| `temper-discover` | User's project description | Nothing else |
-| `temper-constitution` | Clarified project info from discover | Design, tasks, code |
-| `temper-spec` | `.temper/constitution.md` | Design, tasks, code |
-| `temper-design` | `constitution.md` + `specs/INDEX.md` + individual spec files | Tasks, code |
-| `temper-tasks` | `constitution.md` + `specs/` + `design.md` | Code |
+| `temper-analyst` | User's project description | Nothing else |
+| `temper-architect` | `.temper/prd.md` | Functional scope changes, design, tasks, code |
+| `temper-spec` | `.temper/prd.md` | Design, tasks, code |
+| `temper-design` | `prd.md` + `backend-config.md` + `specs/INDEX.md` + individual spec files | Tasks, code |
+| `temper-tasks` | `prd.md` + `specs/` + `design.md` | Code |
 | `temper-plan` | `tasks/INDEX.md` + `design.md` | Code |
 | `temper-backend` | Specific task file + user story spec + relevant files | Full codebase, all tasks, all specs |
 | `temper-frontend` | Specific task file + relevant files | Full codebase, all tasks |
@@ -142,8 +142,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Agent | Skills Loaded |
 |---|---|
-| `temper-discover` | None |
-| `temper-constitution` | `prd-analyzer` |
+| `temper-analyst` | None |
+| `temper-architect` | None |
 | `temper-spec` | `prd-analyzer` |
 | `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None (reads `.temper/` files) |
@@ -163,8 +163,8 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 | Phase | Input Tokens | Output Tokens | Total |
 |---|---|---|---|
-| `temper-discover` | 1,500-3,000 | 1,000-2,000 | 2,500-5,000 |
-| `temper-constitution` | 2,000-4,000 | 1,500-3,000 | 3,500-7,000 |
+| `temper-analyst` | 1,500-3,000 | 1,000-2,000 | 2,500-5,000 |
+| `temper-architect` | 1,000-2,000 | 500-1,500 | 1,500-3,500 |
 | `temper-spec` | 1,500-3,000 | 3,000-6,000 | 4,500-9,000 |
 | `temper-design` | 3,000-6,000 | 4,000-8,000 | 7,000-14,000 |
 | `temper-tasks` | 5,000-10,000 | 2,000-4,000 | 7,000-14,000 |
@@ -189,13 +189,17 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 ## The DAG: Dependency Flow
 
 ```
-                     ┌─────────┐
-                     │  Init   │
-                     └────┬────┘
-                          │
-                     ┌────▼────┐
-                     │  Spec   │
-                     └────┬────┘
+                      ┌─────────┐
+                      │ Analyst │
+                      └────┬────┘
+                           │
+                      ┌────▼────┐
+                      │Architect│
+                      └────┬────┘
+                           │
+                      ┌────▼────┐
+                      │  Spec   │
+                      └────┬────┘
                           │
                      ┌────▼────┐
                      │ Design  │
@@ -238,8 +242,9 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 
 Each phase has a quality gate:
 
-1. **Init gate:** Constitution approved by user
-2. **Spec gate:** User stories and acceptance criteria approved
+1. **Analyst gate:** PRD approved by user
+2. **Architect gate:** Config files approved by user
+3. **Spec gate:** User stories and acceptance criteria approved
 3. **Design gate:** Architecture and API design approved
 4. **Tasks gate:** Task breakdown approved
 5. **Plan gate:** Build plan approved
@@ -272,7 +277,9 @@ The orchestrator MUST follow this protocol after EVERY phase output and EVERY su
 
 ### Persistent State (`.temper/` directory)
 
-- `constitution.md` — project decisions
+- `prd.md` — functional requirements (from temper-analyst)
+- `backend-config.md` — technical decisions (from temper-architect)
+- `frontend-config.md` — frontend decisions (from temper-architect, if applicable)
 - `specs/` — user stories directory
   - `INDEX.md` — fast-lookup index of all user stories
   - `US-001-[slug].md` — individual user story files

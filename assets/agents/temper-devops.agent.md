@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-devops starting
    Skills loaded: [devops/docker, devops/github-actions]
-   Context files: [.temper/constitution.md, .temper/design.md, .temper/tasks/US-XXX/T###-*.md]
+   Context files: [.temper/backend-config.md, .temper/design.md, .temper/tasks/US-XXX/T###-*.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,7 +47,7 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/constitution.md` to confirm the technology stack, database choice, and any infrastructure requirements.
+1. Read `.temper/backend-config.md` to confirm the technology stack, database choice, and any infrastructure requirements.
 2. Read `.temper/design.md` to understand the project structure, project names, and service dependencies.
 3. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-003/T004-docker-config.md`).
 4. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.

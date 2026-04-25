@@ -4,56 +4,58 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 
 ---
 
-## temper-discover
+## temper-analyst
 
-**Phase:** 1 — Discovery
+**Phase:** 1 — Functional Analysis
 **Skills:** None
 
-**Role:** Analyze what the user wants to build, ask questions to clarify ambiguities, gather all necessary information. Does NOT generate any files.
+**Role:** First contact point in the SDD workflow. Gathers functional requirements by asking business-focused questions only (never technology or architecture), identifies scope deltas if a PRD already exists, and generates `.temper/prd.md` as the single source of truth.
 
 **Workflow:**
 1. Read the user's project description.
-2. Identify what is known and what is NOT known.
-3. Ask questions to clarify all ambiguities.
+2. If `.temper/prd.md` exists, read it and identify scope deltas.
+3. Ask functional questions only: project purpose, user capabilities, scope boundaries, business rules, external integrations.
 4. Iterate until everything is clear.
-5. Report back to the orchestrator with all gathered information.
+5. Generate `.temper/prd.md` with functional scope, business rules, and status workflows.
 
 **Questions asked:**
 - Project basics (problem, end users, core features)
-- Architecture preference (Clean, Hexagonal, Vertical Slice, Onion)
-- Technology stack (database, frontend, authentication, messaging)
-- Infrastructure (API docs with Scalar, health checks)
+- Functional capabilities (what users should be able to DO)
+- Scope boundaries (what's in, what's out, MVP definition)
+- Business rules and validation constraints
+- External integrations from user perspective
 
-**Output:** Clear project requirements summary (no files)
+**Output:** `.temper/prd.md`
 
 ---
 
-## temper-constitution
+## temper-architect
 
-**Phase:** 2 — Constitution
-**Skills:** `prd-analyzer`
+**Phase:** 2 — Technical Architecture
+**Skills:** None
 
-**Role:** Generate `.temper/constitution.md` from the clarified requirements provided by `temper-discover`.
+**Role:** Reads `.temper/prd.md`, asks ONLY technical questions (database, architecture pattern, frontend type, auth), and generates `.temper/backend-config.md` and `.temper/frontend-config.md` for implementation agents. NEVER changes functional scope.
 
 **Workflow:**
-1. Read the clarified project information from the orchestrator.
-2. Generate `.temper/constitution.md` with all foundational decisions.
-3. Show summary and request approval.
+1. Read `.temper/prd.md` to understand functional scope.
+2. Ask technical questions only: architecture pattern, database, frontend type, authentication, API documentation.
+3. Recommend based on PRD complexity when user doesn't know.
+4. Generate config files with project-specific technical decisions.
 
-**Output:** `.temper/constitution.md`
+**Output:** `.temper/backend-config.md` + `.temper/frontend-config.md` (if applicable)
 
 ---
 
 ## temper-spec
 
 **Phase:** 3 — Specification
-**Skills:** `dotnet-csharp`, `prd-analyzer`
+**Skills:** `prd-analyzer`
 
 **Role:** Generate user stories, acceptance criteria, edge cases, and non-functional requirements.
 
 **Workflow:**
-1. Read `.temper/constitution.md`.
-2. Identify user stories from the constitution.
+1. Read `.temper/prd.md`.
+2. Identify user stories from the functional scope.
 3. Define acceptance criteria for each story.
 4. Document edge cases and error cases.
 5. Define non-functional requirements.
@@ -72,7 +74,7 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Design the complete architecture — entities, endpoints, database schema, components.
 
 **Workflow:**
-1. Read `constitution.md` and `specs/`.
+1. Read `prd.md`, `backend-config.md`, and `specs/`.
 2. Design domain entities with properties, relationships, factory methods.
 3. Design API endpoints with HTTP methods, routes, DTOs.
 4. Design database schema.
@@ -92,8 +94,8 @@ Agents are specialized AI sub-agents that handle specific phases of the SDD work
 **Role:** Break the design into atomic, trackable implementation tasks.
 
 **Workflow:**
-1. Read `constitution.md`, `specs/`, and `design.md`.
-2. Create atomic tasks (1-3 files each).
+1. Read `prd.md`, `specs/`, and `design.md`.
+2. Create atomic tasks (feature-centric, not component-centric).
 3. Define dependencies between tasks.
 4. Assign each task to an agent (backend, frontend, tester, devops).
 5. Define completion criteria for each task.

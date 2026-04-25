@@ -126,10 +126,35 @@ Muestra opciones:
 ```
 Usuario describe lo que quiere construir
     ↓
-/temper-discover → Hace preguntas hasta que todo está claro
-    ↓ (información aclarada)
-/temper-constitution → Genera .temper/constitution.md
-    ↓ (aprobación del usuario)
+/temper-analyst → Hace preguntas funcionales hasta que todo esta claro
+    ↓ (genera prd.md)
+/temper-architect → Define stack tecnico, genera backend-config.md + frontend-config.md
+    ↓ (aprobacion del usuario)
+/temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
+    ↓ (aprobacion del usuario)
+/temper-design → Genera .temper/design.md (arquitectura, entidades, endpoints)
+    ↓ (aprobacion del usuario)
+/temper-tasks → Genera .temper/tasks/ (tareas atomicas por user story + INDEX.md)
+    ↓ (aprobacion del usuario)
+/temper-plan → Genera .temper/build-plan.md (grupos paralelos, agentes)
+    ↓ (aprobacion del usuario)
+[orchestrator ejecuta el build] → Spawnea sub-agentes por grupo (efimero)
+    ├── Group 1 → orchestrator spawnea agentes → actualiza state.md → termina
+    ├── Group 2 → nueva sesion → orchestrator lee state.md → spawnea agentes → actualiza state.md → termina
+    └── Group N → ... → build completo
+    ↓
+/temper-review → Valida codigo contra specs/
+    ↓ (aprobacion del usuario)
+/temper-docs → Genera README, API docs, decisiones de arquitectura
+    ↓
+✅ Workflow completo
+```
+Usuario describe lo que quiere construir
+    ↓
+/temper-analyst → Hace preguntas funcionales hasta que todo esta claro
+    ↓ (genera prd.md)
+/temper-architect → Define stack tecnico, genera config files
+    ↓ (aprobacion del usuario)
 /temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
     ↓ (aprobación del usuario)
 /temper-design → Genera .temper/design.md (arquitectura, entidades, endpoints)
@@ -297,20 +322,21 @@ temper-ai/
 │   ├── agents/
 │   │   ├── README.md
 │   │   ├── temper-orchestrator.agent.md  ← Orquestador principal ✅
-│   │   ├── temper-discover.agent.md          ← Fase 1: PRD + Constitución ✅
-│   │   ├── temper-spec.agent.md          ← Fase 2: User Stories ✅
-│   │   ├── temper-design.agent.md        ← Fase 3: Arquitectura ✅
-│   │   ├── temper-tasks.agent.md         ← Fase 4: Tareas atómicas ✅
-│   │   ├── temper-plan.agent.md          ← Fase 5: Plan de build ✅
-│   │   ├── temper-backend.agent.md       ← Fase 5a: Backend ✅
-│   │   ├── temper-frontend.agent.md      ← Fase 5b: Frontend ✅
-│   │   ├── temper-tester.agent.md        ← Fase 5c: Testing ✅
-│   │   ├── temper-devops.agent.md        ← Fase 5d: DevOps ✅
-│   │   ├── temper-review.agent.md        ← Fase 6: Code Review ✅
-│   │   └── temper-docs.agent.md          ← Fase 7: Documentación ✅
+│   │   ├── temper-analyst.agent.md       ← Fase 1: Analisis funcional ✅
+│   │   ├── temper-architect.agent.md     ← Fase 2: Arquitectura tecnica ✅
+│   │   ├── temper-spec.agent.md          ← Fase 3: User Stories ✅
+│   │   ├── temper-design.agent.md        ← Fase 4: Arquitectura ✅
+│   │   ├── temper-tasks.agent.md         ← Fase 5: Tareas atómicas ✅
+│   │   ├── temper-plan.agent.md          ← Fase 6: Plan de build ✅
+│   │   ├── temper-backend.agent.md       ← Fase 6a: Backend ✅
+│   │   ├── temper-frontend.agent.md      ← Fase 6b: Frontend ✅
+│   │   ├── temper-tester.agent.md        ← Fase 6c: Testing ✅
+│   │   ├── temper-devops.agent.md        ← Fase 6d: DevOps ✅
+│   │   ├── temper-review.agent.md        ← Fase 7: Code Review ✅
+│   │   └── temper-docs.agent.md          ← Fase 8: Documentación ✅
 │   │
 │   ├── commands/
-│   │   ├── temper-discover.md
+│   │   ├── temper-init.md
 │   │   ├── temper-next.md
 │   │   └── temper-status.md
 │   │
@@ -407,64 +433,67 @@ description: >
 | Archivo | Fase | Descripción | Estado |
 |---|---|---|---|
 | `temper-orchestrator.agent.md` | — | Orquestador principal — evalúa complejidad y decide path | ✅ Completo |
-| `temper-discover.agent.md` | Fase 1 | Lee PRD, hace preguntas, genera `constitution.md` | ✅ Completo |
-| `temper-spec.agent.md` | Fase 2 | User stories, criterios de aceptación, `specs/` | ✅ Completo |
-| `temper-design.agent.md` | Fase 3 | Arquitectura, entidades, endpoints, `design.md` | ✅ Completo |
-| `temper-tasks.agent.md` | Fase 4 | Rompe design en tareas atómicas por user story, `tasks/` | ✅ Completo |
-| `temper-plan.agent.md` | Fase 5 | Genera build-plan.md con grupos paralelos | ✅ Completo |
-| `temper-backend.agent.md` | Fase 5a | Genera código .NET 10 según task file asignado | ✅ Completo |
-| `temper-frontend.agent.md` | Fase 5b | Genera código Blazor | ✅ Completo |
-| `temper-tester.agent.md` | Fase 5c | Genera tests xUnit/bUnit | ✅ Completo |
-| `temper-devops.agent.md` | Fase 5d | Docker, GitHub Actions | ✅ Completo |
-| `temper-review.agent.md` | Fase 6 | Valida código contra specs/ | ✅ Completo |
-| `temper-docs.agent.md` | Fase 7 | README, API docs, decisiones | ✅ Completo |
+| `temper-analyst.agent.md` | Fase 1 | Analisis funcional, genera `prd.md` | ✅ Completo |
+| `temper-architect.agent.md` | Fase 2 | Decisiones tecnicas, genera config files | ✅ Completo |
+| `temper-spec.agent.md` | Fase 3 | User stories, criterios de aceptacion, `specs/` | ✅ Completo |
+| `temper-design.agent.md` | Fase 4 | Arquitectura, entidades, endpoints, `design.md` | ✅ Completo |
+| `temper-tasks.agent.md` | Fase 5 | Rompe design en tareas atomicas por user story, `tasks/` | ✅ Completo |
+| `temper-plan.agent.md` | Fase 6 | Genera build-plan.md con grupos paralelos | ✅ Completo |
+| `temper-backend.agent.md` | Fase 6a | Genera codigo .NET 10 segun task file asignado | ✅ Completo |
+| `temper-frontend.agent.md` | Fase 6b | Genera codigo Blazor | ✅ Completo |
+| `temper-tester.agent.md` | Fase 6c | Genera tests xUnit/bUnit | ✅ Completo |
+| `temper-devops.agent.md` | Fase 6d | Docker, GitHub Actions | ✅ Completo |
+| `temper-review.agent.md` | Fase 7 | Valida codigo contra specs/ | ✅ Completo |
+| `temper-docs.agent.md` | Fase 8 | README, API docs, decisiones | ✅ Completo |
 
 ### Comandos slash
 
-| Comando | Acción |
+| Comando | Accion |
 |---|---|
-| `/temper-discover` | Arranca el workflow SDD |
+| `/temper-init` | Arranca el workflow SDD |
 | `/temper-next` | Avanza a la siguiente fase |
-| `/temper-status` | Muestra en qué fase estás |
+| `/temper-status` | Muestra en que fase estas |
 
 ### Estructura `.temper/` en cada proyecto
 
 ```
 tu-proyecto/
 └── .temper/
-    ├── constitution.md        ← stack, arquitectura, estándares del proyecto
-    ├── specs/                 ← user stories individuales
-    │   ├── INDEX.md           ← índice rápido de todas las user stories
-    │   └── US-001-*.md        ← cada user story en su propio archivo
-    ├── design.md              ← entidades, endpoints, estructura de carpetas
-    ├── tasks/                 ← tareas atómicas organizadas por user story
-    │   ├── INDEX.md           ← índice rápido de todas las tareas
-    │   └── US-001/            ← tareas de la user story US-001
-    │       └── T001-*.md      ← cada tarea en su propio archivo
-    ├── build-plan.md          ← plan de ejecución con grupos paralelos
-    ├── orchestrator-state.md  ← estado persistente del orchestrator (checkpoint)
-    ├── budget.md              ← tracking de uso de tokens por fase
-    └── .snapshots/            ← snapshots automáticos para rollback
+    ├── prd.md                   ← alcance funcional, reglas de negocio
+    ├── backend-config.md        ← arquitectura, base de datos, auth
+    ├── frontend-config.md       ← tipo de frontend (si aplica)
+    ├── specs/                   ← user stories individuales
+    │   ├── INDEX.md             ← indice rapido de todas las user stories
+    │   └── US-001-*.md          ← cada user story en su propio archivo
+    ├── design.md                ← entidades, endpoints, estructura de carpetas
+    ├── tasks/                   ← tareas atomicas organizadas por user story
+    │   ├── INDEX.md             ← indice rapido de todas las tareas
+    │   └── US-001/              ← tareas de la user story US-001
+    │       └── T001-*.md        ← cada tarea en su propio archivo
+    ├── build-plan.md            ← plan de ejecucion con grupos paralelos
+    ├── orchestrator-state.md    ← estado persistente del orchestrator (checkpoint)
+    ├── budget.md                ← tracking de uso de tokens por fase
+    └── .snapshots/              ← snapshots automaticos para rollback
 ```
 
 ### Formato de agente (`.agent.md`)
 
-Para GitHub Copilot CLI, los agentes van en `~/.copilot/agents/` con extensión `.agent.md`:
+Para GitHub Copilot CLI, los agentes van en `~/.copilot/agents/` con extension `.agent.md`:
 
 ```markdown
 ---
-name: temper-discover
+name: temper-analyst
 description: >
-  Agente de inicialización de TemperAI. Usar cuando el usuario
-  ejecuta /temper-discover o quiere iniciar un nuevo proyecto desde un PRD.
-mode: agent
+  Agente de analisis funcional de TemperAI. Usar cuando el usuario
+  quiere definir que debe hacer su aplicacion desde el punto de vista del negocio.
+mode: subagent
 tools:
   read_file: true
   write_file: true
   ask_followup_question: true
 ---
 
-# temper-discover — Agente de Inicialización
+# temper-analyst — Agente de Analisis Funccional
 
 ## Tu rol
 Sos el primer agente del workflow SDD de TemperAI...
@@ -672,7 +701,7 @@ src/
 - [x] Skill `prd-analyzer/SKILL.md` — PRD Analysis
 - [x] Skill `token-budget/SKILL.md` — Token Budget
 - [x] Los 12 agentes SDD completos (orchestrator, init, spec, design, tasks, build, backend, frontend, tester, devops, review, docs)
-- [x] Comandos slash (temper-discover, temper-next, temper-status)
+- [x] Comandos slash (temper-init, temper-next, temper-status)
 - [x] Documentación completa (README, ARCHITECTURE, CONVENTIONS, CLI, AGENTS, SKILLS, WORKFLOW, GETTING_STARTED)
 - [x] `TemperAI.NeuralCore` — memoria persistente MCP en .NET con Clean Architecture
   - [x] Domain entities (Session, Observation)
