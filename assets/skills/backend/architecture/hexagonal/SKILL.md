@@ -101,18 +101,14 @@ src/
 │   │   ├── Entities/
 │   │   │   └── Product/
 │   │   │       ├── Product.cs
-│   │   │       ├── ValueObjects/
-│   │   │       │   └── Money.cs
 │   │   │       ├── Enums/
 │   │   │       │   └── ProductStatus.cs
 │   │   │       └── Events/
 │   │   │           └── ProductCreatedEvent.cs
-│   │   ├── Common/
-│   │   │   ├── ValueObjects/
-│   │   │   │   └── Address.cs
-│   │   │   └── Primitives/
-│   │   │       ├── Entity.cs
-│   │   │       └── IDomainEvent.cs
+│   │   └── Common/
+│   │       └── Primitives/
+│   │           ├── Entity.cs
+│   │           └── IDomainEvent.cs
 │   │   └── Errors/
 │   │
 │   ├── Contracts/
@@ -267,14 +263,6 @@ Entities follow a strict pattern:
 - Never `throw` for business validations.
 
 See `backend/dotnet/ddd` for the complete entity implementation pattern.
-
-### Value Object pattern
-
-- `sealed record` with explicit properties — never `[ComplexType]` or DataAnnotations.
-- Factory method returning `(List<string> Errors, ValueObject? ValueObject)`.
-- Configured by the data access adapter (e.g., `OwnsOne` in EF Core).
-
-See `backend/dotnet/ddd` for the complete Value Object implementation pattern.
 
 ### Domain Event pattern
 

@@ -1,6 +1,6 @@
 # NeuralCore — Project Memory Export
 
-> Generated: 2026-04-13 19:16 UTC
+> Generated: 2026-04-14 14:28 UTC
 > Project: Temper-AI
 
 ## Sessions
@@ -10,8 +10,21 @@
 - **Temper-AI** — Active (2026-04-13)
 - **Temper-AI** — Active (2026-04-13)
 - **Temper-AI** — Active (2026-04-13)
+- **Temper-AI** — Active (2026-04-14)
 
 ## Observations
+
+### [Discovery] Session summary: Actualizar skills DDD para enfoque pragmático sin ValueObjects
+
+- **Date:** 2026-04-14 14:28
+- **Topic:** session-summary
+
+Goal: Actualizar skills DDD para enfoque pragmático sin ValueObjects
+Discoveries: Se encontraron secciones de ValueObjects en ddd/SKILL.md y en las 4 arquitecturas (clean, hexagonal, onion, vertical-slice). La regla de no usar VOs pertenece solo al skill DDD, no a arquitecturas.
+Accomplished: Actualizado ddd/SKILL.md: reemplazada sección de VOs con 'NOT USED', clarificado que DomainEvents son contratos sueltos en Events/ folder por entidad, no van en la entidad. Eliminados ValueObjects/ de folder structures en las 4 arquitecturas. Removida regla de VOs de archivos de arquitectura.
+Files changed: assets/skills/backend/dotnet/ddd/SKILL.md, assets/skills/backend/architecture/clean/SKILL.md, assets/skills/backend/architecture/hexagonal/SKILL.md, assets/skills/backend/architecture/onion/SKILL.md, assets/skills/backend/architecture/vertical-slice/SKILL.md
+
+---
 
 ### [Discovery] Session summary: Actualizar skill DDD para enfoque pragmático sin ValueObjects
 

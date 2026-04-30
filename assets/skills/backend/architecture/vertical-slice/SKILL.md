@@ -107,10 +107,8 @@ src/
 │   │   │   ├── Product.cs
 │   │   │   ├── Enums/
 │   │   │   │   └── ProductStatus.cs
-│   │   │   ├── Events/
-│   │   │   │   └── ProductCreatedEvent.cs
-│   │   │   └── ValueObjects/
-│   │   │       └── Money.cs
+│   │   │   └── Events/
+│   │   │       └── ProductCreatedEvent.cs
 │   │   ├── Orders/
 │   │   │   ├── Order.cs
 │   │   │   ├── Enums/
@@ -196,10 +194,8 @@ Domain/
 │   ├── Product.cs
 │   ├── Enums/
 │   │   └── ProductStatus.cs
-│   ├── Events/
-│   │   └── ProductCreatedEvent.cs
-│   └── ValueObjects/
-│       └── Money.cs
+│   └── Events/
+│       └── ProductCreatedEvent.cs
 ├── Orders/
 │   ├── Order.cs
 │   ├── Enums/
@@ -722,7 +718,7 @@ For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-cs
 - **No Repository pattern** — `DbContext` is used directly in handlers
 - **No UnitOfWork** — `SaveChangesAsync` is called directly in the handler
 - **No interfaces for handlers** — handlers are concrete classes, injected directly
-- `Domain/` at root level — each entity in its own **plural** folder (`Products/`, `Orders/`) with its enums, events, and value objects
+- `Domain/` at root level — each entity in its own **plural** folder (`Products/`, `Orders/`) with its enums and events
 - `Persistence/` at root level contains DbContext and EF Core configurations
 - `Shared/` only contains cross-cutting concerns: Result, base Entity, extensions
 - Each feature folder contains **everything** it needs: endpoint, handler, DTOs, validator

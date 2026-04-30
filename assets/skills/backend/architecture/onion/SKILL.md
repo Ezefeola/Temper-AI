@@ -133,10 +133,8 @@ src/
 │   │       ├── Product.cs
 │   │       ├── Enums/
 │   │       │   └── ProductStatus.cs
-│   │       ├── Events/
-│   │       │   └── ProductCreatedEvent.cs
-│   │       └── ValueObjects/
-│   │           └── Money.cs
+│   │       └── Events/
+│   │           └── ProductCreatedEvent.cs
 │   ├── Orders/
 │   │   ├── Order.cs
 │   │   ├── Enums/
@@ -162,8 +160,6 @@ src/
 │   │   │   └── IUnitOfWork.cs
 │   │
 │   ├── Common/
-│   │   ├── ValueObjects/
-│   │   │   └── Address.cs
 │   │   └── Primitives/
 │   │       ├── Entity.cs
 │   │       └── IDomainEvent.cs
@@ -253,14 +249,6 @@ Each entity lives in its own folder under `Domain/Entities/` along with its rela
 - Never `throw` for business validations.
 
 See `backend/dotnet/ddd` for the complete entity implementation pattern.
-
-### Value Object pattern
-
-- `sealed record` with explicit properties — never `[ComplexType]` or DataAnnotations.
-- Factory method returning `(List<string> Errors, ValueObject? ValueObject)`.
-- Configured by the data access layer (e.g., `OwnsOne` in EF Core).
-
-See `backend/dotnet/ddd` for the complete Value Object implementation pattern.
 
 ### Domain Event pattern
 
@@ -718,4 +706,4 @@ When generating actual code, the namespace MUST match the folder structure exact
 - **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - Domain folder names must be **plural** and different from the class name — `Domain/Entities/Products/Product.cs`, never `Domain/Entities/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
 - For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
-- For data access implementation details, load `backend/dotnet/ef-core`.
+- For data access implementation details, load `backend/dotnet/ef-core`

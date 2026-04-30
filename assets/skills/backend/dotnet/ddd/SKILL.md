@@ -126,54 +126,44 @@ public abstract class Entity<TId>
 }
 ```
 
-## Value Objects — sealed record with factory method
+## Value Objects — NOT USED
+
+**ValueObjects are intentionally NOT used in this project.**
+
+We follow a pragmatic DDD approach where:
+- Primitive types are used directly in entities
+- `string`, `decimal`, `int`, `Guid`, `DateTime`, etc. are the preferred types
+- Validation is performed in factory and update methods
+- No complex mapping or `OwnsOne` configurations needed
+
+**Example — using primitives instead of ValueObject:**
 
 ```csharp
-public sealed record Money
+// ✅ CORRECT — primitives in entity
+public sealed class Product : Entity<Guid>
 {
-    public decimal Amount { get; init; } = 0;
-    public string Currency { get; init; } = string.Empty;
-
-    private Money() { }
-
-    public static (List<string> Errors, Money? Money) Create(decimal amount, string currency)
+    public string Currency { get; private set; } = string.Empty;  // primitive
+    public decimal Amount { get; private set; }                   // primitive
+    
+    // Validation in factory method
+    public static (List<string> Errors, Product? Product) Create(
+        string name, decimal amount, string currency)
     {
-        List<string> moneyErrors = [];
-
-        if (amount < 0)
-        {
-            moneyErrors.Add("Amount cannot be negative");
-        }
-
-        if (string.IsNullOrWhiteSpace(currency))
-        {
-            moneyErrors.Add("Currency is required");
-        }
-
-        if (moneyErrors.Count > 0)
-        {
-            return (moneyErrors, null);
-        }
-
-        Money money = new()
-        {
-            Amount = amount,
-            Currency = currency
-        };
-
-        return ([], money);
+        // validate currency and amount here
     }
 }
 ```
 
-### Value Object rules
+```csharp
+// ❌ WRONG — ValueObject (not used in this project)
+public sealed record Money { ... }  // DO NOT CREATE
+```
 
-- Always `sealed record` with explicit properties — no `[ComplexType]` or DataAnnotations.
-- Always a factory method returning `(List<string> Errors, ValueObject? ValueObject)`.
-- Always configured with `OwnsOne` in the entity's `IEntityTypeConfiguration`.
-- Never expose public setters — properties are `init` only.
+## Domain Events — contract only, published to message broker
 
-## Domain Events — contract only
+Domain events are **contracts only** — `sealed record` with data, no behavior.
+
+**Key distinction**: Domain events do NOT live in a list on the entity. They are created on-demand in use cases and published to a message broker (RabbitMQ, Azure Service Bus, etc.) when the business scenario requires async communication.
 
 ```csharp
 public interface IDomainEvent { }
@@ -195,10 +185,36 @@ public sealed record ProductCreatedEvent : IDomainEvent
 
 ### Domain Event rules
 
-- Domain events are only contracts — `sealed record` with data, no behavior.
-- Never register events on the entity or dispatch them in SaveChanges.
-- Always publish explicitly in the UseCase after `CompleteAsync`.
-- `Entity<TId>` base is clean — no event list or `RaiseDomainEvent` method.
+- Domain events are **contracts only** — `sealed record` with data, no behavior.
+- Domain events live in `Domain/Entities/{EntityName}/Events/` folder — **NOT** on the entity itself.
+- **Never** create a domain event list on the entity (no `List<IDomainEvent>` property, no `RaiseDomainEvent` method).
+- Create the event in the UseCase **only when publishing is required** (e.g., after `CompleteAsync` when you need to notify other systems).
+- Publish via `IEventPublisher.PublishAsync()` — the event is sent to a message broker for async processing by other services.
+- `Entity<TId>` base is clean — no event logic whatsoever.
+
+**When to publish a domain event**: Only when other services/systems need to react to something that happened (e.g., "send welcome email", "notify inventory service", "update search index"). If no external reaction is needed, don't create the event.
+
+**When NOT to publish a domain event**: When the operation is self-contained and no other system needs to know about it.
+
+### Domain Event organization
+
+Domain events are organized by entity in their respective Events folder:
+
+```
+Domain/
+├── Entities/
+│   └── Products/
+│       ├── Product.cs
+│       └── Events/
+│           └── ProductCreatedEvent.cs
+├── Common/
+│   └── Primitives/
+│       ├── Entity.cs
+│       └── IDomainEvent.cs
+└── Errors/
+```
+
+**Note:** No `ValueObjects/` folder — primitives are used directly in entities.
 
 ## Enums
 
@@ -222,18 +238,19 @@ public enum ProductStatus
 ```
 Domain/
 ├── Entities/
-│   └── Product/
+│   └── Products/
 │       ├── Product.cs
-│       ├── ValueObjects/
 │       ├── Enums/
 │       └── Events/
+│           └── ProductCreatedEvent.cs
 ├── Common/
-│   ├── ValueObjects/       ← Shared VOs between entities
 │   └── Primitives/
 │       ├── Entity.cs
 │       └── IDomainEvent.cs
 └── Errors/
 ```
+
+**Note:** No `ValueObjects/` folder — primitives are used directly.
 
 ## Rules
 
@@ -242,6 +259,8 @@ Domain/
 - Never use `throw` for business validations — use the Result tuple pattern.
 - Never put domain events on entities — publish them explicitly in use cases.
 - Never use DataAnnotations on entities or Value Objects.
+- **Always use primitive types** — never create ValueObjects. Validate in factory/update methods instead.
+- **Never put domain events on entities** — publish them explicitly in use cases when needed.
 - **Always place the nested `Rules` class at the TOP of the entity** — before properties, constructor, and methods. Constraints should be visible first for readability.
 
 ```csharp
