@@ -2,17 +2,40 @@
 name: dotnet-ddd
 description: >
   Domain-Driven Design standards for .NET 10 projects. Covers entity design,
-  value objects, domain events, aggregates, and domain rules. Use when
-  creating or modifying domain layer components.
+  aggregates with child entities, domain events, and domain rules.
+  Load when creating or modifying any Domain layer component — entities, enums, events, aggregates.
+  DO NOT load for infrastructure, repository, or controller tasks.
+  Value Objects are intentionally NOT used — primitives are used directly in entities.
+requires: [dotnet-csharp]
+produces: [entities, aggregates, domain-events, enums, domain-rules]
 ---
 
 # DDD — TemperAI Standards
+
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **NEVER Value Objects** — primitives are used directly in entities. Never create `sealed record` value types.
+2. **NEVER throw** for business validations — always return `(List<string> Errors, T? Entity)`
+3. **NEVER domain events on entities** — publish explicitly in use cases when needed
+4. **NEVER external dependencies in Domain** — pure C# only, zero EF Core or HTTP references
+5. **ALWAYS Rules class at the TOP** of the entity — before properties, constructor, and methods
+
+---
+
+## When NOT to apply this skill
+
+- You are configuring EF Core mappings — load `dotnet-ef-core` instead
+- You are writing repositories or use cases without modifying domain entities
+- You are working on the API or infrastructure layer
+
+---
 
 ## Entities — sealed class with private constructor
 
 ```csharp
 public sealed class Product : Entity<Guid>
 {
+    // 1. Rules class — ALWAYS FIRST
     public class Rules
     {
         public const int NAME_MAX_LENGTH = 100;
@@ -20,6 +43,7 @@ public sealed class Product : Entity<Guid>
         public const decimal MIN_PRICE = 0;
     }
 
+    // 2. Properties
     public string Name { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
     public decimal Price { get; private set; }
@@ -27,42 +51,32 @@ public sealed class Product : Entity<Guid>
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    // 3. Private constructor — EF Core needs this
     private Product() { }
 
+    // 4. Factory method — always returns (errors, entity?)
     public static (List<string> Errors, Product? Product) Create(
         string name,
         string description,
         decimal price)
     {
-        List<string> productErrors = [];
+        List<string> errors = [];
 
         if (string.IsNullOrWhiteSpace(name))
-        {
-            productErrors.Add("Name is required");
-        }
+            errors.Add("Name is required");
         else if (name.Length > Rules.NAME_MAX_LENGTH)
-        {
-            productErrors.Add($"Name cannot exceed {Rules.NAME_MAX_LENGTH} characters");
-        }
+            errors.Add($"Name cannot exceed {Rules.NAME_MAX_LENGTH} characters");
 
         if (string.IsNullOrWhiteSpace(description))
-        {
-            productErrors.Add("Description is required");
-        }
+            errors.Add("Description is required");
         else if (description.Length > Rules.DESCRIPTION_MAX_LENGTH)
-        {
-            productErrors.Add($"Description cannot exceed {Rules.DESCRIPTION_MAX_LENGTH} characters");
-        }
+            errors.Add($"Description cannot exceed {Rules.DESCRIPTION_MAX_LENGTH} characters");
 
         if (price <= Rules.MIN_PRICE)
-        {
-            productErrors.Add("Price must be greater than zero");
-        }
+            errors.Add("Price must be greater than zero");
 
-        if (productErrors.Count > 0)
-        {
-            return (productErrors, null);
-        }
+        if (errors.Count > 0)
+            return (errors, null);
 
         Product product = new()
         {
@@ -77,28 +91,21 @@ public sealed class Product : Entity<Guid>
         return ([], product);
     }
 
+    // 5. Update methods — always return (errors, updated)
     public (List<string> Errors, bool Updated) UpdateName(string newName)
     {
-        List<string> nameErrors = [];
+        List<string> errors = [];
 
         if (string.IsNullOrWhiteSpace(newName))
-        {
-            nameErrors.Add("Name is required");
-        }
+            errors.Add("Name is required");
         else if (newName.Length > Rules.NAME_MAX_LENGTH)
-        {
-            nameErrors.Add($"Name cannot exceed {Rules.NAME_MAX_LENGTH} characters");
-        }
+            errors.Add($"Name cannot exceed {Rules.NAME_MAX_LENGTH} characters");
 
-        if (nameErrors.Count > 0)
-        {
-            return (nameErrors, false);
-        }
+        if (errors.Count > 0)
+            return (errors, false);
 
         if (Name == newName)
-        {
             return ([], false);
-        }
 
         Name = newName;
         UpdatedAt = DateTime.UtcNow;
@@ -109,13 +116,13 @@ public sealed class Product : Entity<Guid>
 
 ### Entity rules
 
-- Always `sealed class` with `private` constructor.
-- Always a nested `Rules` class with constraint constants.
-- Factory method always returns `(List<string> Errors, Entity? Entity)`.
-- Update methods always return `(List<string> Errors, bool Updated)`.
-- Update methods always validate invariants, check if value changed, and set `UpdatedAt`.
-- Never `throw` for business validations.
-- `Entity<TId>` base is clean — no event logic or automatic auditing.
+- Always `sealed class` with `private` constructor
+- Always a nested `Rules` class at the TOP — before properties and methods
+- Factory method always returns `(List<string> Errors, Entity? Entity)`
+- Update methods always return `(List<string> Errors, bool Updated)`
+- Update methods always validate, check if value changed, and set `UpdatedAt`
+- Never `throw` for business validations
+- `Entity<TId>` base is clean — no event logic, no auditing
 
 ### Base Entity
 
@@ -126,44 +133,149 @@ public abstract class Entity<TId>
 }
 ```
 
-## Value Objects — NOT USED
+---
 
-**ValueObjects are intentionally NOT used in this project.**
+## Aggregates with child entities
 
-We follow a pragmatic DDD approach where:
-- Primitive types are used directly in entities
-- `string`, `decimal`, `int`, `Guid`, `DateTime`, etc. are the preferred types
-- Validation is performed in factory and update methods
-- No complex mapping or `OwnsOne` configurations needed
-
-**Example — using primitives instead of ValueObject:**
+An aggregate root controls all access to its children. Children cannot be modified directly.
 
 ```csharp
-// ✅ CORRECT — primitives in entity
-public sealed class Product : Entity<Guid>
+public sealed class Order : Entity<Guid>
 {
-    public string Currency { get; private set; } = string.Empty;  // primitive
-    public decimal Amount { get; private set; }                   // primitive
-    
-    // Validation in factory method
-    public static (List<string> Errors, Product? Product) Create(
-        string name, decimal amount, string currency)
+    public class Rules
     {
-        // validate currency and amount here
+        public const int MAX_ITEMS = 50;
     }
+
+    public Guid CustomerId { get; private set; }
+    public OrderStatus Status { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
+
+    // Child collection — private list, exposed as read-only
+    private readonly List<OrderItem> _items = [];
+    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
+
+    private Order() { }
+
+    public static (List<string> Errors, Order? Order) Create(Guid customerId)
+    {
+        List<string> errors = [];
+
+        if (customerId == Guid.Empty)
+            errors.Add("CustomerId is required");
+
+        if (errors.Count > 0)
+            return (errors, null);
+
+        Order order = new()
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = customerId,
+            Status = OrderStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return ([], order);
+    }
+
+    // Aggregate root controls child mutations
+    public (List<string> Errors, bool Added) AddItem(Guid productId, int quantity, decimal unitPrice)
+    {
+        List<string> errors = [];
+
+        if (Status != OrderStatus.Pending)
+            errors.Add("Items can only be added to pending orders");
+
+        if (_items.Count >= Rules.MAX_ITEMS)
+            errors.Add($"Order cannot exceed {Rules.MAX_ITEMS} items");
+
+        if (quantity <= 0)
+            errors.Add("Quantity must be greater than zero");
+
+        if (unitPrice <= 0)
+            errors.Add("Unit price must be greater than zero");
+
+        if (errors.Count > 0)
+            return (errors, false);
+
+        OrderItem item = new()
+        {
+            Id = Guid.NewGuid(),
+            OrderId = Id,
+            ProductId = productId,
+            Quantity = quantity,
+            UnitPrice = unitPrice
+        };
+
+        _items.Add(item);
+        UpdatedAt = DateTime.UtcNow;
+        return ([], true);
+    }
+
+    public (List<string> Errors, bool Confirmed) Confirm()
+    {
+        if (Status != OrderStatus.Pending)
+            return (["Order is not in Pending status"], false);
+
+        if (_items.Count == 0)
+            return (["Cannot confirm an order with no items"], false);
+
+        Status = OrderStatus.Confirmed;
+        UpdatedAt = DateTime.UtcNow;
+        return ([], true);
+    }
+}
+
+// Child entity — no factory method needed, created only by the aggregate root
+public sealed class OrderItem : Entity<Guid>
+{
+    public Guid OrderId { get; internal set; }
+    public Guid ProductId { get; internal set; }
+    public int Quantity { get; internal set; }
+    public decimal UnitPrice { get; internal set; }
+
+    internal OrderItem() { }
 }
 ```
 
+### Aggregate rules
+
+- The aggregate root owns the child collection — always `private readonly List<T> _items = []`
+- Expose children as `IReadOnlyList<T>` — never expose the mutable list
+- All child mutations go through aggregate root methods — never modify children directly
+- Child entities use `internal set` and `internal` constructor — not accessible outside the aggregate
+- Invariants are enforced in the aggregate root — children are dumb data holders
+- EF Core can hydrate private collections via `DBCONTEXT_SETUP.md` navigation configuration
+
+---
+
+## Value Objects — NOT USED in this project
+
+**Primitives are used directly in entities.**
+
 ```csharp
-// ❌ WRONG — ValueObject (not used in this project)
+// ✅ CORRECT — primitives
+public sealed class Product : Entity<Guid>
+{
+    public string Currency { get; private set; } = string.Empty;
+    public decimal Amount { get; private set; }
+}
+
+// ❌ WRONG — Value Object
 public sealed record Money { ... }  // DO NOT CREATE
 ```
 
-## Domain Events — contract only, published to message broker
+> ⚠️ NOTE FOR EF CORE: Since Value Objects are not used, `OwnsOne` configuration is also never used.
+> The `OwnsOne` API exists in EF Core but does not apply to this project.
+> See `dotnet-ef-core/ENTITY_CONFIGURATION.md` for correct entity configuration.
+
+---
+
+## Domain Events
 
 Domain events are **contracts only** — `sealed record` with data, no behavior.
-
-**Key distinction**: Domain events do NOT live in a list on the entity. They are created on-demand in use cases and published to a message broker (RabbitMQ, Azure Service Bus, etc.) when the business scenario requires async communication.
+They do NOT live on entities. They are created and published in use cases.
 
 ```csharp
 public interface IDomainEvent { }
@@ -183,108 +295,71 @@ public sealed record ProductCreatedEvent : IDomainEvent
 }
 ```
 
-### Domain Event rules
+**When to publish:** Only when another system needs to react (send email, notify inventory, update search index).
+**When NOT to publish:** When the operation is self-contained with no external reactions needed.
 
-- Domain events are **contracts only** — `sealed record` with data, no behavior.
-- Domain events live in `Domain/Entities/{EntityName}/Events/` folder — **NOT** on the entity itself.
-- **Never** create a domain event list on the entity (no `List<IDomainEvent>` property, no `RaiseDomainEvent` method).
-- Create the event in the UseCase **only when publishing is required** (e.g., after `CompleteAsync` when you need to notify other systems).
-- Publish via `IEventPublisher.PublishAsync()` — the event is sent to a message broker for async processing by other services.
-- `Entity<TId>` base is clean — no event logic whatsoever.
+```csharp
+// ✅ CORRECT — event created and published in use case, not on entity
+public async Task<Result<...>> ExecuteAsync(...)
+{
+    // ... create and save entity ...
 
-**When to publish a domain event**: Only when other services/systems need to react to something that happened (e.g., "send welcome email", "notify inventory service", "update search index"). If no external reaction is needed, don't create the event.
+    ProductCreatedEvent domainEvent = new(product.Id, product.Name, product.Price);
+    await _eventPublisher.PublishAsync(domainEvent, cancellationToken);
 
-**When NOT to publish a domain event**: When the operation is self-contained and no other system needs to know about it.
+    return Result<...>.Success(...);
+}
 
-### Domain Event organization
-
-Domain events are organized by entity in their respective Events folder:
-
-```
-Domain/
-├── Entities/
-│   └── Products/
-│       ├── Product.cs
-│       └── Events/
-│           └── ProductCreatedEvent.cs
-├── Common/
-│   └── Primitives/
-│       ├── Entity.cs
-│       └── IDomainEvent.cs
-└── Errors/
+// ❌ WRONG — event list on entity
+public sealed class Product : Entity<Guid>
+{
+    private readonly List<IDomainEvent> _domainEvents = [];  // NEVER
+    public void RaiseDomainEvent(IDomainEvent e) => _domainEvents.Add(e);  // NEVER
+}
 ```
 
-**Note:** No `ValueObjects/` folder — primitives are used directly in entities.
+---
 
 ## Enums
 
 ```csharp
 public enum ProductStatus
 {
-    Active = 0,
-    Inactive = 1,
-    Discontinued = 2
+    Active = 1,
+    Inactive = 2,
+    Discontinued = 3
 }
 ```
 
-### Enum rules
+**Rules:**
+- Always start at 1
+- Always use explicit values — never rely on implicit ordering
+- Store as string in database — configure with `.HasConversion<string>()` in entity configuration
 
-- Always start at 0 — EF Core maps 0 to the first value by default.
-- Always use explicit values — never rely on implicit ordering.
-- Store as string in the database using `.HasConversion<string>()` in configuration.
+---
 
-## Domain organization
+## Domain folder structure
 
 ```
 Domain/
 ├── Entities/
-│   └── Products/
-│       ├── Product.cs
+│   ├── Products/
+│   │   ├── Product.cs
+│   │   ├── Enums/
+│   │   │   └── ProductStatus.cs
+│   │   └── Events/
+│   │       └── ProductCreatedEvent.cs
+│   └── Orders/
+│       ├── Order.cs
+│       ├── OrderItem.cs          ← child entity, same folder as aggregate root
 │       ├── Enums/
+│       │   └── OrderStatus.cs
 │       └── Events/
-│           └── ProductCreatedEvent.cs
-├── Common/
-│   └── Primitives/
-│       ├── Entity.cs
-│       └── IDomainEvent.cs
-└── Errors/
+│           └── OrderConfirmedEvent.cs
+└── Common/
+    └── Primitives/
+        ├── Entity.cs
+        └── IDomainEvent.cs
 ```
 
-**Note:** No `ValueObjects/` folder — primitives are used directly.
-
-## Rules
-
-- `Domain` has zero external dependencies — pure C# only.
-- Never reference EF Core, HTTP, or any infrastructure concern in the domain.
-- Never use `throw` for business validations — use the Result tuple pattern.
-- Never put domain events on entities — publish them explicitly in use cases.
-- Never use DataAnnotations on entities or Value Objects.
-- **Always use primitive types** — never create ValueObjects. Validate in factory/update methods instead.
-- **Never put domain events on entities** — publish them explicitly in use cases when needed.
-- **Always place the nested `Rules` class at the TOP of the entity** — before properties, constructor, and methods. Constraints should be visible first for readability.
-
-```csharp
-// GOOD — Rules class first
-public sealed class Product : Entity<Guid>
-{
-    public class Rules
-    {
-        public const int NAME_MAX_LENGTH = 100;
-    }
-
-    public string Name { get; private set; } = string.Empty;
-    // ...
-}
-
-// BAD — Rules class at the bottom
-public sealed class Product : Entity<Guid>
-{
-    public string Name { get; private set; } = string.Empty;
-    // ... methods ...
-
-    public class Rules  // WRONG — should be at the top
-    {
-        public const int NAME_MAX_LENGTH = 100;
-    }
-}
-```
+**Note:** No `ValueObjects/` folder — primitives are used directly in entities.

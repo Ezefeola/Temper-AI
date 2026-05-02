@@ -2,20 +2,28 @@
 name: entity-configuration
 description: >
   Fluent API entity configuration for EF Core.
+  Load as part of dotnet-ef-core — never in isolation.
   Never use DataAnnotations. Always use IEntityTypeConfiguration<T>.
+  OwnsOne is NOT used in this project — Value Objects are not used.
+requires: [dotnet-ef-core]
+produces: [entity-configuration-classes, relationship-mappings, column-types]
 ---
 
 # Entity Configuration — TemperAI
 
-## Rules
+## 🚨 NON-NEGOTIABLE RULES
 
-- **Never `DataAnnotations`** on entities or Value Objects
-- **One `IEntityTypeConfiguration<T>`** per entity in `Infrastructure/Persistence/Configurations/`
-- **Never `nvarchar(max)` or `varchar(max)`** — always specify lengths from `Entity.Rules`
-- **`varchar` for ASCII**, `nvarchar` for Unicode
-- **Value Objects configured with `OwnsOne`** — no `[ComplexType]` or DataAnnotations
-- **Never call `builder.ToTable()`** — EF Core infers from DbSet property name
-- **Never call `HasDefaultValueSql()` or `ValueGeneratedOnAdd()`** for primary keys
+1. **NEVER `DataAnnotations`** on entities — Fluent API only
+2. **NEVER `nvarchar(max)` or `varchar(max)`** — always specify lengths from `Entity.Rules`
+3. **NEVER `builder.ToTable()`** — EF Core infers from DbSet property name
+4. **NEVER `HasDefaultValueSql()` or `ValueGeneratedOnAdd()`** for primary keys
+5. **NEVER `OwnsOne`** — Value Objects are not used in this project. See `dotnet-ddd`.
+
+> ⚠️ `OwnsOne` exists in EF Core but does NOT apply here.
+> This project uses primitives directly in entities — never Value Objects.
+> If you think you need `OwnsOne`, you are creating a Value Object. Stop and read `dotnet-ddd` first.
+
+---
 
 ## Basic entity configuration
 
@@ -28,7 +36,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasKey(product => product.Id);
 
         builder.Property(product => product.Name)
-            .HasMaxLength(Product.Rules.NAME_MAX_LENGTH)
+            .HasMaxLength(Product.Rules.NAME_MAX_LENGTH)  // ← always from Entity.Rules
             .HasColumnType("varchar");
 
         builder.Property(product => product.Description)
@@ -55,7 +63,11 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 }
 ```
 
-## Value Object configuration with OwnsOne
+---
+
+## Aggregate with child entity configuration
+
+When configuring an aggregate root with child entities, use `HasMany` / `WithOne`.
 
 ```csharp
 // Infrastructure/Persistence/Configurations/OrderConfiguration.cs
@@ -65,81 +77,71 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
     {
         builder.HasKey(order => order.Id);
 
-        builder.OwnsOne(order => order.Total, moneyBuilder =>
-        {
-            moneyBuilder.Property(money => money.Amount)
-                .HasColumnName("TotalAmount")
-                .HasColumnType("decimal(18,2)");
+        builder.Property(order => order.CustomerId)
+            .HasColumnType("uniqueidentifier");
 
-            moneyBuilder.Property(money => money.Currency)
-                .HasColumnName("TotalCurrency")
-                .HasMaxLength(3)
-                .HasColumnType("varchar");
-        });
+        builder.Property(order => order.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasColumnType("varchar");
+
+        builder.Property(order => order.CreatedAt)
+            .HasColumnType("datetime2");
+
+        builder.Property(order => order.UpdatedAt)
+            .HasColumnType("datetime2");
+
+        // Configure private collection navigation — EF Core accesses via shadow property
+        builder.HasMany(order => order.Items)
+            .WithOne()
+            .HasForeignKey(item => item.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
-```
 
-## Multiple Value Objects
-
-```csharp
-public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
+// Infrastructure/Persistence/Configurations/OrderItemConfiguration.cs
+public sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 {
-    public void Configure(EntityTypeBuilder<Order> builder)
+    public void Configure(EntityTypeBuilder<OrderItem> builder)
     {
-        builder.HasKey(order => order.Id);
+        builder.HasKey(item => item.Id);
 
-        // First Value Object
-        builder.OwnsOne(order => order.Total, moneyBuilder =>
-        {
-            moneyBuilder.Property(money => money.Amount)
-                .HasColumnName("TotalAmount")
-                .HasColumnType("decimal(18,2)");
+        builder.Property(item => item.OrderId)
+            .HasColumnType("uniqueidentifier");
 
-            moneyBuilder.Property(money => money.Currency)
-                .HasColumnName("TotalCurrency")
-                .HasMaxLength(3)
-                .HasColumnType("varchar");
-        });
+        builder.Property(item => item.ProductId)
+            .HasColumnType("uniqueidentifier");
 
-        // Second Value Object
-        builder.OwnsOne(order => order.ShippingAddress, addressBuilder =>
-        {
-            addressBuilder.Property(address => address.Street)
-                .HasColumnName("ShippingStreet")
-                .HasMaxLength(200)
-                .HasColumnType("nvarchar");
+        builder.Property(item => item.Quantity)
+            .HasColumnType("int");
 
-            addressBuilder.Property(address => address.City)
-                .HasColumnName("ShippingCity")
-                .HasMaxLength(100)
-                .HasColumnType("nvarchar");
-
-            addressBuilder.Property(address => address.PostalCode)
-                .HasColumnName("ShippingPostalCode")
-                .HasMaxLength(20)
-                .HasColumnType("varchar");
-        });
+        builder.Property(item => item.UnitPrice)
+            .HasColumnType("decimal(18,2)");
     }
 }
 ```
+
+---
 
 ## Column type reference
 
-| CLR Type | Typical SQL Type | Notes |
+| CLR Type | SQL Type | Notes |
 |---|---|---|
-| `string` (ASCII) | `varchar(n)` | Names, codes, identifiers |
-| `string` (Unicode) | `nvarchar(n)` | Descriptions, addresses |
-| `decimal` | `decimal(18,2)` | Money, prices |
-| `DateTime` | `datetime2` | Timestamps |
-| `Guid` | `uniqueidentifier` | Primary keys |
-| `int` | `int` | Counts, quantities |
+| `string` (ASCII) | `varchar(n)` | Names, codes, enums as string, identifiers |
+| `string` (Unicode) | `nvarchar(n)` | Descriptions, addresses, free text |
+| `decimal` | `decimal(18,2)` | Money, prices, quantities with decimals |
+| `DateTime` | `datetime2` | All timestamps — always UTC |
+| `Guid` | `uniqueidentifier` | Primary keys, foreign keys |
+| `int` | `int` | Counts, quantities without decimals |
 | `bool` | `bit` | Flags |
+| `enum` | `varchar(n)` | Always `.HasConversion<string>()` |
+
+---
 
 ## Anti-patterns — NEVER DO THIS
 
 ```csharp
-// ❌ NEVER use DataAnnotations
+// ❌ NEVER DataAnnotations
 public class Product
 {
     [Key]
@@ -148,18 +150,20 @@ public class Product
     public Guid Id { get; set; }
 }
 
-// ❌ NEVER use nvarchar(max)
+// ❌ NEVER nvarchar(max)
 builder.Property(product => product.Description)
     .HasColumnType("nvarchar(max)");
 
-// ❌ NEVER call ToTable — EF Core infers from DbSet name
+// ❌ NEVER ToTable
 builder.ToTable("Products");
 
-// ❌ NEVER call HasDefaultValueSql for primary keys
+// ❌ NEVER HasDefaultValueSql for PKs
 builder.Property(product => product.Id)
     .HasDefaultValueSql("NEWID()");
 
-// ✅ CORRECT: Let EF Core handle primary keys
+// ❌ NEVER OwnsOne — Value Objects are not used
+builder.OwnsOne(order => order.Total, money => { ... });
+
+// ✅ CORRECT — HasKey only, EF handles the rest
 builder.HasKey(product => product.Id);
-// That's it — no additional configuration needed for Guid PKs
 ```

@@ -4,34 +4,48 @@ description: >
   ASP.NET Core API standards for .NET 10 projects. Covers controllers,
   middleware, routing, error handling, DI setup, logging, FluentValidation,
   nullable reference types, and appsettings structure.
-  For general C# conventions (syntax, usings, naming, async patterns),
-  load dotnet-csharp. For EF Core specifics, load backend/dotnet/ef-core.
+  Load when creating or modifying controllers, middleware, Program.cs, or validators.
+  DO NOT load for domain or repository tasks — load dotnet-ef-core or dotnet-ddd instead.
+  For general C# conventions, dotnet-csharp must be loaded first.
+requires: [dotnet-csharp]
+produces: [controllers, middleware, validators, program-cs, appsettings, logging]
 ---
 
 # ASP.NET Core API Standards — TemperAI
 
-> **IMPORTANT: Only use Controllers.** Never use Minimal APIs. All APIs must be implemented as MVC-style controllers inheriting from `ControllerBase` with `[ApiController]` attribute.
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-> For general C# conventions (syntax, usings, naming, async, DTOs), load `dotnet-csharp`.
-> For EF Core specifics (entity configuration, repositories, DbContext), load `backend/dotnet/ef-core`.
+1. **ONLY Controllers** — NEVER Minimal APIs. All endpoints must inherit `ControllerBase` with `[ApiController]`
+2. **NEVER Swagger/Swashbuckle** — always Scalar for API documentation
+3. **NEVER DataAnnotations on DTOs** — always FluentValidation
+4. **NEVER hardcoded numbers in validators** — always reference `Entity.Rules` constants
+5. **NEVER string interpolation in log messages** — always structured logging with named placeholders
+
+> For general C# conventions (syntax, usings, naming, async, DTOs): `dotnet-csharp` must be loaded.
+> For EF Core specifics (entities, repositories, DbContext): load `dotnet-ef-core`.
+
+---
+
+## When NOT to apply this skill
+
+- You are working exclusively on domain entities, repositories, or use cases with no controller changes
+- You are working on infrastructure configuration unrelated to the API layer
 
 ---
 
 ## FluentValidation
 
-- **Always use FluentValidation** for request DTO validation — never DataAnnotations on DTOs.
-- **One validator per DTO** — named `[DtoName]Validator`.
-- **Register validators** with `AddValidatorsFromAssembly`.
-- **Never use hardcoded numbers** — always reference `Entity.Rules` constants for lengths, ranges, and constraints.
+**Always use FluentValidation** for request DTO validation — never DataAnnotations on DTOs.
 
 ```csharp
+// ✅ CORRECT
 public sealed class CreateProductRequestDtoValidator : AbstractValidator<CreateProductRequestDto>
 {
     public CreateProductRequestDtoValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(Product.Rules.NAME_MAX_LENGTH);
+            .MaximumLength(Product.Rules.NAME_MAX_LENGTH);  // ← always Entity.Rules, never magic numbers
 
         RuleFor(x => x.Description)
             .MaximumLength(Product.Rules.DESCRIPTION_MAX_LENGTH);
@@ -47,11 +61,52 @@ public sealed class CreateProductRequestDtoValidator : AbstractValidator<CreateP
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 ```
 
+**Rules:**
+- One validator per DTO — named `[DtoName]Validator`
+- Register with `AddValidatorsFromAssembly` — never register manually
+- Always reference `Entity.Rules` constants — never hardcode lengths or ranges
+
+---
+
+## Controllers
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    [HttpPost]
+    [EndpointDescription("Creates a new product with the provided data.")]
+    [ProducesResponseType(typeof(CreateProductResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateProductRequestDto request,
+        [FromServices] ICreateProduct createProduct,
+        CancellationToken cancellationToken)
+    {
+        Result<CreateProductResponseDto> result =
+            await createProduct.ExecuteAsync(request, cancellationToken);
+
+        return result.ToActionResult();
+    }
+}
+```
+
+**Rules:**
+- Always `[ApiController]` and `[Route("api/[controller]")]`
+- Always `[EndpointDescription]` on every endpoint
+- Always `[ProducesResponseType]` for ALL success and error responses
+- Always inject use cases via `[FromServices]` — never use constructor injection in controllers
+- Always delegate to a use case — zero business logic in controllers
+- Always return `result.ToActionResult()` — never map manually
+
 ---
 
 ## Global error handling middleware
 
-All unhandled exceptions must be caught and returned as `ProblemDetails`. Since we never throw custom exceptions in application code, only unexpected errors reach this handler.
+All unhandled exceptions are caught here and returned as `ProblemDetails`.
+Since application code never throws, only unexpected infrastructure errors reach this handler.
 
 ```csharp
 // Program.cs
@@ -61,7 +116,7 @@ app.UseExceptionHandler(errorApp =>
     {
         context.Response.ContentType = "application/problem+json";
 
-        ExceptionHandlerPathFeature exceptionHandlerPathFeature =
+        IExceptionHandlerPathFeature exceptionHandlerPathFeature =
             context.Features.Get<IExceptionHandlerPathFeature>();
 
         Exception exception = exceptionHandlerPathFeature?.Error;
@@ -87,28 +142,20 @@ app.UseExceptionHandler(errorApp =>
 
 ## Program.cs — structure and extension methods
 
-Keep `Program.cs` clean. All DI setup goes through extension methods.
+Keep `Program.cs` clean. All DI registration goes through extension methods.
 
 ```csharp
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Framework services
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
-
-// Application layer
 builder.Services.AddApplication();
-
-// Infrastructure layer
 builder.Services.AddInfrastructure(builder.Configuration);
-
-// Validation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 WebApplication app = builder.Build();
 
-// Middleware pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();
@@ -128,27 +175,25 @@ if (app.Environment.IsDevelopment())
 app.Run();
 ```
 
+**Rules:**
+- All DI setup through `AddApplication()` and `AddInfrastructure()` extension methods
+- Never register services directly in `Program.cs` — always in extension methods
+- Middleware order is non-negotiable: HTTPS → Auth → Controllers
+
 ---
 
-## API documentation — Scalar (never Swagger)
+## API documentation — Scalar
 
-**Always use Scalar** for API documentation. Never use Swagger/Swashbuckle.
-
-Scalar is faster, cleaner, and has a better UX. It consumes the OpenAPI document generated by .NET 10's built-in `AddOpenApi()`.
-
-### Required package
+**Always use Scalar. Never use Swagger/Swashbuckle.**
 
 ```xml
+<!-- .csproj -->
 <PackageReference Include="Scalar.AspNetCore" Version="2.+" />
 ```
-
-### Configuration
 
 ```csharp
 // Program.cs
 builder.Services.AddOpenApi();
-
-// ...
 
 if (app.Environment.IsDevelopment())
 {
@@ -161,73 +206,35 @@ if (app.Environment.IsDevelopment())
 }
 ```
 
-### Accessing the docs
-
 - OpenAPI JSON: `/openapi/v1.json`
 - Scalar UI: `/scalar/v1`
-
-### Endpoint documentation
-
-Use `[EndpointDescription]` and XML comments for endpoint documentation:
-
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public class ProductsController : ControllerBase
-{
-    [HttpPost]
-    [EndpointDescription("Creates a new product with the provided data.")]
-    [ProducesResponseType(typeof(CreateProductResponseDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateProductRequestDto request,
-        [FromServices] ICreateProduct createProduct,
-        CancellationToken cancellationToken)
-    {
-        Result<CreateProductResponseDto> result =
-            await createProduct.ExecuteAsync(request, cancellationToken);
-
-        return result.ToActionResult();
-    }
-}
-```
-
-### Scalar rules
-
-- **Never use Swagger/Swashbuckle** — Scalar is the TemperAI standard.
-- **Always add `[EndpointDescription]`** to every endpoint for clear documentation.
-- **Always include `[ProducesResponseType]`** for all success and error responses.
-- **Only expose Scalar in Development** — use `if (app.Environment.IsDevelopment())`.
-- **Always set a meaningful title** with `WithTitle("ProjectName API")`.
+- Only expose in Development — never in production
 
 ---
 
-## Logging with ILogger<T>
+## Logging
 
-### When to use each level
+### Log level reference
 
-| Level | When to use | Example |
+| Level | When | Example |
 |---|---|---|
-| `LogTrace` | Detailed diagnostic info, only in development | Request payload, raw SQL queries |
-| `LogDebug` | Information useful for debugging during development | Cache hit/miss, branch taken |
-| `LogInformation` | Normal application flow events | User created, order placed, migration applied |
-| `LogWarning` | Unexpected but recoverable situations | Deprecated API called, retry attempt, slow query |
-| `LogError` | Failures that break a single operation but not the app | Use case failed, external service timeout |
-| `LogCritical` | System-wide failures that require immediate attention | Database unreachable, out of memory |
+| `LogTrace` | Detailed diagnostics, dev only | Raw SQL, request payload |
+| `LogDebug` | Debug during development | Cache hit/miss, branch taken |
+| `LogInformation` | Normal flow events | User created, order placed |
+| `LogWarning` | Unexpected but recoverable | Retry attempt, slow query |
+| `LogError` | Single operation failure | Use case failed, timeout |
+| `LogCritical` | System-wide failure | DB unreachable, OOM |
 
-### Structured logging
-
-Always use structured logging with named placeholders — never string interpolation in log messages.
+### Structured logging — always named placeholders
 
 ```csharp
-// GOOD — structured logging
+// ✅ CORRECT — structured logging
 _logger.LogInformation(
     "Product {ProductId} created by user {UserId}",
     productId,
     userId);
 
-// BAD — string interpolation
+// ❌ WRONG — string interpolation
 _logger.LogInformation($"Product {productId} created by user {userId}");
 ```
 
@@ -267,50 +274,31 @@ public sealed class CreateProduct : ICreateProduct
 
 ## Nullable reference types
 
-### How to enable
-
-Nullable reference types are enabled by default in .NET 10 projects. Ensure your `.csproj` has:
-
 ```xml
+<!-- .csproj — enabled by default in .NET 10 -->
 <PropertyGroup>
     <Nullable>enable</Nullable>
 </PropertyGroup>
 ```
 
-### How to use correctly
-
-- **`string`** — non-nullable, must be initialized. Use `= string.Empty` as default.
-- **`string?`** — nullable, can be null. Must be checked before use.
-- **Injected properties** — use `= default!` with `[Inject]` or `[FromServices]`.
-- **Never use `!` (null-forgiving operator)** without justification — it suppresses the compiler warning without actual null checking.
-
 ```csharp
-// GOOD — non-nullable string with default
+// ✅ Non-nullable string — always initialize
 public string Name { get; init; } = string.Empty;
 
-// GOOD — nullable string, checked before use
+// ✅ Nullable string — always check before use
 public string? Description { get; init; }
+if (!string.IsNullOrWhiteSpace(Description)) { ... }
 
-if (!string.IsNullOrWhiteSpace(description))
-{
-    // safe to use
-}
-
-// GOOD — injected property
-[Inject]
-private IProductService ProductService { get; set; } = default!;
-
-// BAD — unjustified null-forgiving
-Product product = await _repository.GetByIdAsync(id)!; // why is this safe?
+// ❌ WRONG — unjustified null-forgiving
+Product product = await _repository.GetByIdAsync(id)!;
 ```
 
 ---
 
 ## appsettings.json structure
 
-### appsettings.json (production defaults)
-
 ```json
+// appsettings.json — production defaults
 {
   "AllowedHosts": "*",
   "ConnectionStrings": {
@@ -325,9 +313,8 @@ Product product = await _repository.GetByIdAsync(id)!; // why is this safe?
 }
 ```
 
-### appsettings.Development.json
-
 ```json
+// appsettings.Development.json
 {
   "ConnectionStrings": {
     "Default": "Server=localhost;Database=project_dev;Trusted_Connection=True;TrustServerCertificate=True;"
@@ -341,9 +328,8 @@ Product product = await _repository.GetByIdAsync(id)!; // why is this safe?
 }
 ```
 
-### Rules
-
-- **Never commit secrets** to `appsettings.json` — use `appsettings.Development.json` (gitignored) or User Secrets / environment variables.
-- **Connection strings in `appsettings.json` should be empty** — filled by environment or secrets in production.
-- **Logging levels** — `Information` for production, `Debug` for development. Never `Trace` in production.
-- **Use environment variables** for production configuration — `ConnectionStrings__Default`, `ASPNETCORE_ENVIRONMENT`.
+**Rules:**
+- Never commit secrets — use `appsettings.Development.json` (gitignored) or User Secrets
+- Connection strings in `appsettings.json` always empty — filled by environment in production
+- Never `Trace` in production
+- Production config via environment variables: `ConnectionStrings__Default`, `ASPNETCORE_ENVIRONMENT`
