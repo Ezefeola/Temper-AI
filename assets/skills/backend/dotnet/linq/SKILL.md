@@ -1,303 +1,251 @@
 ---
 name: dotnet-linq
 description: >
-  LINQ query standards for .NET 10 projects using EF Core. Covers query
-  patterns, projections, includes, pagination, and performance best practices.
-  Use when writing or reviewing LINQ queries in repositories or use cases.
+  Pure LINQ standards for .NET 10 projects. Covers language operators,
+  query composition, projection patterns, filtering, grouping, and
+  performance best practices over IEnumerable<T> and IQueryable<T>.
+  Load when writing or reviewing LINQ expressions in any layer.
+  DO NOT load expecting EF Core-specific methods (ToListAsync, AsNoTracking,
+  Include, ExecuteUpdateAsync) — those belong to dotnet-ef-core-queries.
+requires: [dotnet-csharp]
+produces: [linq-expressions, query-compositions, in-memory-projections]
 ---
 
 # LINQ — TemperAI Standards
 
-## Query patterns
+## What this skill covers
 
-### Tracking vs NoTracking
+LINQ operators and patterns that work over **any** `IEnumerable<T>` or `IQueryable<T>` —
+regardless of whether the source is a database, a list, an array, or any other collection.
 
-- Use tracking queries (`GetByIdAsync`) when the entity will be modified.
-- Use no-tracking queries (`GetByIdAsNoTrackingAsync`) for read-only operations.
-- Always express tracking behavior in the method name.
+**This skill does NOT cover:**
+- `ToListAsync`, `AnyAsync`, `FirstOrDefaultAsync` — these are EF Core extensions, not LINQ
+- `AsNoTracking`, `Include`, `AsSplitQuery`, `TagWith` — EF Core query behavior
+- `ExecuteUpdateAsync`, `ExecuteDeleteAsync` — EF Core bulk operations
+- Tracking vs no-tracking strategy — EF Core concern
 
-```csharp
-// With tracking — for modifications
-public async Task<Product?> GetByIdAsync(
-    Guid productId,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .FirstOrDefaultAsync(
-            product => product.Id == productId,
-            cancellationToken);
-}
+For all of the above, load `dotnet-ef-core-queries`.
 
-// Without tracking — for reads
-public async Task<Product?> GetByIdAsNoTrackingAsync(
-    Guid productId,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .FirstOrDefaultAsync(
-            product => product.Id == productId,
-            cancellationToken);
-}
-```
+---
 
-### Explicit includes — never lazy loading
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-```csharp
-// GOOD — explicit include
-public async Task<Order?> GetByIdWithItemsAsync(
-    Guid orderId,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Orders
-        .AsNoTracking()
-        .Include(order => order.Items)
-        .FirstOrDefaultAsync(
-            order => order.Id == orderId,
-            cancellationToken);
-}
+1. **NEVER filter after `.ToList()` or `.AsEnumerable()`** — always filter before materializing
+2. **NEVER use manual `.Join()`** — use navigation properties or `SelectMany`
+3. **NEVER chain multiple `Where` clauses when one suffices** — compose predicates explicitly
+4. **ALWAYS use `Any()` instead of `Count() > 0`** — stops at first match
 
-// BAD — relies on lazy loading
-public async Task<Order?> GetByIdAsync(Guid orderId)
-{
-    return await _appDbContext.Orders.FindAsync(orderId);
-    // order.Items will trigger N+1 if accessed
-}
-```
+---
 
-### Projections — select only what you need
+## When NOT to load this skill
+
+- Task is purely about EF Core query behavior (tracking, includes, async materialization) → load `dotnet-ef-core-queries`
+- Task has no collection or query logic at all
+
+---
+
+## Core operators — quick reference
+
+| Operator | Use for | Returns |
+|---|---|---|
+| `Where` | Filtering | `IQueryable<T>` / `IEnumerable<T>` |
+| `Select` | Projection | `IQueryable<TResult>` |
+| `SelectMany` | Flatten nested collections | `IQueryable<TResult>` |
+| `OrderBy` / `ThenBy` | Sorting | `IOrderedQueryable<T>` |
+| `GroupBy` | Grouping | `IQueryable<IGrouping<TKey,T>>` |
+| `Any` | Existence check | `bool` |
+| `All` | Universal check | `bool` |
+| `Count` | Count items (use `Any` for existence) | `int` |
+| `First` / `FirstOrDefault` | First match | `T` / `T?` |
+| `Single` / `SingleOrDefault` | Exactly one match | `T` / `T?` |
+| `Skip` / `Take` | Pagination | `IQueryable<T>` |
+| `Distinct` | Remove duplicates | `IQueryable<T>` |
+| `Contains` | IN-style check | `bool` |
+
+---
+
+## Projection — always project to what you need
+
+Never return more data than required. Project to DTOs or anonymous types as close to the source as possible.
 
 ```csharp
-// GOOD — project to DTO, only fetch needed columns
-public async Task<List<ProductSummaryDto>> GetAllSummariesAsync(
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Select(product => new ProductSummaryDto
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Price = product.Price
-        })
-        .ToListAsync(cancellationToken);
-}
-
-// BAD — fetches entire entity graph when only summary is needed
-public async Task<List<Product>> GetAllAsync()
-{
-    return await _appDbContext.Products.ToListAsync();
-}
-```
-
-### Pagination
-
-```csharp
-public async Task<PagedResult<Product>> GetPagedAsync(
-    int page,
-    int pageSize,
-    CancellationToken cancellationToken = default)
-{
-    IQueryable<Product> query = _appDbContext.Products.AsNoTracking();
-
-    int totalCount = await query.CountAsync(cancellationToken);
-
-    List<Product> items = await query
-        .OrderBy(product => product.Name)
-        .Skip((page - 1) * pageSize)
-        .Take(pageSize)
-        .ToListAsync(cancellationToken);
-
-    return new PagedResult<Product>
+// ✅ CORRECT — project early, only fetch needed fields
+IEnumerable<ProductSummaryDto> summaries = products
+    .Select(product => new ProductSummaryDto
     {
-        Items = items,
-        TotalCount = totalCount,
-        Page = page,
-        PageSize = pageSize
-    };
-}
+        Id = product.Id,
+        Name = product.Name,
+        Price = product.Price
+    });
+
+// ❌ WRONG — returns full entities, maps later
+List<Product> all = products.ToList();
+List<ProductSummaryDto> summaries = all
+    .Select(p => new ProductSummaryDto { ... })
+    .ToList();
 ```
 
-### Filtering
+---
+
+## Filtering — always before materialization
 
 ```csharp
-// GOOD — composable filters
-public async Task<List<Product>> GetByStatusAsync(
-    ProductStatus status,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Where(product => product.Status == status)
-        .ToListAsync(cancellationToken);
-}
+// ✅ CORRECT — filter in the query, not in memory
+IEnumerable<Product> active = products
+    .Where(product => product.Status == ProductStatus.Active);
 
-// GOOD — string search with EF Core translation
-public async Task<List<Product>> SearchByNameAsync(
-    string searchTerm,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Where(product => product.Name.Contains(searchTerm))
-        .ToListAsync(cancellationToken);
-}
+// ❌ WRONG — materializes everything, then filters in memory
+List<Product> all = products.ToList();
+List<Product> active = all
+    .Where(product => product.Status == ProductStatus.Active)
+    .ToList();
 ```
 
-### IN clause with Contains
+---
+
+## Composable queries — build incrementally
+
+When filters are conditional, compose the query step by step instead of duplicating predicates.
 
 ```csharp
-// GOOD — translates to WHERE Id IN (...)
-public async Task<List<Product>> GetByIdsAsync(
-    List<Guid> ids,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Where(product => ids.Contains(product.Id))
-        .ToListAsync(cancellationToken);
-}
+// ✅ CORRECT — composable, clean, no duplication
+IQueryable<Product> query = source;
+
+if (!string.IsNullOrWhiteSpace(searchTerm))
+    query = query.Where(product => product.Name.Contains(searchTerm));
+
+if (status.HasValue)
+    query = query.Where(product => product.Status == status.Value);
+
+if (minPrice.HasValue)
+    query = query.Where(product => product.Price >= minPrice.Value);
+
+// Materialize only at the end
+List<Product> results = query.ToList();
+
+// ❌ WRONG — duplicated predicates, hard to maintain
+if (searchTerm != null && status.HasValue)
+    results = source.Where(p => p.Name.Contains(searchTerm) && p.Status == status.Value).ToList();
+else if (searchTerm != null)
+    results = source.Where(p => p.Name.Contains(searchTerm)).ToList();
+// ... and so on
 ```
 
-### ExecuteUpdateAsync / ExecuteDeleteAsync (EF Core 7+)
+---
 
-Use for bulk operations without loading entities into the change tracker.
+## Existence check — always `Any`, never `Count > 0`
 
 ```csharp
-// GOOD — single SQL UPDATE, no entity loading
-public async Task<int> ActivateProductsByCategoryAsync(
-    string category,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .Where(product => product.Category == category)
-        .ExecuteUpdateAsync(
-            setters => setters.SetProperty(p => p.Status, ProductStatus.Active),
-            cancellationToken);
-}
+// ✅ CORRECT — stops at first match
+bool hasActive = products.Any(product => product.Status == ProductStatus.Active);
 
-// BAD — loads all entities, updates each, then saves
-var products = await _appDbContext.Products
-    .Where(p => p.Category == category)
-    .ToListAsync(cancellationToken);
-
-foreach (var product in products)
-{
-    product.Status = ProductStatus.Active;
-}
-
-await _appDbContext.SaveChangesAsync(cancellationToken);
+// ❌ WRONG — counts all matching items unnecessarily
+bool hasActive = products.Count(product => product.Status == ProductStatus.Active) > 0;
 ```
 
-### Query tags for debugging
+---
+
+## Flattening nested collections — SelectMany
 
 ```csharp
-// GOOD — query appears in logs with tag for easy identification
-public async Task<List<Product>> GetActiveProductsAsync(
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .TagWith("GetActiveProducts")
-        .Where(product => product.Status == ProductStatus.Active)
-        .ToListAsync(cancellationToken);
-}
+// ✅ CORRECT — flatten order items across all orders
+IEnumerable<OrderItem> allItems = orders
+    .SelectMany(order => order.Items);
+
+// ✅ CORRECT — flatten with parent context
+IEnumerable<(Order Order, OrderItem Item)> pairs = orders
+    .SelectMany(
+        order => order.Items,
+        (order, item) => (order, item));
 ```
 
-### Split queries for multiple collections
+---
 
-Use `AsSplitQuery()` when including multiple collection navigations to avoid Cartesian explosion.
-
-```csharp
-// GOOD — separate SQL queries for each collection
-public async Task<Order?> GetByIdWithDetailsAsync(
-    Guid orderId,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Orders
-        .AsNoTracking()
-        .AsSplitQuery()
-        .Include(order => order.Items)
-        .Include(order => order.Payments)
-        .Include(order => order.Shipments)
-        .FirstOrDefaultAsync(
-            order => order.Id == orderId,
-            cancellationToken);
-}
-```
-
-### Navigation properties — never manual joins
+## Grouping
 
 ```csharp
-// GOOD — uses navigation property, EF Core generates optimal JOIN
-public async Task<List<Product>> GetProductsBySupplierNameAsync(
-    string supplierName,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Where(product => product.Supplier.Name == supplierName)
-        .ToListAsync(cancellationToken);
-}
-
-// BAD — manual join, harder to read, same result
-public async Task<List<Product>> GetProductsBySupplierNameAsync(
-    string supplierName,
-    CancellationToken cancellationToken = default)
-{
-    return await _appDbContext.Products
-        .AsNoTracking()
-        .Join(
-            _appDbContext.Suppliers,
-            product => product.SupplierId,
-            supplier => supplier.Id,
-            (product, supplier) => new { product, supplier })
-        .Where(x => x.supplier.Name == supplierName)
-        .Select(x => x.product)
-        .ToListAsync(cancellationToken);
-}
-```
-
-## Performance rules
-
-- **Always** use `AsNoTracking()` for read-only queries.
-- **Always** use `Select` to project to DTOs when you do not need the full entity.
-- **Always** use `Include` explicitly — never rely on lazy loading.
-- **Always** use `CancellationToken` in async LINQ methods.
-- **Always** use `DateTime.UtcNow` in queries — `DateTime.Now` may not translate correctly to SQL.
-- **Always** use `AnyAsync()` instead of `CountAsync() > 0` — `AnyAsync` stops at the first match.
-- **Always** use `AsSplitQuery()` when including 2+ collection navigations.
-- **Always** use `ExecuteUpdateAsync` / `ExecuteDeleteAsync` for bulk operations.
-- **Never** use `.ToList()` before filtering — filter in the database, not in memory.
-- **Never** use `.AsEnumerable()` before filtering — it pulls all data into memory.
-- **Never** use client-side methods in LINQ expressions that EF Core cannot translate (e.g., custom methods, `DateTime.Now`).
-- **Never** use `Contains` on large in-memory collections (> 10,000 items) — use a database-side join or temporary table.
-- **Never** use manual `.Join()` — always use navigation properties instead.
-- **Never** use `DateTime.Now` in queries — always use `DateTime.UtcNow`.
-
-## Query composition pattern
-
-```csharp
-// GOOD — build queries incrementally
-public async Task<List<Product>> GetFilteredAsync(
-    string? searchTerm,
-    ProductStatus? status,
-    CancellationToken cancellationToken = default)
-{
-    IQueryable<Product> query = _appDbContext.Products.AsNoTracking();
-
-    if (!string.IsNullOrWhiteSpace(searchTerm))
+// ✅ CORRECT — group products by category, project each group
+IEnumerable<CategorySummaryDto> grouped = products
+    .GroupBy(product => product.Category)
+    .Select(group => new CategorySummaryDto
     {
-        query = query.Where(product => product.Name.Contains(searchTerm));
-    }
-
-    if (status.HasValue)
-    {
-        query = query.Where(product => product.Status == status.Value);
-    }
-
-    return await query
-        .OrderBy(product => product.Name)
-        .ToListAsync(cancellationToken);
-}
+        Category = group.Key,
+        Count = group.Count(),
+        AveragePrice = group.Average(p => p.Price)
+    });
 ```
+
+---
+
+## Pagination — always Skip then Take, always with OrderBy
+
+Pagination without `OrderBy` produces non-deterministic results.
+
+```csharp
+// ✅ CORRECT — deterministic pagination
+IEnumerable<Product> page = products
+    .OrderBy(product => product.Name)
+    .ThenBy(product => product.Id)   // secondary sort for stability
+    .Skip((pageNumber - 1) * pageSize)
+    .Take(pageSize);
+
+// ❌ WRONG — no OrderBy, result order is undefined
+IEnumerable<Product> page = products
+    .Skip((pageNumber - 1) * pageSize)
+    .Take(pageSize);
+```
+
+---
+
+## IN-style checks — Contains on a collection
+
+```csharp
+// ✅ CORRECT — filter by a set of IDs
+List<Guid> targetIds = [id1, id2, id3];
+
+IEnumerable<Product> matching = products
+    .Where(product => targetIds.Contains(product.Id));
+```
+
+> When used over EF Core `IQueryable<T>`, this translates to `WHERE Id IN (...)`.
+> For in-memory collections larger than 10,000 items, use a `HashSet<T>` for O(1) lookup:
+
+```csharp
+// ✅ CORRECT — O(1) lookup for large in-memory sets
+HashSet<Guid> targetIds = new HashSet<Guid>([id1, id2, id3, /* ... */]);
+
+IEnumerable<Product> matching = products
+    .Where(product => targetIds.Contains(product.Id));
+```
+
+---
+
+## Null safety in LINQ expressions
+
+```csharp
+// ✅ CORRECT — guard against null before LINQ
+if (products is null || !products.Any())
+    return [];
+
+// ✅ CORRECT — null-conditional in projection
+IEnumerable<string> names = products
+    .Where(product => product.Name is not null)
+    .Select(product => product.Name!);
+
+// ❌ WRONG — null-forgiving inside LINQ
+IEnumerable<string> names = products.Select(p => p.Name!);
+```
+
+---
+
+## Performance rules summary
+
+| Rule | Reason |
+|---|---|
+| Always filter before `.ToList()` | Avoids loading unnecessary data into memory |
+| Always project with `Select` early | Reduces the data surface at the source |
+| Always use `Any()` over `Count() > 0` | Stops evaluation at first match |
+| Always `OrderBy` before `Skip/Take` | Deterministic pagination |
+| Use `HashSet<T>` for large in-memory `Contains` | O(1) lookup vs O(n) on list |
+| Never manual `.Join()` | Use navigation properties or `SelectMany` |
+| Never chain `.Where` duplicates | Compose predicates with the composable pattern |

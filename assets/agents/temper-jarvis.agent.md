@@ -493,7 +493,7 @@ Expected behavior: [what should happen, in domain terms]
 ```
 
 For analyst and architect: pass the user's request and any available context files.
-For all others: provide only the specific task file and directly relevant files.
+For all others: provide only the task reference (e.g., "Implement task T008") and directly relevant files. **Do NOT paste task file contents — the implementing agent reads the task file directly.**
 
 ⚠️ Before sending any prompt → run the Pre-delegation checklist in "Delegation rules" below.
 

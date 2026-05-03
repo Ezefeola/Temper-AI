@@ -252,10 +252,10 @@ For each task, create `.temper/tasks/US-[NNN]/T[NNN]-[kebab-case-title].md` with
 
 ### [Entity or Concept Name]
 
-| Field | Type | Required | Business Constraints |
-|---|---|---|---|
-| [field1] | [type] | yes/no | [business constraint, e.g., "must be unique", "max 100 chars"] |
-| [field2] | [type] | yes/no | [business constraint] |
+For each entity, describe what data it contains:
+
+- **[field1]:** [description of what this field represents, required constraints]
+- **[field2]:** [description of what this field represents]
 
 [For operations: what data is needed as input, what data is produced as output — described in domain terms]
 
@@ -324,6 +324,10 @@ After generating all files:
 - **NEVER** include HTTP status codes (201, 400, 409, etc.) — these are implementation decisions.
 - **NEVER** include HTTP methods or routes (POST /api/products) — these are implementation decisions.
 - **NEVER** include class names, method names, or file names — these are implementation decisions.
+- **NEVER** include code snippets, method signatures, or pseudocode — these are implementation decisions.
+- **NEVER** include library names, package names, or NuGet dependencies — the implementing agent's skills determine the technical approach.
+- **NEVER** include protocol numbers, port numbers, or network details (e.g., port 587, TLS, SMTP) — these are implementation decisions.
+- **NEVER** include layer names (Application, Domain, Infrastructure) or folder locations — these are determined by the architecture skills.
 - **ALWAYS** ensure dependency chains are correct — a task cannot depend on a task that comes after it.
 - **ALWAYS** include explicit Business Rules extracted from the user story's edge cases and error cases.
 - **ALWAYS** ask the user if the design lacks information needed to define a complete task.

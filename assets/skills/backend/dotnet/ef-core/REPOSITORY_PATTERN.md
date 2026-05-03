@@ -1,13 +1,40 @@
 ---
 name: repository-pattern
 description: >
-  Generic and specific repository patterns with UnitOfWork.
-  Load when creating or modifying repositories.
+  Full implementation of GenericRepository, specific repositories, and UnitOfWork.
+  Load when CREATING repositories or UnitOfWork from scratch.
+  DO NOT load when only adding query methods to existing repositories or using
+  repositories in use cases — load REPOSITORY_USAGE.md instead.
+requires: [dotnet-ef-core]
+produces: [generic-repository, specific-repositories, unit-of-work, save-result]
 ---
 
-# Repository Pattern — TemperAI
+# Repository Pattern — Implementation — TemperAI
 
-## GenericRepository<TEntity>
+## When to load this file
+
+Load this file when the task requires **creating** any of these from scratch:
+- `GenericRepository<TEntity>` base class
+- A new specific repository interface and implementation
+- `IUnitOfWork` interface or `UnitOfWork` implementation
+- `SaveResult`
+
+For adding methods to an existing repository or using repositories in use cases,
+load `REPOSITORY_USAGE.md` instead — it is significantly lighter.
+
+---
+
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **NEVER call `.Update()`** — EF change tracker handles this automatically
+2. **NEVER use lazy loading** — always explicit `.Include()`
+3. **ALWAYS use `AsNoTracking()`** on read-only queries
+4. **ALWAYS handle `DbUpdateException`** in `CompleteAsync` — never let it bubble up
+5. **ALWAYS return `IReadOnlyList<T>`** from collection methods — never `List<T>`
+
+---
+
+## GenericRepository\<TEntity\>
 
 ```csharp
 // Infrastructure/Persistence/Repositories/GenericRepository.cs
@@ -25,7 +52,9 @@ public abstract class GenericRepository<TEntity> where TEntity : class
         CancellationToken cancellationToken = default)
     {
         return await AppDbContext.Set<TEntity>()
-            .FirstOrDefaultAsync(entity => EF.Property<Guid>(entity, "Id") == id, cancellationToken);
+            .FirstOrDefaultAsync(
+                entity => EF.Property<Guid>(entity, "Id") == id,
+                cancellationToken);
     }
 
     public async Task<TEntity?> GetByIdAsNoTrackingAsync(
@@ -34,7 +63,9 @@ public abstract class GenericRepository<TEntity> where TEntity : class
     {
         return await AppDbContext.Set<TEntity>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(entity => EF.Property<Guid>(entity, "Id") == id, cancellationToken);
+            .FirstOrDefaultAsync(
+                entity => EF.Property<Guid>(entity, "Id") == id,
+                cancellationToken);
     }
 
     public async Task AddAsync(
@@ -51,10 +82,10 @@ public abstract class GenericRepository<TEntity> where TEntity : class
 }
 ```
 
-## IGenericRepository<TEntity>
+## IGenericRepository\<TEntity\>
 
 ```csharp
-// Domain/Products/Repositories/IGenericRepository.cs
+// Domain/Common/Repositories/IGenericRepository.cs
 public interface IGenericRepository<TEntity> where TEntity : class
 {
     Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -64,28 +95,19 @@ public interface IGenericRepository<TEntity> where TEntity : class
 }
 ```
 
-## Specific repository interface
+---
+
+## Specific repository — interface and implementation
 
 ```csharp
 // Domain/Products/Repositories/IProductRepository.cs
 public interface IProductRepository : IGenericRepository<Product>
 {
-    Task<bool> ExistsByNameAsync(
-        string productName,
-        CancellationToken cancellationToken = default);
-
-    Task<Product?> GetByNameAsync(
-        string productName,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<Product>> GetAllAsync(
-        CancellationToken cancellationToken = default);
+    Task<bool> ExistsByNameAsync(string productName, CancellationToken cancellationToken = default);
+    Task<Product?> GetByNameAsync(string productName, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default);
 }
-```
 
-## Specific repository implementation
-
-```csharp
 // Infrastructure/Persistence/Repositories/ProductRepository.cs
 public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
@@ -99,9 +121,7 @@ public sealed class ProductRepository : GenericRepository<Product>, IProductRepo
     {
         return await AppDbContext.Products
             .AsNoTracking()
-            .AnyAsync(
-                product => product.Name == productName,
-                cancellationToken);
+            .AnyAsync(product => product.Name == productName, cancellationToken);
     }
 
     public async Task<Product?> GetByNameAsync(
@@ -124,6 +144,8 @@ public sealed class ProductRepository : GenericRepository<Product>, IProductRepo
 }
 ```
 
+---
+
 ## UnitOfWork
 
 ```csharp
@@ -131,7 +153,7 @@ public sealed class ProductRepository : GenericRepository<Product>, IProductRepo
 public interface IUnitOfWork : IDisposable
 {
     IProductRepository ProductRepository { get; }
-    // Add more repositories as needed
+    // Add repositories as the project grows
 
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);
@@ -146,9 +168,7 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public IProductRepository ProductRepository { get; }
 
-    public UnitOfWork(
-        AppDbContext appDbContext,
-        IProductRepository productRepository)
+    public UnitOfWork(AppDbContext appDbContext, IProductRepository productRepository)
     {
         _appDbContext = appDbContext;
         ProductRepository = productRepository;
@@ -174,12 +194,7 @@ public sealed class UnitOfWork : IUnitOfWork
         try
         {
             int rowsAffected = await _appDbContext.SaveChangesAsync(cancellationToken);
-
-            return new SaveResult
-            {
-                IsSuccess = true,
-                RowsAffected = rowsAffected
-            };
+            return new SaveResult { IsSuccess = true, RowsAffected = rowsAffected };
         }
         catch (DbUpdateException dbUpdateException)
         {
@@ -207,42 +222,26 @@ public sealed class SaveResult
 }
 ```
 
-## Rules
-
-| Rule | Explanation |
-|---|---|
-| No `.Update()` | EF change tracker detects changes automatically |
-| `GetByIdAsync` with tracking | Use for modifications — EF tracks changes |
-| `GetByIdAsNoTrackingAsync` without tracking | Use for reads — more performant |
-| Always `AsNoTracking()` | On read-only queries |
-| Handle `DbUpdateException` | In `CompleteAsync` — never let it bubble up |
-| No lazy loading | Use explicit `.Include()` always |
+---
 
 ## Anti-patterns — NEVER DO THIS
 
 ```csharp
-// ❌ NEVER call .Update() — change tracker handles this
-public async Task UpdateAsync(Product product, CancellationToken ct)
-{
-    _appDbContext.Products.Update(product); // WRONG
-    await _appDbContext.SaveChangesAsync(ct);
-}
+// ❌ NEVER call .Update()
+_appDbContext.Products.Update(product);
 
-// ✅ CORRECT: EF detects changes automatically
-public async Task UpdateAsync(Product product, CancellationToken ct)
-{
-    // Just modify the tracked entity and call CompleteAsync
-    await _unitOfWork.CompleteAsync(ct);
-}
+// ✅ CORRECT — modify tracked entity, call CompleteAsync
+product.UpdateName("New Name");
+await _unitOfWork.CompleteAsync(cancellationToken);
 
-// ❌ NEVER use lazy loading
+// ❌ NEVER lazy loading navigation properties
 public class Product
 {
-    public virtual ICollection<Order> Orders { get; set; } // WRONG
+    public virtual ICollection<Order> Orders { get; set; }
 }
 
-// ✅ CORRECT: Explicit includes
-var product = await _appDbContext.Products
+// ✅ CORRECT — explicit includes in repository methods
+return await AppDbContext.Products
     .Include(p => p.Orders)
     .FirstOrDefaultAsync(p => p.Id == id, ct);
 ```
