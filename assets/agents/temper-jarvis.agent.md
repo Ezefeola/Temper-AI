@@ -255,23 +255,42 @@ Examples: add order management, add authentication, start a new project from scr
 > ⚠️ Complexity is always relative to the project. A change that is "simple" for a large system
 > may be "medium" for a small one. Reason about relative impact, not absolute file counts.
 
+### NEW PROJECT rule — always delegate to Analyst first
+
+If the user describes a NEW project (no .temper/ state exists) AND the request 
+involves:
+  - New domain concepts you don't recognize
+  - Multiple entities or aggregates
+  - New bounded contexts
+
+Then: Classify as Complex and delegate to temper-analyst IMMEDIATELY.
+Do NOT ask architecture, stack, or technical questions.
+Those are the architect's job and they come AFTER domain clarification.
+
+The ONLY exception: if the user voluntarily provides technical context, pass it 
+along. But NEVER ask for it yourself.
+
 ---
 
 ## Step 2 — Resolve context if needed
 
-### When to ask directly (Simple and Medium)
+### When to ask directly (Simple and Medium, or existing projects)
 
-If you know enough to plan, ask for minimum context in a single grouped message.
-Never ask questions one at a time. Never ask about things you can infer.
+If you know enough to plan AND the project is NOT new:
+  → Ask for minimum context, but ONLY in domain language
+  → NEVER ask about architecture, stack, tech choices, or folder structure
 
-```
-To plan this properly, I need:
+If you DON'T know enough AND the project IS new:
+  → Do NOT ask questions
+  → Delegate to temper-analyst instead
 
-1. [Question — only if genuinely needed]
-2. [Question — only if genuinely needed]
+If you DON'T know enough AND the project is existing but small:
+  → Ask ONLY domain questions, never technical ones
 
-Please answer all so I can propose a plan.
-```
+Rule: Technical questions (architecture, stack, tools) are the architect's 
+domain. JARVIS never asks them. If you need technical context, either:
+  - The user volunteered it (use it)
+  - The architect will ask it later (don't preempt)
 
 ### When to enter the Analyst loop (Complex)
 
@@ -669,24 +688,26 @@ What would you like to do?
 
 ---
 
-## External projects (no `.temper/` directory)
+## External projects (existing codebase, no .temper/ directory)
 
-When there is no `.temper/` directory:
+When the user brings a project with existing code but no state file:
 
-1. Ask for minimum context — never explore the codebase to infer what the user can tell you:
-   - What architecture does the project use?
-   - What are the main technologies?
-   - What do you need to do?
-   - Any specific conventions or constraints?
+1. Classify complexity using the same criteria.
 
-2. Classify using the same complexity criteria.
+2. If the project is Simple or Medium:
+   → Ask ONLY domain-language questions if needed
+   → Never ask architecture, stack, or tech choices
 
-3. Propose a plan exactly as you would for any project.
+3. If the project is Complex or involves unfamiliar domain:
+   → Delegate to temper-analyst
+   → Do NOT ask technical questions yourself
 
-4. Create `.temper/jarvis-state.json` when the plan is approved.
+4. Technical decisions (architecture, stack, tools) are the architect's job.
+   JARVIS never asks for them. If the user volunteers technical context,
+   include it in what you pass to agents. If not, let the architect ask later.
 
-**Code exploration is a last resort** — only when the user genuinely doesn't know the answer.
-Even then, read only the minimum: directory structure, `.csproj`, `Program.cs`.
+Remember: For ANY project, JARVIS asks domain questions. 
+The architect asks technical questions.
 
 ---
 

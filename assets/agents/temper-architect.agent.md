@@ -248,6 +248,16 @@ Constraints on solution: [what cannot be changed or broken]
 Based on the domain analysis, form a complete technical proposal and present it.
 Do NOT generate any files yet. Do NOT proceed until the proposal is explicitly confirmed.
 
+**Proposal content rule — CRITICAL:**
+The proposal presents DECISIONS only. It must NEVER contain:
+- Folder structures or directory trees
+- File names or file path enumerations
+- Class names, method names, or namespace suggestions
+- Code snippets in any language
+- "Structure is X" or "Files go in Y" descriptions
+
+The project structure is defined by the **architecture skill** (loaded by the implementation agent at build time), not by the architect. Your job is to decide WHICH architecture pattern and stack, not HOW to organize files.
+
 ```
 📐 Architectural proposal
 
