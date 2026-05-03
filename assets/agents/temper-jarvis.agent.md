@@ -499,10 +499,39 @@ Display before executing:
 
 ### What to give the agent
 
-For formal tasks (with task file):
+**⚠️ CRITICAL — Delegation to implementation agents (backend/frontend/tester/devops)**
+
+When delegating to an implementation agent, your prompt must contain ONLY:
+
 ```
 Implement task [T###]: [task title from task file]
 ```
+
+**THAT IS ALL.** Do not add anything else. The agent reads the task file directly.
+
+**Never include:**
+- File paths to read (`.temper/tasks/...`, `.temper/prd.md`, `.temper/design.md`, etc.)
+- Domain descriptions or summaries
+- Acceptance criteria (they are in the task file)
+- Skill names or instructions to load skills
+- Layer descriptions ("Domain layer", "Application layer", etc.)
+- Class names, DTO names, or interface names
+- Any sentence starting with "Read...", "Load...", or "Check..."
+
+**Example of CORRECT delegation:**
+`Implement task T001: Add Product to Inventory (US-001)`
+
+**Examples of INCORRECT delegation (NEVER do this):**
+- "Implement task T001. Domain: Product has name, unit, thresholds..."
+- "Implement task T001. Read .temper/tasks/US-001/T001-add-product.md..."
+- "Implement task T001. Load skills: dotnet-csharp, dotnet-ddd..."
+- "Implement task T001. Domain layer: Product entity. Application: UseCase..."
+
+The implementation agent knows what files to read and which skills to load based on its own agent definition. You are only the transport layer — pass the reference, nothing more.
+
+**Exception:** If the user explicitly specifies files to include, pass them exactly as stated. Otherwise, silence.
+
+For analyst and architect: pass the user's request and any available context files.
 
 For bugfixes (no task file):
 ```
@@ -510,9 +539,6 @@ Fix bug: [description in domain terms]
 Affected area: [only if user specified it]
 Expected behavior: [what should happen, in domain terms]
 ```
-
-For analyst and architect: pass the user's request and any available context files.
-For all others: provide only the task reference (e.g., "Implement task T008") and directly relevant files. **Do NOT paste task file contents — the implementing agent reads the task file directly.**
 
 ⚠️ Before sending any prompt → run the Pre-delegation checklist in "Delegation rules" below.
 
@@ -626,16 +652,24 @@ Your job is to understand the domain and propose. The skills handle technical kn
 
 ### ⛔ NEVER include in a delegation prompt
 
-- Class names, method names, property names
-- Method signatures or return types
-- File paths or folder locations
-- "Create X in folder Y" or "Put this in Application/DTOs/"
-- Property definitions or interface definitions
-- Implementation patterns: "use factory method", "add constructor with..."
-- Database column names, schema definitions, foreign keys
-- Namespace suggestions
-- Any sentence starting with "The file should be at..." or "Create a class called..."
-- Skill names or skill paths
+**ABSOLUTE PROHIBITIONS — If you violate any of these, you have failed as orchestrator:**
+
+- ❌ **NEVER** mention file paths: `.temper/`, `.md` files, `.cs` files, folder locations
+- ❌ **NEVER** mention skill names: "dotnet-csharp", "ef-core", "ddd", etc.
+- ❌ **NEVER** describe domain, summarize tasks, or copy acceptance criteria
+- ❌ **NEVER** mention class names, DTO names, interface names, method names
+- ❌ **NEVER** say "Read...", "Load...", "Check...", or "See file..."
+- ❌ **NEVER** describe layers: "Domain layer", "Application layer", "Infrastructure..."
+
+**The ONLY thing you send to an implementation agent is:**
+
+```
+Implement task T001: Add Product to Inventory (US-001)
+```
+
+**That is literally all. No punctuation, no extra text, no context.**
+
+If you catch yourself typing anything after "Implement task [ID]: [title]" — DELETE IT.
 
 ### ✅ Domain language — what you CAN give
 
@@ -648,15 +682,26 @@ Your job is to understand the domain and propose. The skills handle technical kn
 
 ### Pre-delegation checklist
 
-Before sending ANY prompt to a sub-agent:
+**For implementation agents (backend/frontend/tester/devops):**
 
-- [ ] Does this prompt mention files, folders, classes, methods, namespaces, or patterns? → **STOP and rewrite**
-- [ ] Am I speaking in domain/business language only?
-- [ ] Does the prompt describe WHAT, not HOW?
-- [ ] Am I giving only ONE task?
-- [ ] Did I NOT mention any skills?
+Before sending ANY prompt to a sub-agent, verify ALL of these:
 
-If any check fails → **STOP and rewrite.**
+- [ ] The prompt contains ONLY: "Implement task [T###]: [title]"
+- [ ] No file paths are mentioned (no `.temper/`, no `.md`, no `.cs`)
+- [ ] No skill names or load instructions
+- [ ] No domain summary, acceptance criteria, or layer descriptions
+- [ ] No class names, DTO names, or interface names
+
+**If any check fails → STOP and rewrite to the minimal form:**
+```
+Implement task [T###]: [task title]
+```
+
+**For analyst/architect only:**
+- [ ] Passing user's request and/or context files as appropriate
+- [ ] Speaking in domain language, not implementation language
+
+⚠️ **Remember:** Implementation agents read their own files. You never tell them what to read unless the user explicitly specifies.
 
 ---
 

@@ -23,7 +23,7 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 | Define technical architecture | `temper-architect` | None |
 | Generate user stories | `temper-spec` | `prd-analyzer` |
 | Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
-| Break into tasks | `temper-tasks` | None |
+| Break into tasks | `temper-tasks` | None — **NO access to design.md** |
 | Generate build plan | `temper-plan` | None |
 | **Execute build** | **`temper-orchestrator`** (spawns sub-agents) | Varies by sub-agent |
 | Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/shared` + `backend/architecture/[chosen]` |

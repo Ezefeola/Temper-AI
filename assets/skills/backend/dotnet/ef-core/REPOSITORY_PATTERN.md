@@ -37,7 +37,6 @@ load `REPOSITORY_USAGE.md` instead — it is significantly lighter.
 ## GenericRepository\<TEntity\>
 
 ```csharp
-// Infrastructure/Persistence/Repositories/GenericRepository.cs
 public abstract class GenericRepository<TEntity> where TEntity : class
 {
     protected readonly AppDbContext AppDbContext;
@@ -47,25 +46,41 @@ public abstract class GenericRepository<TEntity> where TEntity : class
         AppDbContext = appDbContext;
     }
 
-    public async Task<TEntity?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<TEntity?> GetByIdAsync(TId id, CancellationToken ct = default)
     {
+        var entityType = AppDbContext.Model.FindEntityType(typeof(TEntity));
+        var pkProperty = entityType?.FindPrimaryKey()?.Properties.FirstOrDefault();
+
+        if (pkProperty == null)
+            throw new InvalidOperationException($"Entity {typeof(TEntity).Name} has no primary key defined.");
+
+        var parameter = Expression.Parameter(typeof(TEntity), "e");
+        var property = Expression.Property(parameter, pkProperty.Name);
+        var value = Expression.Constant(id, typeof(TId));
+        var equality = Expression.Equal(property, value);
+        var lambda = Expression.Lambda<Func<TEntity, bool>>(equality, parameter);
+
         return await AppDbContext.Set<TEntity>()
-            .FirstOrDefaultAsync(
-                entity => EF.Property<Guid>(entity, "Id") == id,
-                cancellationToken);
+            .FirstOrDefaultAsync(lambda, ct);
     }
 
-    public async Task<TEntity?> GetByIdAsNoTrackingAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<TEntity?> GetByIdAsNoTrackingAsync(TId id, CancellationToken ct = default)
     {
+        var entityType = AppDbContext.Model.FindEntityType(typeof(TEntity));
+        var pkProperty = entityType?.FindPrimaryKey()?.Properties.FirstOrDefault();
+
+        if (pkProperty == null)
+            throw new InvalidOperationException($"Entity {typeof(TEntity).Name} has no primary key defined.");
+
+        var parameter = Expression.Parameter(typeof(TEntity), "e");
+        var property = Expression.Property(parameter, pkProperty.Name);
+        var value = Expression.Constant(id, typeof(TId));
+        var equality = Expression.Equal(property, value);
+        var lambda = Expression.Lambda<Func<TEntity, bool>>(equality, parameter);
+
         return await AppDbContext.Set<TEntity>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-                entity => EF.Property<Guid>(entity, "Id") == id,
-                cancellationToken);
+            .FirstOrDefaultAsync(lambda, ct);
     }
 
     public async Task AddAsync(
@@ -85,7 +100,6 @@ public abstract class GenericRepository<TEntity> where TEntity : class
 ## IGenericRepository\<TEntity\>
 
 ```csharp
-// Domain/Common/Repositories/IGenericRepository.cs
 public interface IGenericRepository<TEntity> where TEntity : class
 {
     Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -100,7 +114,6 @@ public interface IGenericRepository<TEntity> where TEntity : class
 ## Specific repository — interface and implementation
 
 ```csharp
-// Domain/Products/Repositories/IProductRepository.cs
 public interface IProductRepository : IGenericRepository<Product>
 {
     Task<bool> ExistsByNameAsync(string productName, CancellationToken cancellationToken = default);
@@ -108,7 +121,6 @@ public interface IProductRepository : IGenericRepository<Product>
     Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default);
 }
 
-// Infrastructure/Persistence/Repositories/ProductRepository.cs
 public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     public ProductRepository(AppDbContext appDbContext) : base(appDbContext)
@@ -149,7 +161,6 @@ public sealed class ProductRepository : GenericRepository<Product>, IProductRepo
 ## UnitOfWork
 
 ```csharp
-// Domain/Common/UnitOfWork/IUnitOfWork.cs
 public interface IUnitOfWork : IDisposable
 {
     IProductRepository ProductRepository { get; }
@@ -161,7 +172,6 @@ public interface IUnitOfWork : IDisposable
     Task<SaveResult> CompleteAsync(CancellationToken cancellationToken = default);
 }
 
-// Infrastructure/Persistence/UnitOfWork/UnitOfWork.cs
 public sealed class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _appDbContext;
@@ -213,7 +223,6 @@ public sealed class UnitOfWork : IUnitOfWork
     }
 }
 
-// Domain/Common/UnitOfWork/SaveResult.cs
 public sealed class SaveResult
 {
     public bool IsSuccess { get; init; }
