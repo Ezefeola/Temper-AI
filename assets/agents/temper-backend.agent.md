@@ -157,7 +157,11 @@ Output: `✅ Task [T###] marked as in-progress`
 
 ### Phase 3 — Determine and load required skills
 
-Read the task and spec carefully. Determine exactly which skills are needed before loading any.
+⛔ **You may NOT write a single line of code until this phase is complete and the
+`📚 Skills loaded` checkpoint below has been emitted. No exceptions.**
+
+Read the task and spec carefully. Determine exactly which skills are needed, then load all
+of them before doing anything else.
 
 **Rule: Load only what the task requires. Never load speculatively.**
 If a skill's domain is not present in the task or spec, do not load it.
@@ -166,22 +170,15 @@ If you are unsure, re-read the task — the answer is always there.
 #### Always load — every task, no exceptions
 
 1. `dotnet-csharp/SKILL.md` — universal C# / .NET 10 standards
-   Output: `✅ dotnet-csharp loaded`
-
 2. `backend/architecture/[chosen]/SKILL.md` — folder structure and dependency rules
    - `Clean Architecture` → `backend/architecture/clean/SKILL.md`
    - `Hexagonal Architecture` → `backend/architecture/hexagonal/SKILL.md`
    - `Vertical Slice` → `backend/architecture/vertical-slice/SKILL.md`
    - `Onion Architecture` → `backend/architecture/onion/SKILL.md`
-   Output: `✅ backend/architecture/[chosen] loaded`
-
 3. `backend/architecture/shared/RESULT_PATTERN.md` — Result<T> is universal
-   Output: `✅ Result pattern loaded`
-
 4. `ddd/ubiquitous-language/SKILL.md` — domain terminology understanding
    This skill teaches how to interpret domain terms from specs and tasks.
    It is mandatory for every task — domain understanding precedes implementation.
-   Output: `✅ ddd/ubiquitous-language loaded`
 
 #### Load conditionally — only if the task requires it
 
@@ -205,21 +202,21 @@ If you are unsure, re-read the task — the answer is always there.
 
 - `backend/dotnet/ef-core/BULK_OPERATIONS.md` — only for bulk insert / batch (1000+ rows)
 
-#### Skill loading summary — emit after all skills are loaded
+#### Checkpoint — emit after ALL skills are loaded, before proceeding to Phase 3.5
 
 ```
 📚 Skills loaded:
    ✅ dotnet-csharp
    ✅ backend/architecture/[chosen]
    ✅ Result pattern
-   ✅ ddd/ubiquitous-language/
-   [✅ each additional skill with its file path]
+   ✅ ddd/ubiquitous-language
+   [✅ each additional skill loaded]
 
    Ready to implement.
 ```
 
-**If you reach Phase 4 without having executed `read_file` for each skill
-and emitted the confirmations above — STOP. Go back and load the skills.**
+⛔ **If you have not executed `read_file` for every skill listed above and emitted this
+checkpoint — STOP. You are not allowed to proceed. Load the missing skills first.**
 
 ---
 
@@ -452,6 +449,8 @@ Output:
 ## Absolute rules
 
 - **NEVER write code before all context files and required skills are loaded**
+- **NEVER proceed past Phase 3 without emitting the `📚 Skills loaded` checkpoint**
+- **NEVER emit individual skill confirmations (`✅ X loaded`) outside of the `📚 Skills loaded` checkpoint block**
 - **NEVER invent conventions not defined in a loaded skill**
 - **NEVER follow literal file path or class name suggestions from task files** — skills define structure
 - **NEVER output code that has not passed Phase 5 validation**

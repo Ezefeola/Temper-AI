@@ -179,36 +179,28 @@ public sealed class Order : Entity<Guid>
         return ([], order);
     }
 
-    // Aggregate root controls child mutations
+    // Aggregate root validates its own invariants, then delegates child creation to the child itself
     public (List<string> Errors, bool Added) AddItem(Guid productId, int quantity, decimal unitPrice)
     {
         List<string> errors = [];
 
+        // Aggregate-level invariants only — not field-level validation
         if (Status != OrderStatus.Pending)
             errors.Add("Items can only be added to pending orders");
 
         if (_items.Count >= Rules.MAX_ITEMS)
             errors.Add($"Order cannot exceed {Rules.MAX_ITEMS} items");
 
-        if (quantity <= 0)
-            errors.Add("Quantity must be greater than zero");
-
-        if (unitPrice <= 0)
-            errors.Add("Unit price must be greater than zero");
-
         if (errors.Count > 0)
             return (errors, false);
 
-        OrderItem item = new()
-        {
-            Id = Guid.NewGuid(),
-            OrderId = Id,
-            ProductId = productId,
-            Quantity = quantity,
-            UnitPrice = unitPrice
-        };
+        // Delegate field validation to the child's own factory method
+        var (itemErrors, item) = OrderItem.Create(Id, productId, quantity, unitPrice);
 
-        _items.Add(item);
+        if (itemErrors.Count > 0)
+            return (itemErrors, false);
+
+        _items.Add(item!);
         UpdatedAt = DateTime.UtcNow;
         return ([], true);
     }
@@ -227,26 +219,111 @@ public sealed class Order : Entity<Guid>
     }
 }
 
-// Child entity — no factory method needed, created only by the aggregate root
+// Child entity — internal Create factory method, validates its own business rules
 public sealed class OrderItem : Entity<Guid>
 {
-    public Guid OrderId { get; internal set; }
-    public Guid ProductId { get; internal set; }
-    public int Quantity { get; internal set; }
-    public decimal UnitPrice { get; internal set; }
+    public class Rules
+    {
+        public const int MAX_QUANTITY = 100;
+    }
 
-    internal OrderItem() { }
+    public Guid OrderId { get; private set; }
+    public Guid ProductId { get; private set; }
+    public int Quantity { get; private set; }
+    public decimal UnitPrice { get; private set; }
+
+    // Private constructor — EF Core needs this
+    private OrderItem() { }
+
+    // internal — only the aggregate root can call this
+    internal static (List<string> Errors, OrderItem? Item) Create(
+        Guid orderId,
+        Guid productId,
+        int quantity,
+        decimal unitPrice)
+    {
+        List<string> errors = [];
+
+        if (orderId == Guid.Empty)
+            errors.Add("OrderId is required");
+
+        if (productId == Guid.Empty)
+            errors.Add("ProductId is required");
+
+        if (quantity <= 0 || quantity > Rules.MAX_QUANTITY)
+            errors.Add($"Quantity must be between 1 and {Rules.MAX_QUANTITY}");
+
+        if (unitPrice <= 0)
+            errors.Add("Unit price must be greater than zero");
+
+        if (errors.Count > 0)
+            return (errors, null);
+
+        return ([], new OrderItem
+        {
+            Id = Guid.NewGuid(),
+            OrderId = orderId,
+            ProductId = productId,
+            Quantity = quantity,
+            UnitPrice = unitPrice
+        });
+    }
 }
 ```
 
 ### Aggregate rules
 
+**Structure**
 - The aggregate root owns the child collection — always `private readonly List<T> _items = []`
 - Expose children as `IReadOnlyList<T>` — never expose the mutable list
 - All child mutations go through aggregate root methods — never modify children directly
-- Child entities use `internal set` and `internal` constructor — not accessible outside the aggregate
-- Invariants are enforced in the aggregate root — children are dumb data holders
+- Child entities live in the same folder as their aggregate root
 - EF Core can hydrate private collections via `DBCONTEXT_SETUP.md` navigation configuration
+
+**Child entities — factory methods and accessibility**
+- Child entities have an `internal static Create(...)` factory method — never `public`
+- The `internal` factory method validates the child's own business rules (field-level: nulls, ranges, formats)
+- Properties use `private set` — never `internal set`
+- Constructor is `private` — same as any entity, EF Core requires it
+- This guarantees that nothing outside the aggregate can instantiate or mutate a child
+
+**Responsibility split between root and child**
+- The aggregate root validates **aggregate-level invariants** — state checks, collection limits, cross-child rules
+- The child validates **its own field-level rules** — required fields, value ranges, format constraints
+- The aggregate root never duplicates field validation from the child — it calls `Child.Create(...)` and propagates errors
+- This keeps each class responsible for exactly what belongs to it (SRP)
+
+**Aggregate size — keep it small**
+- An aggregate must be loadable in full from the database without explosive JOINs
+- Practical rule: if a child collection can exceed ~50 records in production, reconsider whether it is truly a child or should be its own aggregate referenced by ID
+- An aggregate requiring 4+ child collections is a signal it is modeled too broadly — split it
+- Prefer small, cohesive aggregates over large aggregates that group everything related
+
+**References between aggregates — by ID only**
+- An aggregate never holds an EF navigation property pointing to another aggregate
+- References are primitive IDs only (`Guid CustomerId`, never `Customer Customer`)
+- If a use case needs data from another aggregate, load it separately in the use case
+- This prevents accidental eager loading, hidden lazy loading, and coupling between boundaries
+
+```csharp
+// ✅ CORRECT — reference another aggregate by ID only
+public sealed class Order : Entity<Guid>
+{
+    public Guid CustomerId { get; private set; }  // ID only
+}
+
+// ❌ WRONG — navigation property to another aggregate
+public sealed class Order : Entity<Guid>
+{
+    public Customer Customer { get; private set; }  // NEVER — hidden loading, tight coupling
+}
+```
+
+**Invariants**
+- Aggregate-level rules (order status, max items, cross-child constraints) live in the aggregate root
+- Field-level rules (valid values, required fields, ranges) live in the child's `internal Create` factory method
+- If a child accumulates complex business logic beyond validating its own fields, it is a signal it should become its own aggregate
+- Never duplicate validations across root and child — each layer owns its slice of responsibility
 
 ---
 
