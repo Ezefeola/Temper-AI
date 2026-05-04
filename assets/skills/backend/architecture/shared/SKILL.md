@@ -17,18 +17,20 @@ description: >
 | `RESULT_PATTERN.md` | **Always** — Result<T> is universal |
 | `DTO_CONVENTIONS.md` | **Always** — DTOs are needed in most backend tasks |
 | `USE_CASE_PATTERNS.md` | **Always** — Use cases are needed in most backend tasks |
+| `SOLID_CLEAN_CODE.md` | **Always** — SOLID principles and Clean Code standards |
 
 ## How to load this skill
 
-When an agent determines it needs this skill, load ALL three sub-files:
+When an agent determines it needs this skill, load ALL four sub-files:
 
 ```
 read_file('backend/architecture/shared/RESULT_PATTERN.md')
 read_file('backend/architecture/shared/DTO_CONVENTIONS.md')
 read_file('backend/architecture/shared/USE_CASE_PATTERNS.md')
+read_file('backend/architecture/shared/SOLID_CLEAN_CODE.md')
 ```
 
-This skill does NOT have optional sub-files. Load all three always.
+This skill does NOT have optional sub-files. Load all four always.
 
 ## Quick Reference — Always loaded
 
@@ -57,6 +59,16 @@ Load `USE_CASE_PATTERNS.md` for complete patterns. Key rules:
 - Interface in same folder — `ICreateProduct`
 - `sealed class` with explicit constructor
 - Result pattern with HttpStatusCode
+
+### SOLID & Clean Code (always loaded)
+
+Load `SOLID_CLEAN_CODE.md` for complete rules. Key rules:
+
+- Methods ≤ ~30 lines — extract private methods with descriptive names
+- Nesting ≤ 3 levels — use early returns
+- Branches ≤ ~7 per method — extract or simplify
+- New behavior = new file — never modify an existing use case
+- No dead code, no boolean parameters, comments only for WHY
 
 ## Absolute rules — never broken
 

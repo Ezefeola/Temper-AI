@@ -179,6 +179,9 @@ If you are unsure, re-read the task — the answer is always there.
 4. `ddd/ubiquitous-language/SKILL.md` — domain terminology understanding
    This skill teaches how to interpret domain terms from specs and tasks.
    It is mandatory for every task — domain understanding precedes implementation.
+5. `backend/architecture/shared/SOLID_CLEAN_CODE.md` — SOLID principles and Clean Code standards
+   This skill provides design principles for method size, class boundaries, and complexity control.
+   It applies to every task — good design is not optional.
 
 #### Load conditionally — only if the task requires it
 
@@ -210,6 +213,7 @@ If you are unsure, re-read the task — the answer is always there.
    ✅ backend/architecture/[chosen]
    ✅ Result pattern
    ✅ ddd/ubiquitous-language
+   ✅ SOLID & Clean Code
    [✅ each additional skill loaded]
 
    Ready to implement.
