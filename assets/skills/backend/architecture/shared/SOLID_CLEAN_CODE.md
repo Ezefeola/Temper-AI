@@ -11,14 +11,14 @@ produces: [method-design, class-boundaries, complexity-control, solid-principles
 
 # SOLID Principles & Clean Code — TemperAI
 
-> This skill covers DESIGN decisions: method size, class boundaries, complexity control.
+> This skill covers DESIGN decisions: method cohesion, class boundaries, complexity control.
 > It does NOT duplicate rules from dotnet-csharp, RESULT_PATTERN, USE_CASE_PATTERNS, or DTO_CONVENTIONS.
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-1. **NEVER methods longer than ~30 lines** — extract private methods with descriptive names
-2. **NEVER more than 3 levels of nesting** — use early returns to flatten
-3. **NEVER methods with more than ~7 branches** (if/switch/loops combined) — extract or simplify
+1. **NEVER a method that does more than one clearly defined job** — if you can't describe it in one sentence starting with a verb, it does too much. "Create an order from a request, validate it, persist it, and return the result" IS one sentence. "Create an order, send a confirmation email, and generate an invoice" is NOT.
+2. **NEVER deep nesting that hides the happy path** — use early returns to keep code flat. If you have to scroll horizontally or count braces to find what the method actually does, flatten it.
+3. **NEVER a method where you lose track of the happy path** — if branching is so complex that you can't trace the success path at a glance, extract the confusing part into a well-named method.
 4. **NEVER modify an existing use case to add new behavior** — create a new use case class
 5. **NEVER a class with 2+ unrelated responsibilities** — split into separate classes
 6. **NEVER dead code** — no commented-out code, no unused methods, no unused imports
@@ -27,79 +27,108 @@ produces: [method-design, class-boundaries, complexity-control, solid-principles
 
 ---
 
-## SRP — Single Responsibility
+## The Use Case Flow — Readability First
 
-One class = one reason to change. One method = one job.
+A use case's `ExecuteAsync` has a natural rhythm: **validate → create → persist → return**. This is ONE cohesive job. The steps are sequential, they depend on each other, and they read naturally top-to-bottom.
 
-### Detect violations
+### When to keep it inline
 
-- A method that does "validate AND persist AND notify" is doing three jobs — extract
-- If a class has 3+ private fields from different domains (e.g., `_productRepo`, `_emailSender`, `_paymentGateway`), it's doing too much
-- If you can describe a class's purpose only with "AND", it violates SRP
-
-### ✅ CORRECT — extracted private methods with descriptive names
+If the full flow is readable at a glance — you can see the beginning and the end on screen, and each step is straightforward — **keep it inline**. Do NOT fragment it into `ValidateRequest()`, `CreateEntity()`, `PersistEntity()`, `BuildResponse()` private methods. That makes it HARDER to follow because you have to jump between methods to understand a simple flow.
 
 ```csharp
-public async Task<Result<CreateOrderResponseDto>> ExecuteAsync(
-    CreateOrderRequestDto request, CancellationToken ct)
+// ✅ CORRECT — cohesive flow, reads top-to-bottom
+public async Task<Result<CreateProductResponseDto>> ExecuteAsync(
+    CreateProductRequestDto request, CancellationToken ct)
 {
-    Result<Order> orderResult = CreateOrderFromRequest(request);
-    if (!orderResult.IsSuccess)
-        return Result<CreateOrderResponseDto>.Failure(orderResult.HttpStatusCode)
-            .WithErrors(orderResult.Errors);
-
-    await _orderRepository.AddAsync(orderResult.Payload!, ct);
-    await _unitOfWork.SaveChangesAsync(ct);
-
-    return Result<CreateOrderResponseDto>.Success(HttpStatusCode.Created)
-        .WithPayload(orderResult.Payload.ToCreateOrderResponseDto());
-}
-```
-
-### ❌ WRONG — one fat method doing everything
-
-```csharp
-public async Task<Result<CreateOrderResponseDto>> ExecuteAsync(
-    CreateOrderRequestDto request, CancellationToken ct)
-{
-    List<string> errors = [];
-    if (string.IsNullOrWhiteSpace(request.CustomerName))
-        errors.Add("Customer name is required");
-    if (request.Items.Count == 0)
-        errors.Add("Order must have at least one item");
-    foreach (var item in request.Items)
-    {
-        if (item.Quantity <= 0)
-            errors.Add($"Item {item.ProductId} has invalid quantity");
-        if (item.UnitPrice <= 0)
-            errors.Add($"Item {item.ProductId} has invalid price");
-    }
+    List<string> errors = Validate(request);
     if (errors.Count > 0)
-        return Result<CreateOrderResponseDto>.Failure(HttpStatusCode.BadRequest)
+        return Result<CreateProductResponseDto>.Failure(HttpStatusCode.BadRequest)
             .WithErrors(errors);
 
-    Order order = new()
+    Product product = new()
     {
         Id = Guid.NewGuid(),
-        CustomerName = request.CustomerName,
-        Items = request.Items.Select(i => new OrderItem
-        {
-            Id = Guid.NewGuid(),
-            ProductId = i.ProductId,
-            Quantity = i.Quantity,
-            UnitPrice = i.UnitPrice
-        }).ToList(),
+        Name = request.Name,
+        Price = request.Price,
         CreatedAt = DateTime.UtcNow
     };
 
-    await _orderRepository.AddAsync(order, ct);
+    await _productRepository.AddAsync(product, ct);
     await _unitOfWork.SaveChangesAsync(ct);
 
-    // ... more logic
-    return Result<CreateOrderResponseDto>.Success(HttpStatusCode.Created)
-        .WithPayload(order.ToCreateOrderResponseDto());
+    return Result<CreateProductResponseDto>.Success(HttpStatusCode.Created)
+        .WithPayload(product.ToCreateProductResponseDto());
 }
 ```
+
+Notice: validation IS extracted here because it has its own internal complexity (multiple rules, a loop). But entity creation, persistence, and response mapping are inline because they're each 2-3 lines that add no complexity.
+
+### When to extract from a use case
+
+Extract a private method when:
+- A block of logic has **its own internal complexity** that breaks the reading flow (e.g., validation with cross-field rules, multi-step aggregate construction)
+- The same logic appears in multiple places (DRY)
+- Extracting it gives it a **name that makes the caller more readable** — the name communicates something the raw code doesn't
+
+Do NOT extract when:
+- The extracted method is only called once AND its name doesn't add information beyond what the code already says
+- Reading it requires jumping to another method to understand what should be obvious inline
+
+### The readability test
+
+Ask yourself: **"Can I read this method once, top-to-bottom, and understand the complete flow?"**
+
+- If yes → it's good, even if it's 40-50 lines
+- If no → find the part that's confusing and extract THAT part — not everything
+
+---
+
+## SRP — Single Responsibility
+
+One class = one reason to change. One method = one cohesive job.
+
+### Detect violations
+
+- A method that does "create an order AND send an email AND generate an invoice" is doing three jobs — split into separate use cases
+- If a class has 3+ private fields from different domains (e.g., `_orderRepo`, `_emailSender`, `_paymentGateway`), it's doing too much
+- If you can describe a class's purpose only with "AND", it violates SRP
+
+### ✅ CORRECT — separate use cases for separate jobs
+
+```csharp
+// Each use case does ONE job
+public sealed class CreateOrder : ICreateOrder { ... }
+public sealed class SendOrderConfirmation : ISendOrderConfirmation { ... }
+public sealed class GenerateInvoice : IGenerateInvoice { ... }
+```
+
+### ❌ WRONG — one use case doing unrelated things
+
+```csharp
+public sealed class CreateOrder : ICreateOrder
+{
+    public async Task<Result<CreateOrderResponseDto>> ExecuteAsync(
+        CreateOrderRequestDto request, CancellationToken ct)
+    {
+        // Create the order — this is the use case's job
+        Order order = new() { /* ... */ };
+        await _orderRepository.AddAsync(order, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        // Send confirmation email — NOT this use case's job
+        await _emailSender.SendAsync(order.CustomerEmail, "Order confirmed", ct);
+
+        // Generate invoice PDF — NOT this use case's job
+        byte[] pdf = await _invoiceGenerator.GenerateAsync(order.Id, ct);
+        await _storage.SaveAsync($"invoices/{order.Id}.pdf", pdf, ct);
+
+        return Result<CreateOrderResponseDto>.Success(HttpStatusCode.Created)
+            .WithPayload(order.ToCreateOrderResponseDto());
+    }
+}
+```
+
+The CreateOrder use case should create an order. Email and invoice are separate concerns — trigger them via domain events or orchestrate from a higher level.
 
 ---
 
@@ -244,41 +273,72 @@ Most DIP coverage already exists in USE_CASE_PATTERNS and architecture skills (u
 
 ## Clean Code Rules
 
-### Method size — ~30 lines max
+### Method cohesion — readable at a glance
 
-If a method exceeds ~30 lines, extract private methods with descriptive names.
+A method should do ONE cohesive thing that you can understand at a glance. If it does, length doesn't matter. If you have to scroll and lose track of what's happening, THAT's when you extract.
+
+**Guidelines:**
+
+- A method should be readable at a glance — you see the beginning and the end on screen
+- If a method does ONE cohesive thing (like a use case's ExecuteAsync that validates, creates, persists, and returns), that's FINE even if it's 40-50 lines. The flow reads top-to-bottom.
+- Extract private methods when:
+  - A block of logic has its own internal complexity that breaks the reading flow
+  - The same logic appears in multiple places (DRY)
+  - Extracting it gives it a name that makes the caller MORE readable
+- Do NOT extract when:
+  - The extracted method is only called once
+  - Its name doesn't add information beyond what the code already says
+  - Reading it requires jumping to another method to understand what should be obvious inline
 
 ```csharp
-// ❌ WRONG — 50-line ExecuteAsync
-public async Task<Result<CreateProductResponseDto>> ExecuteAsync(...)
-{
-    // 10 lines of validation
-    // 10 lines of entity creation
-    // 10 lines of persistence
-    // 10 lines of notification
-    // 10 lines of response mapping
-}
-
-// ✅ CORRECT — composed of small, named steps
+// ❌ WRONG — over-extracted, you have to jump to 4 private methods to understand a simple flow
 public async Task<Result<CreateProductResponseDto>> ExecuteAsync(
     CreateProductRequestDto request, CancellationToken ct)
 {
-    Product? product = CreateAndValidateProduct(request);
-    if (product is null)
+    var errors = ValidateRequest(request);
+    if (errors.Count > 0)
         return Result<CreateProductResponseDto>.Failure(HttpStatusCode.BadRequest)
-            .WithErrors(_validationErrors);
+            .WithErrors(errors);
 
+    Product product = CreateProductEntity(request);
     await PersistProductAsync(product, ct);
+    return BuildResponse(product);
+}
+// Each private method is 3-5 lines that would be clearer inline
+
+// ✅ CORRECT — inline flow that reads top-to-bottom
+public async Task<Result<CreateProductResponseDto>> ExecuteAsync(
+    CreateProductRequestDto request, CancellationToken ct)
+{
+    List<string> errors = Validate(request);
+    if (errors.Count > 0)
+        return Result<CreateProductResponseDto>.Failure(HttpStatusCode.BadRequest)
+            .WithErrors(errors);
+
+    Product product = new()
+    {
+        Id = Guid.NewGuid(),
+        Name = request.Name,
+        Price = request.Price,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    await _productRepository.AddAsync(product, ct);
+    await _unitOfWork.SaveChangesAsync(ct);
 
     return Result<CreateProductResponseDto>.Success(HttpStatusCode.Created)
         .WithPayload(product.ToCreateProductResponseDto());
 }
 ```
 
-### Nesting — 3 levels max, use early return
+Note: `Validate` IS extracted above because it contains multiple validation rules with their own logic. The entity creation, persistence, and response mapping stay inline because they're each 2-3 obvious lines.
+
+### Nesting — keep code flat with early returns
+
+Deep nesting hides the happy path and forces readers to track brace levels. Use early returns to flatten.
 
 ```csharp
-// ❌ WRONG — 4 levels of nesting
+// ❌ WRONG — deep nesting hides the actual logic
 public async Task<Result<OrderDto>> ExecuteAsync(...)
 {
     if (request != null)
@@ -289,7 +349,7 @@ public async Task<Result<OrderDto>> ExecuteAsync(...)
             {
                 if (item.Quantity > 0)
                 {
-                    // logic here
+                    // logic buried 4 levels deep
                 }
             }
         }
@@ -313,23 +373,28 @@ public async Task<Result<OrderDto>> ExecuteAsync(...)
                 .WithErrors(["Quantity must be positive"]);
     }
 
-    // flat logic here
+    // flat, readable logic here
 }
 ```
 
-### Complexity — ~7 branches max per method
+### Complexity — can you trace the happy path?
 
-If a method has more than ~7 branches (if/switch/loops combined), extract methods or simplify.
+If a method has so many branches that you lose track of the happy path, extract the confusing part.
+
+**Ask yourself:** "Can I trace the success path through this method without re-reading?"
+
+- If yes → the complexity is manageable
+- If no → find the block of branching logic that's confusing, extract it into a well-named method
 
 ```csharp
-// ❌ WRONG — 12 branches in one method
-if (status == Status.Active) { ... }
-else if (status == Status.Pending) { ... }
-else if (status == Status.Suspended) { ... }
-else if (status == Status.Cancelled) { ... }
+// ❌ WRONG — can't trace the happy path
+if (status == Status.Active) { /* 10 lines */ }
+else if (status == Status.Pending) { /* 15 lines */ }
+else if (status == Status.Suspended) { /* 8 lines */ }
+else if (status == Status.Cancelled) { /* 12 lines */ }
 // ... 8 more branches
 
-// ✅ CORRECT — extract each branch into its own method
+// ✅ CORRECT — each branch extracted into its own well-named method
 private Result<OrderDto> HandleActiveStatus(Order order) { ... }
 private Result<OrderDto> HandlePendingStatus(Order order) { ... }
 private Result<OrderDto> HandleSuspendedStatus(Order order) { ... }
