@@ -541,12 +541,40 @@ internal sealed class EntityDataReader : DbDataReader
         if (_hasTempId)
         {
             if (i == 0) return _tempIds![entity];
-            object? value = _properties[i - 1].PropertyInfo?.GetValue(entity);
-            return value ?? DBNull.Value;
+            return GetPropertyValue(_properties[i - 1], entity);
         }
 
-        object? simpleValue = _properties[i].PropertyInfo?.GetValue(entity);
-        return simpleValue ?? DBNull.Value;
+        return GetPropertyValue(_properties[i], entity);
+    }
+
+    private static object GetPropertyValue(IProperty property, object entity)
+    {
+        object? value = property.PropertyInfo?.GetValue(entity);
+        if (value is null) return DBNull.Value;
+
+        // Handle enum types — convert to the appropriate SQL representation
+        if (property.ClrType.IsEnum)
+        {
+            string? columnType = property.GetColumnType();
+            bool storedAsString = columnType is not null &&
+                (columnType.Contains("varchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("nvarchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("nchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("char", StringComparison.OrdinalIgnoreCase));
+
+            if (storedAsString)
+            {
+                // String-backed enum: convert to enum name (e.g., ActionTypeEnum.Buy -> "Buy")
+                return value.ToString() ?? string.Empty;
+            }
+            else
+            {
+                // Int-backed enum: convert to underlying integer value
+                return Convert.ToInt32(value);
+            }
+        }
+
+        return value;
     }
 
     public override string GetName(int i)
@@ -561,12 +589,31 @@ internal sealed class EntityDataReader : DbDataReader
 
     public override Type GetFieldType(int i)
     {
+        IProperty property;
         if (_hasTempId)
-            return i == 0
-                ? typeof(int)
-                : Nullable.GetUnderlyingType(_properties[i - 1].ClrType) ?? _properties[i - 1].ClrType;
+        {
+            if (i == 0) return typeof(int);
+            property = _properties[i - 1];
+        }
+        else
+        {
+            property = _properties[i];
+        }
 
-        return Nullable.GetUnderlyingType(_properties[i].ClrType) ?? _properties[i].ClrType;
+        // If enum stored as string, return string type
+        if (property.ClrType.IsEnum)
+        {
+            string? columnType = property.GetColumnType();
+            bool storedAsString = columnType is not null &&
+                (columnType.Contains("varchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("nvarchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("nchar", StringComparison.OrdinalIgnoreCase) ||
+                 columnType.Contains("char", StringComparison.OrdinalIgnoreCase));
+
+            if (storedAsString) return typeof(string);
+        }
+
+        return Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
     }
 
     public override int GetOrdinal(string name)
@@ -610,9 +657,32 @@ internal sealed class EntityDataReader : DbDataReader
     public override void Close() => _closed = true;
     public override DataTable GetSchemaTable() => throw new NotSupportedException();
     public override Task<bool> ReadAsync(CancellationToken ct) => Task.FromResult(Read());
-    public override IEnumerator GetEnumerator() => new DbEnumerator(this, closeReader: false);
+
+    // Override DbDataReader.GetEnumerator() since it's abstract
+    public override System.Collections.IEnumerator GetEnumerator()
+    {
+        return new System.Data.Common.DbEnumerator(this, closeReader: false);
+    }
 }
 ```
+
+### Enum Handling in EntityDataReader
+
+`EntityDataReader` must handle enum properties correctly regardless of their EF Core storage configuration. Since `SqlBulkCopy` reads values directly from entity properties (bypassing EF Core's type conversions), the reader must apply the appropriate conversion based on the column type.
+
+**String-backed enums** (configured with `.HasConversion<string>()` in EF Core):
+- Stored as `varchar`/`nvarchar` in SQL
+- Example: `ActionTypeEnum.Buy` → `"Buy"`
+- `GetPropertyValue` returns `value.ToString()`
+
+**Int-backed enums** (no conversion configured, stored as `tinyint`/`int`):
+- Stored as integer in SQL
+- Example: `DayOfWeekEnum.Monday` → `1`
+- `GetPropertyValue` returns `Convert.ToInt32(value)`
+
+**GetFieldType behavior**:
+- For string-backed enums, returns `typeof(string)` so `SqlBulkCopy` uses the correct data type mapper
+- For int-backed enums, returns the enum's underlying type
 
 ## ParentKeyResolver
 
