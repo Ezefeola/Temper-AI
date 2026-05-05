@@ -19,6 +19,8 @@ produces: [entities, aggregates, domain-events, enums, domain-rules]
 3. **NEVER domain events on entities** — publish explicitly in use cases when needed
 4. **NEVER external dependencies in Domain** — pure C# only, zero EF Core or HTTP references
 5. **ALWAYS Rules class at the TOP** of the entity — before properties, constructor, and methods
+6. **NEVER `public List<T>`** for child collections — always use `private readonly List<T>` backing field + `IReadOnlyList<T>` public property
+7. **NEVER calculate or derive domain values in use cases or services** — business rules and calculations belong to the entity
 
 ---
 
@@ -137,7 +139,7 @@ public abstract class Entity<TId>
 
 ## Aggregates with child entities
 
-An aggregate root controls all access to its children. Children cannot be modified directly.
+An aggregate root controls all mutations to its children. Child collections are exposed as `IReadOnlyList<T>` — all writes go exclusively through the aggregate root's methods.
 
 ```csharp
 public sealed class Order : Entity<Guid>
@@ -147,14 +149,16 @@ public sealed class Order : Entity<Guid>
         public const int MAX_ITEMS = 50;
     }
 
+    // Backing field — private, mutable, only the aggregate root touches this
+    private readonly List<OrderItem> _items = [];
+
+    // Public surface — read-only, prevents any external mutation
+    public IReadOnlyList<OrderItem> Items => _items;
+
     public Guid CustomerId { get; private set; }
     public OrderStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
-
-    // Child collection — private list, exposed as read-only
-    private readonly List<OrderItem> _items = [];
-    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
     private Order() { }
 
@@ -191,6 +195,10 @@ public sealed class Order : Entity<Guid>
         if (_items.Count >= Rules.MAX_ITEMS)
             errors.Add($"Order cannot exceed {Rules.MAX_ITEMS} items");
 
+        // Cross-child invariant — duplicate product check belongs here, not in the use case
+        if (_items.Any(i => i.ProductId == productId))
+            errors.Add("Product already exists in this order");
+
         if (errors.Count > 0)
             return (errors, false);
 
@@ -201,6 +209,22 @@ public sealed class Order : Entity<Guid>
             return (itemErrors, false);
 
         _items.Add(item!);
+        UpdatedAt = DateTime.UtcNow;
+        return ([], true);
+    }
+
+    // RemoveItem — always through the aggregate root, never via Items directly
+    public (List<string> Errors, bool Removed) RemoveItem(Guid productId)
+    {
+        if (Status != OrderStatus.Pending)
+            return (["Items can only be removed from pending orders"], false);
+
+        OrderItem? item = _items.FirstOrDefault(i => i.ProductId == productId);
+
+        if (item is null)
+            return (["Item not found in order"], false);
+
+        _items.Remove(item);
         UpdatedAt = DateTime.UtcNow;
         return ([], true);
     }
@@ -274,11 +298,32 @@ public sealed class OrderItem : Entity<Guid>
 ### Aggregate rules
 
 **Structure**
-- The aggregate root owns the child collection — always `private readonly List<T> _items = []`
-- Expose children as `IReadOnlyList<T>` — never expose the mutable list
-- All child mutations go through aggregate root methods — never modify children directly
+- Child collections use a `private readonly List<T> _items = []` backing field — the aggregate root mutates this directly
+- Child collections expose `IReadOnlyList<T>` publicly — external code can read but never write
+- **NEVER** use `public List<T>` — `private set` only protects the reference, not the contents of the list
+- All child mutations go through aggregate root methods — never modify children directly from outside
 - Child entities live in the same folder as their aggregate root
-- EF Core can hydrate private collections via `DBCONTEXT_SETUP.md` navigation configuration
+- EF Core maps the backing field automatically by convention when the field name is `_<propertyName>` (e.g. `_items` for `Items`)
+
+**Why `public List<T>` is wrong even with `private set`:**
+
+```csharp
+// ❌ WRONG — private set only protects the reference, not the list contents
+public List<OrderItem> Items { get; private set; } = [];
+
+// This compiles and runs — bypasses ALL aggregate invariants silently:
+order.Items.Add(someItem);   // no status check, no max items check, no UpdatedAt
+order.Items.Clear();         // destroys aggregate state with zero validation
+order.Items.RemoveAt(0);    // no invariant enforced whatsoever
+
+// ✅ CORRECT — IReadOnlyList prevents all external mutation at compile time
+private readonly List<OrderItem> _items = [];
+public IReadOnlyList<OrderItem> Items => _items;
+
+order.Items.Add(someItem);   // ❌ compile error — IReadOnlyList has no Add
+order.Items.Clear();         // ❌ compile error
+order.Items.RemoveAt(0);    // ❌ compile error
+```
 
 **Child entities — factory methods and accessibility**
 - Child entities have an `internal static Create(...)` factory method — never `public`
@@ -324,6 +369,110 @@ public sealed class Order : Entity<Guid>
 - Field-level rules (valid values, required fields, ranges) live in the child's `internal Create` factory method
 - If a child accumulates complex business logic beyond validating its own fields, it is a signal it should become its own aggregate
 - Never duplicate validations across root and child — each layer owns its slice of responsibility
+
+---
+
+## Business rules belong to entities
+
+Business rules, calculations, and domain decisions live in the entity or aggregate root — never in use cases, services, or controllers.
+
+A use case orchestrates: it loads the entity, calls its methods, and saves the result.
+The entity decides: it holds the logic, enforces invariants, and computes derived values.
+
+### What belongs in the entity
+
+| Type | Example | Lives in |
+|---|---|---|
+| State transition rules | "Cannot confirm if no items" | Aggregate root method |
+| Calculations from own data | Total price of an order | Entity method |
+| Domain queries | "Does this order have a specific product?" | Entity method |
+| Conditional domain logic | "Can this order be cancelled?" | Entity method |
+| Cross-child invariants | "No duplicate products in an order" | Aggregate root method |
+
+### Domain methods — calculations and queries
+
+Domain methods that compute or query values from the entity's own data have no side effects and return a value directly — no error tuple needed.
+
+```csharp
+public sealed class Order : Entity<Guid>
+{
+    private readonly List<OrderItem> _items = [];
+    public IReadOnlyList<OrderItem> Items => _items;
+
+    public OrderStatus Status { get; private set; }
+
+    // Calculation — derived from own data, no side effects
+    public decimal CalculateTotal() =>
+        _items.Sum(i => i.Quantity * i.UnitPrice);
+
+    // Domain query — answers a business question about own state
+    public bool CanBeConfirmed() =>
+        Status == OrderStatus.Pending && _items.Count > 0;
+
+    // Domain query — checks own collection
+    public bool HasProduct(Guid productId) =>
+        _items.Any(i => i.ProductId == productId);
+
+    // Calculation with business logic
+    public int TotalItemCount() =>
+        _items.Sum(i => i.Quantity);
+}
+```
+
+### Business rule method naming
+
+Domain methods that answer a question are named as questions or statements of fact:
+
+```
+CanBeConfirmed()          ✅ — answers "can it?"
+HasProduct(id)            ✅ — answers "does it have?"
+IsEligibleForDiscount()   ✅ — answers "is it eligible?"
+CalculateTotal()          ✅ — computes a value
+TotalItemCount()          ✅ — computes a derived count
+```
+
+### What must NOT leak into use cases or services
+
+```csharp
+// ❌ WRONG — domain logic leaking into the use case
+public async Task ExecuteAsync(ConfirmOrderCommand command)
+{
+    Order order = await _repository.GetByIdAsync(command.OrderId);
+
+    // These are domain rules — they do NOT belong here:
+    if (order.Status != OrderStatus.Pending)
+        return (["Order is not pending"], false);
+
+    if (order.Items.Count == 0)
+        return (["Order has no items"], false);
+
+    var total = order.Items.Sum(i => i.Quantity * i.UnitPrice); // domain calculation leaked out
+
+    order.Confirm();
+    await _repository.SaveAsync(order);
+}
+
+// ✅ CORRECT — use case only orchestrates, entity decides
+public async Task ExecuteAsync(ConfirmOrderCommand command)
+{
+    Order order = await _repository.GetByIdAsync(command.OrderId);
+
+    var (errors, confirmed) = order.Confirm(); // all rules live inside Confirm()
+
+    if (errors.Count > 0)
+        return;
+
+    await _repository.SaveAsync(order);
+}
+```
+
+### Absolute rules for business rules
+
+- **NEVER** calculate or derive domain values in a use case — move them to the entity
+- **NEVER** check domain conditions (status, count, eligibility) in a use case before calling the entity — let the entity enforce its own invariants
+- **NEVER** iterate over child collections from outside the aggregate to make a decision — expose a domain method instead
+- **ALWAYS** ask: "does this logic depend only on the entity's own data?" — if yes, it belongs in the entity
+- **Domain methods with no side effects return a value directly** — no error tuple needed, no `Updated` bool
 
 ---
 
