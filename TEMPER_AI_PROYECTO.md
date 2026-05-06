@@ -128,36 +128,7 @@ Usuario describe lo que quiere construir
     ↓
 /temper-analyst → Hace preguntas funcionales hasta que todo esta claro
     ↓ (genera prd.md)
-/temper-architect → Define stack tecnico, genera backend-config.md + frontend-config.md
-    ↓ (aprobacion del usuario)
-/temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
-    ↓ (aprobacion del usuario)
-/temper-design → Genera .temper/design.md (arquitectura, entidades, endpoints)
-    ↓ (aprobacion del usuario)
-/temper-tasks → Genera .temper/tasks/ (tareas atomicas por user story + INDEX.md)
-    ↓ (aprobacion del usuario)
-/temper-plan → Genera .temper/build-plan.md (grupos paralelos, agentes)
-    ↓ (aprobacion del usuario)
-[orchestrator ejecuta el build] → Spawnea sub-agentes por grupo (efimero)
-    ├── Group 1 → orchestrator spawnea agentes → actualiza state.md → termina
-    ├── Group 2 → nueva sesion → orchestrator lee state.md → spawnea agentes → actualiza state.md → termina
-    └── Group N → ... → build completo
-    ↓
-/temper-review → Valida codigo contra specs/
-    ↓ (aprobacion del usuario)
-/temper-docs → Genera README, API docs, decisiones de arquitectura
-    ↓
-✅ Workflow completo
-```
-Usuario describe lo que quiere construir
-    ↓
-/temper-analyst → Hace preguntas funcionales hasta que todo esta claro
-    ↓ (genera prd.md)
 /temper-architect → Define stack tecnico, genera config files
-    ↓ (aprobacion del usuario)
-/temper-spec → Genera .temper/specs/ (user stories individuales + INDEX.md)
-    ↓ (aprobación del usuario)
-/temper-design → Genera .temper/design.md (arquitectura, entidades, endpoints)
     ↓ (aprobación del usuario)
 /temper-tasks → Genera .temper/tasks/ (tareas atómicas por user story + INDEX.md)
     ↓ (aprobación del usuario)
@@ -325,7 +296,6 @@ temper-ai/
 │   │   ├── temper-analyst.agent.md       ← Fase 1: Analisis funcional ✅
 │   │   ├── temper-architect.agent.md     ← Fase 2: Arquitectura tecnica ✅
 │   │   ├── temper-spec.agent.md          ← Fase 3: User Stories ✅
-│   │   ├── temper-design.agent.md        ← Fase 4: Arquitectura ✅
 │   │   ├── temper-tasks.agent.md         ← Fase 5: Tareas atómicas ✅
 │   │   ├── temper-plan.agent.md          ← Fase 6: Plan de build ✅
 │   │   ├── temper-backend.agent.md       ← Fase 6a: Backend ✅
@@ -436,15 +406,14 @@ description: >
 | `temper-analyst.agent.md` | Fase 1 | Analisis funcional, genera `prd.md` | ✅ Completo |
 | `temper-architect.agent.md` | Fase 2 | Decisiones tecnicas, genera config files | ✅ Completo |
 | `temper-spec.agent.md` | Fase 3 | User stories, criterios de aceptacion, `specs/` | ✅ Completo |
-| `temper-design.agent.md` | Fase 4 | Arquitectura, entidades, endpoints, `design.md` | ✅ Completo |
-| `temper-tasks.agent.md` | Fase 5 | Rompe design en tareas atomicas por user story, `tasks/` | ✅ Completo |
-| `temper-plan.agent.md` | Fase 6 | Genera build-plan.md con grupos paralelos | ✅ Completo |
-| `temper-backend.agent.md` | Fase 6a | Genera codigo .NET 10 segun task file asignado | ✅ Completo |
-| `temper-frontend.agent.md` | Fase 6b | Genera codigo Blazor | ✅ Completo |
-| `temper-tester.agent.md` | Fase 6c | Genera tests xUnit/bUnit | ✅ Completo |
-| `temper-devops.agent.md` | Fase 6d | Docker, GitHub Actions | ✅ Completo |
-| `temper-review.agent.md` | Fase 7 | Valida codigo contra specs/ | ✅ Completo |
-| `temper-docs.agent.md` | Fase 8 | README, API docs, decisiones | ✅ Completo |
+| `temper-tasks.agent.md` | Fase 4 | Rompe design en tareas atomicas por user story, `tasks/` | ✅ Completo |
+| `temper-plan.agent.md` | Fase 5 | Genera build-plan.md con grupos paralelos | ✅ Completo |
+| `temper-backend.agent.md` | Fase 5a | Genera codigo .NET 10 segun task file asignado | ✅ Completo |
+| `temper-frontend.agent.md` | Fase 5b | Genera codigo Blazor | ✅ Completo |
+| `temper-tester.agent.md` | Fase 5c | Genera tests xUnit/bUnit | ✅ Completo |
+| `temper-devops.agent.md` | Fase 5d | Docker, GitHub Actions | ✅ Completo |
+| `temper-review.agent.md` | Fase 6 | Valida codigo contra specs/ | ✅ Completo |
+| `temper-docs.agent.md` | Fase 7 | README, API docs, decisiones | ✅ Completo |
 
 ### Comandos slash
 
@@ -465,7 +434,9 @@ tu-proyecto/
     ├── specs/                   ← user stories individuales
     │   ├── INDEX.md             ← indice rapido de todas las user stories
     │   └── US-001-*.md          ← cada user story en su propio archivo
-    ├── design.md                ← entidades, endpoints, estructura de carpetas
+    ├── Docs/                   ← arquitectura, entidades, endpoints
+    │   ├── domain-model.md      ← modelo de dominio completo
+    │   └── api-design.md        ← diseño de API y endpoints
     ├── tasks/                   ← tareas atomicas organizadas por user story
     │   ├── INDEX.md             ← indice rapido de todas las tareas
     │   └── US-001/              ← tareas de la user story US-001

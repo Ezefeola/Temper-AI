@@ -392,8 +392,6 @@ Only include agents that pass this test.
 |---|---|
 | `temper-analyst` | Requirements unclear, new domain, scope uncertain |
 | `temper-architect` | Technical stack decisions needed, config files required, architectural problem to solve |
-| `temper-spec` | Complex enough to need formal user stories before design |
-| `temper-design` | New entity, new aggregate, new API surface, architectural changes |
 | `temper-tasks` | Design is complex enough that implementation needs a task breakdown |
 | `temper-plan` | Enough tasks that parallel execution or ordering matters |
 | `temper-backend` | Any backend implementation |
@@ -403,7 +401,7 @@ Only include agents that pass this test.
 | `temper-review` | After implementation, only if explicitly required or change is significant |
 | `temper-docs` | After review, only if explicitly required |
 
-> `temper-spec`, `temper-tasks`, `temper-plan`, `temper-review`, and `temper-docs` are NOT
+> `temper-tasks`, `temper-plan`, `temper-review`, and `temper-docs` are NOT
 > included by default. Every inclusion must be explicitly justified.
 
 ### How to present the plan
@@ -520,7 +518,7 @@ Implement task [T###]: [task title from task file]
 **THAT IS ALL.** Do not add anything else. The agent reads the task file directly.
 
 **Never include:**
-- File paths to read (`.temper/tasks/...`, `.temper/prd.md`, `.temper/design.md`, etc.)
+- File paths to read (`.temper/tasks/...`, `.temper/prd.md`, `Docs/domain-model.md`, etc.)
 - Domain descriptions or summaries
 - Acceptance criteria (they are in the task file)
 - Skill names or instructions to load skills
@@ -606,7 +604,7 @@ Do not ask passively. Evaluate and recommend. The user decides — but you infor
 
 Criteria for recommending clean:
 - 2+ agents already executed in this session
-- Current context includes large files (design.md, full specs, etc.)
+- Current context includes large files (domain-model.md, full specs, etc.)
 - The next agent needs focused context without accumulated history
 
 Criteria for recommending continue:

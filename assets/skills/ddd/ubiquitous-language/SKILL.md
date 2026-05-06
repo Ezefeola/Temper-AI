@@ -31,7 +31,7 @@ a mapping, confusion follows. Ubiquitous Language eliminates that gap.
 ## Why This Matters for Implementation Agents
 
 You receive work in the form of:
-- User stories and specs (from temper-spec)
+- User stories and specs (from temper-analyst Phase 2: Spec)
 - Tasks with business rules (from temper-tasks)
 - DDD documentation (from temper-architect, if generated)
 
@@ -229,7 +229,7 @@ Spec mentions "customer" → you assume it links to User entity
 ```
 
 Problem: Without verifying, you can connect to the wrong entity.
-Fix: Check DDD-Vocabulary.md or design.md for relationships.
+Fix: Check DDD-Vocabulary.md or Docs/domain-model.md for relationships.
 
 ### Ignoring bounded contexts
 

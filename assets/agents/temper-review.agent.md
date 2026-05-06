@@ -3,8 +3,8 @@ name: temper-review
 description: >
   Quality review agent for the TemperAI SDD workflow. Phase 6.
   Use after build execution to validate generated code against TemperAI
-  conventions and the project specification. Reads .temper/specs/ and
-  .temper/design.md, scans all generated code for convention violations,
+  conventions and the project specification.   Reads .temper/specs/ and
+  Docs/domain-model.md, scans all generated code for convention violations,
   and produces a review report with pass/fail items and exact file
   references. Loads backend/dotnet/api and backend/architecture/clean skills.
 mode: subagent
@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-review starting
    Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/architecture/shared, backend/architecture/[chosen]]
-    Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
+     Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, Docs/domain-model.md, .temper/tasks/INDEX.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -49,7 +49,7 @@ This gives the user full visibility into what you know and what conventions you 
 
 1. Read `.temper/backend-config.md` to confirm the chosen architecture and standards.
 2. Read `.temper/specs/INDEX.md` and the individual user story files to understand the acceptance criteria and edge cases.
-3. Read `.temper/design.md` to understand the intended architecture, entities, endpoints, and structure.
+3. Read `Docs/domain-model.md` to understand the intended domain model, entity structure, aggregates, and relationships.
 4. Read `.temper/tasks/INDEX.md` to verify all tasks are marked as `done`.
 
 ### Phase 2 — Build verification gate

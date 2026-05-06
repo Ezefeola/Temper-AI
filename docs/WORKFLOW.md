@@ -8,7 +8,7 @@ The TemperAI SDD (Spec-Driven Development) workflow consists of 7 phases plus a 
 Phase 1: Analyst   → .temper/prd.md (functional requirements)
 Phase 2: Architect → backend-config.md + frontend-config.md (technical decisions)
 Phase 3: Spec       → specs/INDEX.md + specs/US-XXX-*.md
-Phase 4: Design     → design.md
+Phase 4: Architect (Design) → Docs/domain-model.md
 Phase 5: Tasks      → tasks/INDEX.md + tasks/US-XXX/T###-*.md
 Phase 6: Plan       → build-plan.md
            Build      → Generated code (orchestrator spawns sub-agents per group)
@@ -77,11 +77,44 @@ Review the technical decisions and approve or request changes.
 
 ---
 
-## Phase 3: Specification (`temper-spec`)
+## Phase 2: Specification (`temper-analyst` Phase 2 — Spec)
 
-**Input:** `.temper/prd.md`
+**Input:** `.temper/prd.md` (approved)
 **Output:** `.temper/specs/INDEX.md` + `.temper/specs/US-XXX-*.md`
-**Skills loaded:** `prd-analyzer`
+**Skills loaded:** `spec-generator`
+
+### What happens
+
+1. The agent reads the approved PRD.
+2. It generates user stories in the format: "As a [role], I want to [action], so that [benefit]."
+3. For each user story, it defines:
+   - Priority (High/Medium/Low)
+   - Acceptance criteria (verifiable conditions)
+   - Edge cases
+   - Error cases
+4. It documents non-functional requirements (performance, security, scalability, reliability, usability, maintainability).
+5. It identifies dependencies between user stories.
+
+### User action
+
+Review the spec and approve or request changes.
+
+---
+
+## Phase 3: Technical Architecture (`temper-architect`)
+
+**Input:** `.temper/prd.md` + `.temper/specs/`
+**Output:** `.temper/backend-config.md` + `.temper/frontend-config.md` (if applicable)
+**Skills loaded:** None
+
+### What happens
+
+1. The agent reads `.temper/prd.md` to understand functional scope.
+2. It reads `.temper/specs/` to understand the user stories that must be supported.
+3. It asks technical questions ONLY: architecture pattern, database, frontend type, authentication, API documentation.
+4. It NEVER changes, adds, or removes functional scope.
+5. It recommends based on PRD complexity when the user doesn't know.
+6. It generates config files with project-specific technical decisions.
 
 ### What happens
 
@@ -101,10 +134,10 @@ Review the spec and approve or request changes.
 
 ---
 
-## Phase 4: Design (`temper-design`)
+## Phase 4: Design (`temper-architect`)
 
 **Input:** `.temper/prd.md` + `.temper/specs/` + `.temper/backend-config.md`
-**Output:** `.temper/design.md`
+**Output:** `.temper/Docs/domain-model.md`
 **Skills loaded:** `architecture/[chosen]` + `backend/dotnet/api`
 
 ### What happens
@@ -128,7 +161,7 @@ Review the design and approve or request changes.
 
 ## Phase 5: Task Breakdown (`temper-tasks`)
 
-**Input:** `.temper/prd.md` + `.temper/specs/` + `.temper/design.md`
+**Input:** `.temper/prd.md` + `.temper/specs/` + `.temper/Docs/domain-model.md`
 **Output:** `.temper/tasks/INDEX.md` + `.temper/tasks/US-XXX/T###-*.md`
 **Skills loaded:** None
 
@@ -150,7 +183,7 @@ Review the task list and approve or request changes.
 
 ## Phase 6: Planning (`temper-plan`)
 
-**Input:** `.temper/tasks/INDEX.md` + `.temper/design.md`
+**Input:** `.temper/tasks/INDEX.md` + `.temper/Docs/domain-model.md`
 **Output:** `.temper/build-plan.md`
 **Skills loaded:** None
 
@@ -218,7 +251,7 @@ Each group's output is verified with `dotnet build` before proceeding to the nex
 
 ## Phase 7: Review (`temper-review`)
 
-**Input:** `.temper/specs/` + `.temper/design.md` + generated code
+**Input:** `.temper/specs/` + `.temper/Docs/domain-model.md` + generated code
 **Output:** Review report
 **Skills loaded:** `backend/dotnet/api` + `architecture/[chosen]`
 
@@ -309,10 +342,9 @@ This compares current files against the last snapshot and identifies which phase
 
 | Changed file | Phases that need re-running |
 |---|---|
-| `prd.md` | spec → design → tasks → plan → build → review → docs |
-| `backend-config.md` | design → tasks → plan → build → review → docs |
-| `frontend-config.md` | design → tasks → build → review → docs |
-| `specs/` | design → tasks → plan → build → review → docs |
-| `design.md` | tasks → plan → build → review → docs |
+| `prd.md` | spec → tasks → plan → build → review → docs |
+| `backend-config.md` | tasks → plan → build → review → docs |
+| `frontend-config.md` | tasks → build → review → docs |
+| `specs/` | tasks → plan → build → review → docs |
 | `tasks/` | plan → build → review → docs |
 | `build-plan.md` | build → review → docs |

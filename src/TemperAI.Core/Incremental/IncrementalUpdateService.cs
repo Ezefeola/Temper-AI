@@ -6,59 +6,52 @@ public sealed class IncrementalUpdateService
 {
     private static readonly Dictionary<string, PhaseDependency> _phaseMap = new()
     {
-        ["temper-discover"] = new PhaseDependency
+        ["temper-analyst-prd"] = new PhaseDependency
         {
-            PhaseName = "temper-discover",
+            PhaseName = "temper-analyst-prd",
             DependsOn = [],
-            TrackedFiles = [],
+            TrackedFiles = ["prd.md"],
             Status = "unknown"
         },
-        ["temper-constitution"] = new PhaseDependency
+        ["temper-analyst-spec"] = new PhaseDependency
         {
-            PhaseName = "temper-constitution",
-            DependsOn = ["temper-discover"],
-            TrackedFiles = ["constitution.md"],
+            PhaseName = "temper-analyst-spec",
+            DependsOn = ["temper-analyst-prd"],
+            TrackedFiles = ["specs/INDEX.md"],
             Status = "unknown"
         },
-        ["temper-spec"] = new PhaseDependency
+        ["temper-architect"] = new PhaseDependency
         {
-            PhaseName = "temper-spec",
-            DependsOn = ["temper-constitution"],
-            TrackedFiles = ["spec.md"],
-            Status = "unknown"
-        },
-        ["temper-design"] = new PhaseDependency
-        {
-            PhaseName = "temper-design",
-            DependsOn = ["temper-constitution", "temper-spec"],
-            TrackedFiles = ["design.md"],
+            PhaseName = "temper-architect",
+            DependsOn = ["temper-analyst-spec"],
+            TrackedFiles = ["backend-config.md", "frontend-config.md"],
             Status = "unknown"
         },
         ["temper-tasks"] = new PhaseDependency
         {
             PhaseName = "temper-tasks",
-            DependsOn = ["temper-constitution", "temper-spec", "temper-design"],
-            TrackedFiles = ["tasks.md"],
+            DependsOn = ["temper-analyst-spec", "temper-architect"],
+            TrackedFiles = ["tasks/INDEX.md"],
             Status = "unknown"
         },
         ["temper-plan"] = new PhaseDependency
         {
             PhaseName = "temper-plan",
-            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks"],
+            DependsOn = ["temper-architect", "temper-tasks"],
             TrackedFiles = ["build-plan.md"],
             Status = "unknown"
         },
         ["temper-review"] = new PhaseDependency
         {
             PhaseName = "temper-review",
-            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-plan"],
+            DependsOn = ["temper-architect", "temper-plan"],
             TrackedFiles = [],
             Status = "unknown"
         },
         ["temper-docs"] = new PhaseDependency
         {
             PhaseName = "temper-docs",
-            DependsOn = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"],
+            DependsOn = ["temper-architect", "temper-plan", "temper-review"],
             TrackedFiles = [],
             Status = "unknown"
         }
@@ -148,10 +141,9 @@ public sealed class IncrementalUpdateService
 
         string[] executionOrder =
         [
-            "temper-discover",
-            "temper-constitution",
-            "temper-spec",
-            "temper-design",
+            "temper-analyst-prd",
+            "temper-analyst-spec",
+            "temper-architect",
             "temper-tasks",
             "temper-plan",
             "temper-review",
@@ -213,10 +205,9 @@ public sealed class IncrementalUpdateService
 
         string[][] cascadeRules =
         [
-            ["temper-discover", "temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
-            ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
-            ["temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
-            ["temper-design", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-analyst-prd", "temper-analyst-spec", "temper-architect", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-analyst-spec", "temper-architect", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
+            ["temper-architect", "temper-tasks", "temper-plan", "temper-review", "temper-docs"],
             ["temper-tasks", "temper-plan", "temper-review", "temper-docs"],
             ["temper-plan", "temper-review", "temper-docs"],
             ["temper-review", "temper-docs"]

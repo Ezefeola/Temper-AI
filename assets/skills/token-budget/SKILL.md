@@ -26,8 +26,8 @@ These are the default maximum estimated token limits per phase. They can be over
 |---|---|---|
 | `temper-analyst` | 5,000 | Functional requirements analysis + PRD generation |
 | `temper-architect` | 3,000 | Technical architecture decisions + config files |
-| `temper-spec` | 9,000 | User stories + acceptance criteria |
-| `temper-design` | 14,000 | Architecture design + entity definitions |
+| `temper-analyst` | 15,000 | PRD (9,000) + Spec (6,000) | Phase 1: PRD, Phase 2: Spec |
+| `temper-architect` | 3,000 | Technical architecture decisions + config files |
 | `temper-tasks` | 14,000 | Task breakdown from design |
 | `temper-plan` | 10,000 | Build execution plan |
 | Build (per group) | 5,000 | Implementation per group |
@@ -70,10 +70,9 @@ Each project has a `.temper/budget.md` file that tracks token usage:
 
 | Phase | Estimated In | Estimated Out | Estimated Total | Status |
 |---|---|---|---|---|
-| temper-analyst | 1,500 | 1,000 | 2,500 | Pending |
+| temper-analyst (Phase 1: PRD) | 1,500 | 1,000 | 2,500 | Pending |
+| temper-analyst (Phase 2: Spec) | 1,500 | 3,000 | 4,500 | Pending |
 | temper-architect | 1,000 | 500 | 1,500 | Pending |
-| temper-spec | 1,500 | 3,000 | 4,500 | Pending |
-| temper-design | — | — | — | Pending |
 | temper-tasks | — | — | — | Pending |
 | temper-plan | — | — | — | Pending |
 | Build (per group) | — | — | — | Pending |
@@ -87,7 +86,7 @@ Each project has a `.temper/budget.md` file that tracks token usage:
 | Total estimated tokens used | 8,000 |
 | Total budget remaining | 75,000 |
 | Budget utilization | 9.6% |
-| Most expensive phase | temper-spec (4,500) |
+| Most expensive phase | temper-analyst Phase 2: Spec (4,500) |
 | Average per phase | 4,000 |
 ```
 
@@ -119,7 +118,7 @@ Rough estimation:
 Estimate based on the phase's expected output:
 - **prd.md** — 1,500-3,000 tokens
 - **specs/INDEX.md** — 500-1,500 tokens + **US-XXX-*.md** — 300-800 tokens each (depends on number of user stories)
-- **design.md** — 4,000-8,000 tokens (depends on number of entities and endpoints)
+- **Docs/domain-model.md** — 4,000-8,000 tokens (depends on number of entities and endpoints)
 - **tasks/INDEX.md** — 500-1,500 tokens + **T###-*.md** — 200-500 tokens each (depends on number of tasks)
 - **Code per task** — 500-2,000 tokens (depends on complexity)
 - **Review report** — 1,000-3,000 tokens

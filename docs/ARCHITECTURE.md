@@ -66,10 +66,9 @@ The orchestrator (`temper-orchestrator`) is the brain of the system. It:
 
 | Request | Starting Phase |
 |---|---|
-| "Add user authentication" | `temper-spec` (constitution exists) |
-| "Add Order management" | `temper-spec` |
-| "Add RabbitMQ for events" | `temper-design` |
-| "Start a new project" | `temper-analyst` |
+| "Add user authentication" | `temper-analyst` Phase 2: Spec (PRD exists) |
+| "Add Order management" | `temper-analyst` Phase 2: Spec |
+| "Start a new project" | `temper-analyst` Phase 1: PRD |
 
 ---
 
@@ -87,10 +86,8 @@ Agent loads skills → Reads skill content → Applies rules to code generation
 
 | Agent | Skills |
 |---|---|
-| `temper-analyst` | None |
+| `temper-analyst` | `prd-analyzer` (Phase 1) / `spec-generator` (Phase 2) |
 | `temper-architect` | None |
-| `temper-spec` | `prd-analyzer` |
-| `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
 | `temper-plan` | None |
 | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]` |
@@ -118,16 +115,15 @@ Each skill contains:
 
 | Phase | Max Tokens |
 |---|---|
-| `temper-analyst` | 5,000 |
+| `temper-analyst` Phase 1: PRD | 2,500 |
+| `temper-analyst` Phase 2: Spec | 6,000 |
 | `temper-architect` | 3,000 |
-| `temper-spec` | 9,000 |
-| `temper-design` | 14,000 |
 | `temper-tasks` | 14,000 |
 | `temper-plan` | 10,000 |
 | Build (per group) | 5,000 |
 | `temper-review` | 18,000 |
 | `temper-docs` | 16,000 |
-| **Total** | **88,000** |
+| **Total** | **78,500** |
 
 ### Quick Path Savings
 
@@ -151,7 +147,7 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 - `backend-config.md`
 - `frontend-config.md`
 - `specs/` (entire directory)
-- `design.md`
+- `Docs/domain-model.md`
 - `tasks/` (entire directory)
 - `budget.md`
 
@@ -177,7 +173,7 @@ Before each phase completes successfully, a snapshot of all `.temper/` files is 
 ### Dependency Graph
 
 ```
-prd.md → backend-config.md + frontend-config.md → specs/ → design.md → tasks/ → build → review → docs
+prd.md → backend-config.md + frontend-config.md → specs/ → Docs/domain-model.md → tasks/ → build → review → docs
 ```
 
 ### Cascade Rules
@@ -187,8 +183,7 @@ prd.md → backend-config.md + frontend-config.md → specs/ → design.md → t
 | `prd.md` | specs → design → tasks → build → review → docs |
 | `backend-config.md` | design → tasks → build → review → docs |
 | `frontend-config.md` | design → tasks → build → review → docs |
-| `specs/` | design → tasks → build → review → docs |
-| `design.md` | tasks → build → review → docs |
+| `specs/` | tasks → build → review → docs |
 | `tasks/` | build → review → docs |
 
 ---

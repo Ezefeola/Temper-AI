@@ -27,10 +27,9 @@ Si `.temper/orchestrator-state.md` existe, usalo SIEMPRE. No necesitas inferir l
 | Campo en state.md | Accion |
 |---|---|
 | `Status: complete` + `Pending phases: none` | Informar al usuario que todo esta completo. No lanzar agentes. |
-| `Current phase: analyst` | Lanzar `temper-analyst` |
+| `Current phase: analyst` (PRD) | Lanzar `temper-analyst` Phase 1 (PRD) |
+| `Current phase: analyst` (Spec) | Lanzar `temper-analyst` Phase 2 (Spec) con skill spec-generator |
 | `Current phase: architect` | Lanzar `temper-architect` |
-| `Current phase: spec` | Lanzar `temper-spec` |
-| `Current phase: design` | Lanzar `temper-design` |
 | `Current phase: tasks` | Lanzar `temper-tasks` |
 | `Current phase: plan` | Lanzar `temper-plan` |
 | `Current phase: build` + `Build group: N of M` | Lanzar `temper-orchestrator` para ejecutar Group N |
@@ -44,15 +43,14 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 
 | Archivos existentes | Fase detectada | Proximo paso | Agente a lanzar |
 |---|---|---|---|
-| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Analisis funcional | `temper-analyst` |
-| Solo `prd.md` | Fase 1 — Completada | Fase 2 — Arquitectura tecnica | `temper-architect` |
-| `prd.md` + `backend-config.md` | Fase 2 — Completada | Fase 3 — Especificacion | `temper-spec` |
-| `prd.md` + config files + `specs/INDEX.md` | Fase 3 — Completada | Fase 4 — Diseno | `temper-design` |
-| `prd.md` + config files + `specs/` + `design.md` | Fase 4 — Completada | Fase 5 — Tareas | `temper-tasks` |
-| `prd.md` + config files + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Completada | Fase 6 — Plan | `temper-plan` |
-| Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
-| Todos los anteriores + codigo generado | Build completado | Fase 7 — Revision | `temper-review` |
-| Todos los archivos + revision aprobada | Revision completada | Fase 8 — Documentacion | `temper-docs` |
+| Ningun archivo `.temper/` | Fase 0 — Sin iniciar | Fase 1 — Analisis funcional | `temper-analyst` (Phase 1) |
+| Solo `prd.md` | Fase 1 — PRD completado | Fase 2 — Especificacion (User Stories) | `temper-analyst` (Phase 2) con skill spec-generator |
+| `prd.md` + `specs/INDEX.md` | Fase 2 — Spec completado | Fase 3 — Arquitectura tecnica | `temper-architect` |
+| `prd.md` + config files + `specs/` + `Docs/domain-model.md` | Fase 3 — Arquitectura completada | Fase 4 — Tareas | `temper-tasks` |
+| `prd.md` + config files + `specs/` + `Docs/domain-model.md` + `tasks/INDEX.md` | Fase 4 — Tareas completadas | Fase 5 — Plan | `temper-plan` |
+| Todos los anteriores + `build-plan.md` | Fase 5 — Plan completado | Build Execution | `temper-orchestrator` (ejecuta Group 1) |
+| Todos los anteriores + codigo generado | Build completado | Fase 6 — Revision | `temper-review` |
+| Todos los archivos + revision aprobada | Revision completada | Fase 7 — Documentacion | `temper-docs` |
 | Todos los archivos + documentacion | Workflow completo | — | Informar al usuario |
 
 ## Instrucciones para el agente
@@ -67,15 +65,14 @@ Si `.temper/orchestrator-state.md` NO existe, detecta la fase por los archivos p
 
 ## Agentes del workflow
 
-- Fase 1 → `temper-analyst` (analisis funcional, genera prd.md)
-- Fase 2 → `temper-architect` (decisiones tecnicas, genera config files)
-- Fase 3 → `temper-spec` (user stories)
-- Fase 4 → `temper-design` (arquitectura)
-- Fase 5 → `temper-tasks` (tareas atomicas)
-- Fase 6 → `temper-plan` (genera build-plan.md)
+- Fase 1 → `temper-analyst` Phase 1 (PRD, genera prd.md)
+- Fase 2 → `temper-analyst` Phase 2 (Spec, genera specs/ con user stories)
+- Fase 3 → `temper-architect` (decisiones tecnicas, genera config files + DDD docs)
+- Fase 4 → `temper-tasks` (tareas atomicas)
+- Fase 5 → `temper-plan` (genera build-plan.md)
 - Build → `temper-orchestrator` (lee state.md + build-plan.md, ejecuta UN grupo, actualiza state.md, termina)
-- Fase 7 → `temper-review`
-- Fase 8 → `temper-docs`
+- Fase 6 → `temper-review`
+- Fase 7 → `temper-docs`
 
 ## Mensaje al usuario
 
@@ -104,7 +101,7 @@ Archivos generados:
 - .temper/frontend-config.md (si aplica)
 - .temper/specs/INDEX.md
 - .temper/specs/US-XXX-*.md
-- .temper/design.md
+- .temper/Docs/domain-model.md
 - .temper/tasks/INDEX.md
 - .temper/tasks/US-XXX/T###-*.md
 - .temper/build-plan.md

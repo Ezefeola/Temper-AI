@@ -44,6 +44,35 @@ At the very start of your execution, you MUST announce:
 
 This gives the user full visibility into what you know and what conventions you will follow.
 
+### Phase 0 — Determine project state
+
+**CRITICAL: Before generating any tasks, you MUST determine if this is a NEW project.**
+
+Ask the user explicitly:
+
+```
+⚠️ Before generating tasks, I need to determine the project state.
+
+Is this a NEW project (no existing source code, starting from scratch)?
+This will generate mandatory SETUP tasks for scaffolding, infrastructure, and initial entities.
+
+Reply YES if this is a NEW project — I'll generate SETUP tasks first.
+Reply NO if this is an EXISTING project — I'll skip SETUP and generate only feature tasks.
+```
+
+**If YES (new project):**
+1. Load the `setup-tasks` skill
+2. Execute the setup-tasks skill to generate SETUP tasks
+3. After SETUP tasks are created, continue to Phase 1 for feature tasks
+4. SETUP tasks go in `.temper/tasks/SETUP/` folder
+5. Feature tasks (US-XXX) continue numbering after SETUP tasks
+
+**If NO (existing project):**
+1. Skip SETUP tasks entirely
+2. Proceed directly to Phase 1 for feature tasks
+
+**IMPORTANT: Always ask. Do NOT assume. Even if .temper/tasks/ exists, the user may want to add more features to an existing project without needing new SETUP tasks.**
+
 ## Your workflow — follow in strict order
 
 ### Phase 1 — Read context files
@@ -304,6 +333,8 @@ After generating all files:
    ✅ Phase 4 (Tasks) complete — task breakdown generated
    
    Summary:
+   • SETUP tasks: [N] (if new project) — see .temper/tasks/SETUP/
+   • Feature tasks: [N]
    • Total tasks: [N]
    • Backend tasks: [N]
    • Frontend tasks: [N]
@@ -311,12 +342,36 @@ After generating all files:
    • DevOps tasks: [N]
    • User stories covered: [N]
    • Dependency chains: [N]
-   • Directory structure: .temper/tasks/
+   • Directory structure: .temper/tasks/ (SETUP/ + US-XXX/)
    
    → Proceed to /temper-plan for Phase 5.
    ```
    
 2. **Do NOT ask for user approval** — the orchestrator handles that.
+
+### SETUP Task Execution (New Projects Only)
+
+When SETUP tasks are generated for a new project, the following rules apply:
+
+**SETUP task folder:** `.temper/tasks/SETUP/`
+**Feature task folder:** `.temper/tasks/US-XXX/`
+
+**Execution order is mandatory:**
+```
+SETUP T001 (Scaffolding) → T002 (Result Pattern) → T003 (Domain Primitives) → T004 (Repository) → T005 (EF Core) → T006 (Entities)
+                                        ↓
+                        Then feature tasks (US-XXX) can begin
+```
+
+**Key distinctions:**
+- SETUP tasks create the PROJECT foundation (solution, infrastructure patterns, entities)
+- Feature tasks create BUSINESS FEATURES (use cases, endpoints, UI)
+- SETUP tasks are backend-only
+- Feature tasks can involve backend, frontend, tester, and devops
+
+**When creating feature tasks, they continue numbering after SETUP:**
+- If SETUP has T001-T006, first feature task is T007
+- Feature task dependencies on SETUP are explicit: "Depends on: T006 (SETUP)"
 
 ## Rules for writing tasks
 
@@ -494,4 +549,11 @@ POST /api/products — accepts CreateProductRequestDto, returns 201 with CreateP
 
 ## Skills you load
 
-This agent does not load any code-related skills. It only reads the `.temper/` files and produces a structured task list based on the information contained in them.
+This agent loads skills based on project state:
+
+| Project state | Skills to load |
+|---|---|
+| NEW project | `setup-tasks` — generates mandatory SETUP tasks for scaffolding, infrastructure, and initial entities |
+| EXISTING project | None — reads only `.temper/` files |
+
+**Skills are NOT loaded speculatively.** The `setup-tasks` skill is loaded ONLY when the user confirms this is a new project. For existing projects, no skills are loaded — the agent only reads the existing `.temper/` files to understand the project context and generate feature tasks.

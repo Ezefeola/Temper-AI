@@ -153,10 +153,9 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
 
         string[] allPhases =
         [
-            "temper-discover",
-            "temper-constitution",
-            "temper-spec",
-            "temper-design",
+            "temper-analyst-prd",
+            "temper-analyst-spec",
+            "temper-architect",
             "temper-tasks",
             "temper-plan",
             "temper-review",
@@ -165,23 +164,21 @@ public sealed class IncrementalCommand : Command<IncrementalSettings>
 
         Dictionary<string, string[]> dependencies = new()
         {
-            ["temper-discover"] = [],
-            ["temper-constitution"] = ["temper-discover"],
-            ["temper-spec"] = ["temper-constitution"],
-            ["temper-design"] = ["temper-constitution", "temper-spec"],
-            ["temper-tasks"] = ["temper-constitution", "temper-spec", "temper-design"],
-            ["temper-plan"] = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks"],
-            ["temper-review"] = ["temper-constitution", "temper-spec", "temper-design", "temper-plan"],
-            ["temper-docs"] = ["temper-constitution", "temper-spec", "temper-design", "temper-tasks", "temper-plan", "temper-review"]
+            ["temper-analyst-prd"] = [],
+            ["temper-analyst-spec"] = ["temper-analyst-prd"],
+            ["temper-architect"] = ["temper-analyst-spec"],
+            ["temper-tasks"] = ["temper-analyst-spec", "temper-architect"],
+            ["temper-plan"] = ["temper-architect", "temper-tasks"],
+            ["temper-review"] = ["temper-architect", "temper-plan"],
+            ["temper-docs"] = ["temper-architect", "temper-plan", "temper-review"]
         };
 
         Dictionary<string, string[]> files = new()
         {
-            ["temper-discover"] = [],
-            ["temper-constitution"] = ["constitution.md"],
-            ["temper-spec"] = ["spec.md"],
-            ["temper-design"] = ["design.md"],
-            ["temper-tasks"] = ["tasks.md"],
+            ["temper-analyst-prd"] = ["prd.md"],
+            ["temper-analyst-spec"] = ["specs/INDEX.md"],
+            ["temper-architect"] = ["backend-config.md", "frontend-config.md"],
+            ["temper-tasks"] = ["tasks/INDEX.md"],
             ["temper-plan"] = ["build-plan.md"],
             ["temper-review"] = [],
             ["temper-docs"] = []

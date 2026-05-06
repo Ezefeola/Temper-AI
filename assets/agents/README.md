@@ -8,14 +8,12 @@ Agents are specialized sub-agents in the TemperAI SDD workflow. Each agent handl
 
 | Agent | Phase | Description |
 |-------|-------|-------------|
-| `temper-analyst` | 1 | Functional analyst — gathers business requirements, generates .temper/prd.md |
-| `temper-architect` | 2 | Technical architect — defines stack and architecture, generates config files |
-| `temper-spec` | 3 | Specification agent — generates user stories and acceptance criteria |
-| `temper-design` | 4 | Design agent — produces architecture design, entities, API endpoints |
-| `temper-tasks` | 5 | Task breakdown agent — breaks design into atomic implementation tasks |
-| `temper-plan` | 6 | Build planner — creates execution strategy with parallel groups |
-| `temper-review` | 7 | Quality review — validates code against conventions and specs |
-| `temper-docs` | 8 | Documentation agent — generates README, ARCHITECTURE, API docs |
+| `temper-analyst` | 1 | Functional analyst — Phase 1: PRD. Phase 2: User Stories (after PRD approval). |
+| `temper-architect` | 2 | Technical architect — defines stack, architecture, domain model, generates config files and DDD docs |
+| `temper-tasks` | 3 | Task breakdown agent — breaks design into atomic implementation tasks |
+| `temper-plan` | 4 | Build planner — creates execution strategy with parallel groups |
+| `temper-review` | 5 | Quality review — validates code against conventions and specs |
+| `temper-docs` | 6 | Documentation agent — generates README, ARCHITECTURE, API docs |
 
 ## Build Execution Agents
 

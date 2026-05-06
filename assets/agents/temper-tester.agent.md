@@ -39,7 +39,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-tester starting
    Skills loaded: [dotnet-csharp, backend/dotnet/testing]
-   Context files: [.temper/backend-config.md, .temper/specs/US-XXX-*.md, .temper/design.md, .temper/tasks/US-XXX/T###-*.md]
+   Context files: [.temper/backend-config.md, .temper/specs/US-XXX-*.md, Docs/domain-model.md, .temper/tasks/US-XXX/T###-*.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -50,7 +50,7 @@ This gives the user full visibility into what you know and what conventions you 
 
 1. Read `.temper/backend-config.md` to confirm the technology stack.
 2. Read the user story spec file provided by the orchestrator (e.g., `.temper/specs/US-001-product-management.md`) to understand the acceptance criteria and edge cases.
-3. Read `.temper/design.md` to understand the entities, use cases, and components being tested.
+3. Read `Docs/domain-model.md` to understand the entities, aggregates, and relationships being tested.
 4. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-001/T004-product-tests.md`).
 5. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
 

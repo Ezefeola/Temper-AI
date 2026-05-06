@@ -142,21 +142,22 @@ This generates `.temper/backend-config.md` and `.temper/frontend-config.md` with
 
 ### 3.4 Generate Specifications
 
-After approving the architecture:
+After approving the PRD (Phase 1), the analyst generates user stories in Phase 2:
 
 ```
-@temper-spec
+@temper-analyst (Phase 2: Spec)
 ```
 
 This generates `.temper/specs/` with individual user story files and an `INDEX.md` for fast lookup.
+After approving the specs, the architect proceeds to technical decisions.
 
 ### 3.4 Design the Architecture
 
 ```
-@temper-design
+@temper-architect
 ```
 
-This generates `.temper/design.md` with entity definitions, API endpoints, database schema, and folder structure.
+This generates `.temper/Docs/domain-model.md` with entity definitions, API endpoints, database schema, and folder structure.
 
 ### 3.5 Break Into Tasks
 

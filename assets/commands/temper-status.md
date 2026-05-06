@@ -37,7 +37,7 @@ Si `.temper/orchestrator-state.md` NO existe, listar:
 - `.temper/backend-config.md`
 - `.temper/frontend-config.md` (si aplica)
 - `.temper/specs/INDEX.md`
-- `.temper/design.md`
+- `.temper/Docs/domain-model.md`
 - `.temper/tasks/INDEX.md`
 - `.temper/build-plan.md`
 
@@ -49,8 +49,8 @@ Si `.temper/orchestrator-state.md` NO existe, listar:
 | Solo `prd.md` | Fase 1 — Analisis funcional completado |
 | `prd.md` + `backend-config.md` | Fase 2 — Arquitectura tecnica completada |
 | `prd.md` + config files + `specs/INDEX.md` | Fase 3 — Especificacion completada |
-| `prd.md` + config files + `specs/` + `design.md` | Fase 4 — Diseno completado |
-| `prd.md` + config files + `specs/` + `design.md` + `tasks/INDEX.md` | Fase 5 — Tareas definidas |
+| `prd.md` + config files + `specs/` + `Docs/domain-model.md` | Fase 4 — Diseno completado |
+| `prd.md` + config files + `specs/` + `Docs/domain-model.md` + `tasks/INDEX.md` | Fase 5 — Tareas definidas |
 | Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado |
 | Todos + codigo generado | Build Execution — En progreso o completado |
 | Todos + revision aprobada | Fase 7 — Revision completada |
@@ -99,7 +99,7 @@ Si `.temper/tasks/INDEX.md` existe, contar:
 | backend-config.md | [Exists / Missing] |
 | frontend-config.md | [Exists / Missing / N/A] |
 | specs/INDEX.md | [Exists / Missing] |
-| design.md | [Exists / Missing] |
+| Docs/domain-model.md | [Exists / Missing] |
 | tasks/INDEX.md | [Exists / Missing] |
 | build-plan.md | [Exists / Missing] |
 
@@ -135,7 +135,7 @@ All phases of the SDD workflow have been completed.
 | backend-config.md | Exists |
 | frontend-config.md | Exists (or N/A) |
 | specs/ | Exists |
-| design.md | Exists |
+| Docs/ | Exists |
 | tasks/ | Exists (all done) |
 | build-plan.md | Exists |
 | orchestrator-state.md | Exists (status: complete) |

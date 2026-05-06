@@ -150,16 +150,14 @@ temper-ai/
 │   │   ├── temper-orchestrator.agent.md  ← Main orchestrator
 │   │   ├── temper-analyst.agent.md       ← Phase 1: Functional analysis
 │   │   ├── temper-architect.agent.md     ← Phase 2: Technical architecture
-│   │   ├── temper-spec.agent.md          ← Phase 3: User Stories
-│   │   ├── temper-design.agent.md        ← Phase 4: Architecture Design
-│   │   ├── temper-tasks.agent.md         ← Phase 5: Task Breakdown
-│   │   ├── temper-plan.agent.md           ← Phase 6: Build Planner
-│   │   ├── temper-backend.agent.md       ← Phase 6a: Backend Implementation
-│   │   ├── temper-frontend.agent.md       ← Phase 6b: Frontend Implementation
-│   │   ├── temper-tester.agent.md         ← Phase 6c: Test Implementation
-│   │   ├── temper-devops.agent.md         ← Phase 6d: DevOps Implementation
-│   │   ├── temper-review.agent.md         ← Phase 7: Code Review
-│   │   └── temper-docs.agent.md           ← Phase 8: Documentation
+│   │   ├── temper-tasks.agent.md         ← Phase 4: Task Breakdown
+│   │   ├── temper-plan.agent.md           ← Phase 5: Build Planner
+│   │   ├── temper-backend.agent.md       ← Phase 5a: Backend Implementation
+│   │   ├── temper-frontend.agent.md       ← Phase 5b: Frontend Implementation
+│   │   ├── temper-tester.agent.md         ← Phase 5c: Test Implementation
+│   │   ├── temper-devops.agent.md         ← Phase 5d: DevOps Implementation
+│   │   ├── temper-review.agent.md         ← Phase 6: Code Review
+│   │   └── temper-docs.agent.md           ← Phase 7: Documentation
 │   │
 │   ├── commands/                   ← Slash commands for AI agents
 │   │   ├── temper-init.md
@@ -285,7 +283,7 @@ Each project gets a `.temper/` directory that tracks the SDD workflow state:
 | `frontend-config.md` | Frontend decisions — Blazor type, API URL |
 | `specs/INDEX.md` | Fast-lookup index of all user stories |
 | `specs/US-XXX-*.md` | Individual user story files |
-| `design.md` | Architecture, entities, endpoints, database schema |
+| `Docs/domain-model.md` | Architecture, entities, endpoints, database schema |
 | `tasks/INDEX.md` | Fast-lookup index of all tasks |
 | `tasks/US-XXX/T###-*.md` | Individual task files grouped by user story |
 | `build-plan.md` | Build execution plan with parallel groups |

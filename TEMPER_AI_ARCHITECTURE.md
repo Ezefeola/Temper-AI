@@ -128,14 +128,13 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-analyst` | User's project description | Nothing else |
 | `temper-architect` | `.temper/prd.md` | Functional scope changes, design, tasks, code |
 | `temper-spec` | `.temper/prd.md` | Design, tasks, code |
-| `temper-design` | `prd.md` + `backend-config.md` + `specs/INDEX.md` + individual spec files | Tasks, code |
-| `temper-tasks` | `prd.md` + `specs/` + `design.md` | Code |
-| `temper-plan` | `tasks/INDEX.md` + `design.md` | Code |
+| `temper-tasks` | `prd.md` + `specs/` + `Docs/domain-model.md` | Code |
+| `temper-plan` | `tasks/INDEX.md` + `Docs/domain-model.md` | Code |
 | `temper-backend` | Specific task file + user story spec + relevant files | Full codebase, all tasks, all specs |
 | `temper-frontend` | Specific task file + relevant files | Full codebase, all tasks |
 | `temper-tester` | Specific task file + user story spec + relevant files | Full codebase, all tasks, all specs |
 | `temper-devops` | Specific task file + constitution | Full codebase, all tasks |
-| `temper-review` | `specs/` + `design.md` + generated code | PRD, constitution |
+| `temper-review` | `specs/` + `Docs/domain-model.md` + generated code | PRD, constitution |
 | `temper-docs` | All `.temper/` files | Implementation details |
 
 ### Skill Loading Per Agent
@@ -145,7 +144,6 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-analyst` | None |
 | `temper-architect` | None |
 | `temper-spec` | `prd-analyzer` |
-| `temper-design` | `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None (reads `.temper/` files) |
 | `temper-plan` | None (reads `.temper/` files) |
 | `temper-backend` | `backend/dotnet/api` + `backend/dotnet/ef-core` + `architecture/[chosen]` |
@@ -166,7 +164,6 @@ The orchestrator (`temper-orchestrator.agent.md`) is the brain. It:
 | `temper-analyst` | 1,500-3,000 | 1,000-2,000 | 2,500-5,000 |
 | `temper-architect` | 1,000-2,000 | 500-1,500 | 1,500-3,500 |
 | `temper-spec` | 1,500-3,000 | 3,000-6,000 | 4,500-9,000 |
-| `temper-design` | 3,000-6,000 | 4,000-8,000 | 7,000-14,000 |
 | `temper-tasks` | 5,000-10,000 | 2,000-4,000 | 7,000-14,000 |
 | `temper-plan` | 3,000-6,000 | 2,000-4,000 | 5,000-10,000 |
 | Build (per group) | 1,000-3,000 | 500-2,000 | 1,500-5,000 |
@@ -283,7 +280,7 @@ The orchestrator MUST follow this protocol after EVERY phase output and EVERY su
 - `specs/` — user stories directory
   - `INDEX.md` — fast-lookup index of all user stories
   - `US-001-[slug].md` — individual user story files
-- `design.md` — architecture
+- `Docs/domain-model.md` — architecture
 - `tasks/` — implementation tasks directory
   - `INDEX.md` — fast-lookup index of all tasks
   - `US-001/` — tasks for user story US-001

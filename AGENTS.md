@@ -19,11 +19,10 @@ Full documentation is in TEMPER_AI_ARCHITECTURE.md.
 
 | User intention | Agent | Skills loaded |
 |---|---|---|
-| Gather functional requirements | `temper-analyst` | None |
+| Gather functional requirements | `temper-analyst` | `prd-analyzer` (Phase 1) |
+| Generate user stories | `temper-analyst` (Phase 2) | `spec-generator` (after PRD approval) |
 | Define technical architecture | `temper-architect` | None |
-| Generate user stories | `temper-spec` | `prd-analyzer` |
-| Design architecture | `temper-design` | `dotnet-csharp` + `backend/architecture/[chosen]` + `backend/dotnet/api` |
-| Break into tasks | `temper-tasks` | None — **NO access to design.md** |
+| Break into tasks | `temper-tasks` | None — **NO access to domain-model.md** |
 | Generate build plan | `temper-plan` | None |
 | **Execute build** | **`temper-orchestrator`** (spawns sub-agents) | Varies by sub-agent |
 | Implement backend | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/architecture/shared` + `backend/architecture/[chosen]` |
@@ -41,7 +40,8 @@ Skills are loaded on-demand. Never load all skills at once.
 | Skill | When to load |
 |---|---|
 | `dotnet-csharp` | **ALWAYS** — loaded by every agent that writes C# code |
-| `prd-analyzer` | Reading or building a PRD |
+| `prd-analyzer` | Reading or building a PRD (Phase 1 of analyst) |
+| `spec-generator` | Generating user stories from approved PRD (Phase 2 of analyst) |
 | `backend/architecture/shared` | **ALWAYS** for backend agents — Result pattern, DTO conventions, naming, controller rules |
 | `backend/architecture/clean` | Project uses Clean Architecture |
 | `backend/architecture/hexagonal` | Project uses Hexagonal Architecture |
@@ -76,7 +76,7 @@ Skills are loaded on-demand. Never load all skills at once.
   4. Only then update the state file and proceed.
 - **If the user requests changes**, the orchestrator must spawn the appropriate agent with the feedback, show the revised output, and ask for approval again.
 - **If the user does not explicitly approve**, the orchestrator MUST NOT proceed. Set `Status: awaiting-approval` in the state file.
-- This rule applies to: phase outputs (spec, design, tasks, plan, review, docs), sub-agent results during build, and quick-path results.
+- This rule applies to: phase outputs (spec, tasks, plan, review, docs), sub-agent results during build, and quick-path results.
 
 ## Recovery Rules — Continue from failure point
 

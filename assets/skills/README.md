@@ -1,5 +1,13 @@
 # TemperAI Skills
 
+## Core Skills
+
+| Skill | Description |
+|-------|------------|
+| `prd-analyzer` | Product Requirements Document analysis |
+| `spec-generator` | User story and specification generation |
+| `setup-tasks` | SETUP task generation for new projects (scaffolding, infrastructure, initial entities) |
+
 ## Frontend Skills
 
 | Skill | Description |

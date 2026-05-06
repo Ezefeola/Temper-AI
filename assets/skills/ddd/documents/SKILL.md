@@ -2,28 +2,28 @@
 name: ddd-documents
 description: >
   DDD documentation generation standards for TemperAI. Teaches how to produce
-  DDD-Overview, DDD-Vocabulary, DDD-Entities, DDD-Events, and DDD-Rules documents.
-  Load this skill when generating or modifying any DDD documentation file.
-  Does NOT teach implementation patterns (use dotnet-ddd for that).
+  DDD-Vocabulary, domain-model, and system-architecture documents.
+  Generates three documents: one operational vocabulary file consumed by implementation
+  agents, and two documentation files with Mermaid diagrams covering the domain model
+  and system architecture. Load this skill when generating or modifying any DDD
+  documentation file. Does NOT teach implementation patterns (use dotnet-ddd for that).
 requires: []
-produces: [DDD-Vocabulary.md, DDD-Overview.md, DDD-Entities.md, DDD-Events.md, DDD-Rules.md]
+produces: [DDD-Vocabulary.md, domain-model.md, system-architecture.md]
 ---
 
 # DDD Documents — TemperAI Standards
 
-This skill teaches how to generate the five DDD documentation artifacts.
-It covers why each document exists, how to extract the information from context,
-and the exact structure for each.
+This skill teaches how to generate the three DDD documentation artifacts.
+It covers why each document exists, how to extract information from the PRD,
+and the exact structure and templates for each.
 
 ## Documents and Their Purpose
 
-| Document | Purpose | Generated From |
-|---|---|---|
-| `DDD-Vocabulary.md` | Single source of truth for domain terminology | PRD + specs + design |
-| `DDD-Overview.md` | Bounded contexts and external integrations | PRD + external systems analysis |
-| `DDD-Entities.md` | Entity model with aggregates and relationships | PRD + specs + design |
-| `DDD-Events.md` | Domain events catalog | specs + design (use cases) |
-| `DDD-Rules.md` | Business rules index | specs (edge cases + error cases) |
+| Document | Location | Purpose | Generated From |
+|---|---|---|---|
+| `DDD-Vocabulary.md` | `.temper/DDD-Vocabulary.md` | Single source of truth for domain terminology. Consumed by implementation agents at build time. | PRD nouns, status words, actions |
+| `domain-model.md` | `Docs/domain-model.md` | Entity model, aggregates, state transitions, domain events, business rules, and diagrams. Replaces DDD-Entities + DDD-Events + DDD-Rules. | PRD entities, workflows, rules |
+| `system-architecture.md` | `Docs/system-architecture.md` | Bounded contexts, context map, component diagram, external integrations. Replaces DDD-Overview. | PRD user roles, domain areas, external systems |
 
 ---
 
@@ -32,16 +32,14 @@ and the exact structure for each.
 Always generate DDD documents in this order:
 
 ```
-1. DDD-Vocabulary.md    ← Foundation. All other docs reference it.
-2. DDD-Overview.md       ← Contexts. Depends on vocabulary.
-3. DDD-Entities.md       ← Entity model. Depends on vocabulary + overview.
-4. DDD-Events.md         ← Events. Depends on entities.
-5. DDD-Rules.md          ← Rules. Depends on all above.
+1. DDD-Vocabulary.md       → Foundation. All other docs reference these terms.
+2. domain-model.md          → Entity structure. Depends on vocabulary for consistent naming.
+3. system-architecture.md   → System view. Depends on vocabulary + entity model for context boundaries.
 ```
 
-**Reason:** Each document builds on the previous. Vocabulary defines terms,
-Overview defines contexts, Entities define structure, Events define behavior,
-Rules define constraints.
+**Reason:** Each document builds on the previous. Vocabulary defines the language,
+domain-model defines the structural and behavioral model using that language,
+system-architecture defines the system-level decomposition based on the model.
 
 ---
 
@@ -55,6 +53,8 @@ No synonyms. No ambiguity. Implementation agents read this to understand domain 
 **Why it exists:** Without a shared vocabulary, the same concept gets called different names
 in specs, tasks, and code. This causes confusion and bugs. The vocabulary ensures everyone
 uses the same words for the same things.
+
+**Output location:** `.temper/DDD-Vocabulary.md`
 
 **What goes in it:**
 
@@ -109,21 +109,262 @@ uses the same words for the same things.
 
 ---
 
-### DDD-Overview.md
+### domain-model.md
 
-**What it is:** The strategic DDD view — bounded contexts, context map, and external integrations.
-Shows how the system is divided and how it communicates with the outside world.
+**What it is:** The tactical DDD model — entities, aggregates, state transitions, domain events,
+business rules, and entity relationships with Mermaid diagrams. One coherent document that
+replaces the previous DDD-Entities, DDD-Events, and DDD-Rules documents.
+
+**Why it exists:** Splitting entities, events, and rules into separate documents created friction.
+Developers had to cross-reference three files to understand a single aggregate. This document
+brings everything together so the full picture of each entity — its structure, behavior, and
+constraints — is visible in one place.
+
+**Output location:** `Docs/domain-model.md`
+
+**Sections:**
+
+1. **Entity Index** — table of all entities with type and summary
+2. **Aggregates** — per-aggregate sections with root, children, invariants, properties
+3. **State Transitions** — per-entity state diagrams using Mermaid `stateDiagram-v2`
+4. **Domain Events** — per-entity events with name, trigger, and data fields
+5. **Business Rules** — organized by entity with rule description, owner, enforcement, and error
+6. **Entity Relationships** — Mermaid `classDiagram` showing how entities connect
+7. **ER Diagram** — Mermaid `erDiagram` showing the data model
+8. **Identity Strategy** — how each entity is identified
+
+**Rules:**
+- No implementation details — no DTOs, no repository interfaces, no C# types, no EF Core references
+- Diagrams MUST use Mermaid syntax
+- Events are named in past tense (OrderPlaced, PaymentReceived)
+- Rules have clear owners — the aggregate or entity that enforces them
+- Each aggregate section must list its invariants explicitly
+- State transitions must show valid transitions and blocking conditions
+
+**Template:**
+
+```markdown
+# Domain Model — [Project Name]
+
+> Generated by TemperAI — temper-architect
+> Date: [YYYY-MM-DD]
+> Version: [YYYYMMDD-HHMM]
+> Status: Confirmed
+
+---
+
+## Entity Index
+
+| Entity | Type | Summary |
+|---|---|---|
+| [Entity] | [Aggregate Root / Entity / Value Object] | [One-line description] |
+
+---
+
+## Aggregates
+
+### [Aggregate Root Name]
+
+**Type:** Aggregate Root
+**Responsibility:** [What this aggregate is responsible for]
+**Invariants:**
+- [Invariant 1 — must always be true]
+- [Invariant 2]
+
+**Properties:**
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| [Property] | [Domain type] | [Yes/No] | [Description] |
+
+**Child Entities:**
+
+#### [Child Entity Name]
+
+**Access:** Only through [Aggregate Root Name]
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| [Property] | [Domain type] | [Yes/No] | [Description] |
+
+---
+
+## State Transitions
+
+### [Entity Name]
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Submitted: Customer submits order
+    Submitted --> Confirmed: Payment received
+    Submitted --> Cancelled: Customer cancels
+    Confirmed --> Shipped: Order dispatched
+    Confirmed --> Cancelled: Admin cancels
+    Shipped --> Delivered: Delivery confirmed
+    Delivered --> [*]
+    Cancelled --> [*]
+```
+
+**Transition Conditions:**
+
+| From | To | Condition |
+|---|---|---|
+| Draft | Submitted | All required items present |
+| Submitted | Confirmed | Valid payment received |
+| Submitted | Cancelled | Customer requests cancellation before confirmation |
+| Confirmed | Shipped | Order packed and dispatched |
+| Confirmed | Cancelled | Admin overrides and cancels |
+| Shipped | Delivered | Delivery confirmation received |
+
+---
+
+## Domain Events
+
+### [Entity Name] Events
+
+| Event | Trigger | Data Fields |
+|---|---|---|
+| [EventName] | [When raised] | [field1], [field2], [field3] |
+
+#### [EventName]
+
+**Raised by:** [Entity or Aggregate]
+**Trigger:** [When this event is raised]
+**Data:**
+- [field]: [domain type] — [description]
+
+**Consumers:**
+- [Which bounded contexts or external systems react]
+
+---
+
+## Business Rules
+
+### [Entity Name] Rules
+
+| Rule | Owner Entity | Enforcement | Error When Violated |
+|---|---|---|---|
+| [Rule description] | [Entity] | [How enforced] | [What happens / error message] |
+
+### Invariant Rules (Enforced by Aggregates)
+
+| Rule | Aggregate | Enforcement | Error When Violated |
+|---|---|---|---|
+| [Rule description] | [Aggregate] | [How enforced] | [What happens / error message] |
+
+### Transition Rules
+
+| Entity | From State | To State | Conditions |
+|---|---|---|---|
+| [Entity] | [State A] | [State B] | [Conditions required for transition] |
+
+### Calculation Rules
+
+| Rule | Input | Calculation | Output |
+|---|---|---|---|
+| [Rule] | [Inputs] | [How calculated] | [Result] |
+
+---
+
+## Entity Relationships
+
+```mermaid
+classDiagram
+    class Order {
+        +OrderId
+        +Status
+        +Total
+        +CreatedAt
+    }
+    class OrderItem {
+        +ProductId
+        +Quantity
+        +UnitPrice
+    }
+    class Product {
+        +ProductId
+        +Name
+        +Price
+        +Stock
+    }
+    class Customer {
+        +CustomerId
+        +Name
+        +Email
+    }
+    Customer "1" --> "*" Order : places
+    Order "1" --> "*" OrderItem : contains
+    OrderItem "*" --> "1" Product : references
+```
+
+---
+
+## ER Diagram
+
+```mermaid
+erDiagram
+    CUSTOMER ||--o{ ORDER : "places"
+    ORDER ||--|{ ORDER_ITEM : "contains"
+    PRODUCT ||--o{ ORDER_ITEM : "referenced in"
+    ORDER {
+        guid OrderId
+        guid CustomerId
+        string Status
+        decimal Total
+        datetime CreatedAt
+    }
+    ORDER_ITEM {
+        guid OrderItemId
+        guid OrderId
+        guid ProductId
+        int Quantity
+        decimal UnitPrice
+    }
+    PRODUCT {
+        guid ProductId
+        string Name
+        decimal Price
+        int Stock
+    }
+    CUSTOMER {
+        guid CustomerId
+        string Name
+        string Email
+    }
+```
+
+---
+
+## Identity Strategy
+
+| Entity | Identity Type | Generation |
+|---|---|---|
+| [Entity] | [GUID / Int / String / Composite] | [Auto / User-provided / Derived] |
+```
+
+---
+
+### system-architecture.md
+
+**What it is:** The strategic DDD view — bounded contexts, context map with Mermaid diagrams,
+component architecture, and external integrations. Shows how the system is divided and how
+it communicates internally and with the outside world.
 
 **Why it exists:** In complex systems, not everything is related to everything else.
 Bounded contexts define where certain terms and rules apply. Understanding boundaries
-prevents accidental coupling and helps teams work independently.
+prevents accidental coupling and helps teams work independently. This document replaces
+the previous DDD-Overview with richer diagram support.
 
-**What goes in it:**
+**Output location:** `Docs/system-architecture.md`
 
-1. **Bounded contexts** — each context with its responsibility and core domain
-2. **Context map** — how contexts relate to each other (Shared Kernel, Customer-Supplier, etc.)
-3. **External integrations** — third-party systems the application talks to
-4. **Anticorruption layer** — how the system protects its model from external influences
+**Sections:**
+
+1. **Bounded Contexts** — each context with responsibility, core domain, and language terms
+2. **Context Map** — Mermaid `graph` showing context relationships with labeled edges
+3. **Component Diagram** — Mermaid `graph` with subgraphs for architectural layers
+4. **External Integrations** — table of third-party systems with type, description, and integration points
+5. **Anticorruption Layer** — protection mechanisms (if applicable)
 
 **Context relationship types (for the map):**
 - `Shared Kernel` — both contexts share a subset of the model
@@ -133,14 +374,16 @@ prevents accidental coupling and helps teams work independently.
 - `Open Host Service` — one context exposes a protocol others consume
 
 **Rules:**
+- Integrations described from the domain perspective, not the technical perspective
+- Context map must show relationships between contexts with labeled edges
+- Component diagram must show the architectural layers (API, Domain, Infrastructure, External)
 - Each bounded context should have a clear, single responsibility
-- If a term appears in multiple contexts, note if it has the same meaning in each
-- External integrations are described from the DOMAIN perspective, not the technical perspective
+- If a term appears in multiple contexts, note whether it has the same meaning in each
 
 **Template:**
 
 ```markdown
-# DDD Overview — [Project Name]
+# System Architecture — [Project Name]
 
 > Generated by TemperAI — temper-architect
 > Date: [YYYY-MM-DD]
@@ -155,305 +398,131 @@ prevents accidental coupling and helps teams work independently.
 
 **Description:** [What this context is responsible for]
 **Core Domain:** [The primary subdomain it serves]
-**Ubiquitous Language terms:** [list of terms from vocabulary that belong to this context]
+**Ubiquitous Language terms:** [Comma-separated list of terms from vocabulary that belong to this context]
+
+---
 
 ## Context Map
 
-```
-[Context A] ──> [Context B]
-     │              │
-     └──> [Shared Kernel: X] <──┘
+```mermaid
+graph LR
+    Ordering[Ordering Context]
+    Billing[Billing Context]
+    Shipping[Shipping Context]
+    Catalog[Catalog Context]
+
+    Ordering -->|Customer-Supplier| Billing
+    Ordering -->|Customer-Supplier| Shipping
+    Catalog -->|Shared Kernel| Ordering
+    Billing -->|Anticorruption Layer| PaymentGateway[Payment Gateway]
 ```
 
-[Describe the relationships using the types above]
+**Relationships:**
+
+| From | To | Type | Description |
+|---|---|---|---|
+| Ordering | Billing | Customer-Supplier | Ordering provides order data to Billing for invoice generation |
+| Ordering | Shipping | Customer-Supplier | Ordering provides fulfilled orders to Shipping for dispatch |
+| Catalog | Ordering | Shared Kernel | Both contexts share product identity and pricing |
+| Billing | Payment Gateway | Anticorruption Layer | Billing translates external payment model into domain terms |
+
+---
+
+## Component Diagram
+
+```mermaid
+graph TB
+    subgraph API[API Layer]
+        Controllers[Controllers]
+        Middleware[Middleware]
+    end
+
+    subgraph Domain[Domain Layer]
+        Orders[Orders Aggregate]
+        Products[Products Aggregate]
+        Customers[Customers Aggregate]
+    end
+
+    subgraph Infrastructure[Infrastructure Layer]
+        Repositories[Repositories]
+        DbContext[Database Context]
+        EventDispatcher[Event Dispatcher]
+    end
+
+    subgraph External[External Systems]
+        PaymentGateway[Payment Gateway]
+        EmailService[Email Service]
+    end
+
+    Controllers --> Orders
+    Controllers --> Products
+    Controllers --> Customers
+    Orders --> Repositories
+    Products --> Repositories
+    Repositories --> DbContext
+    Orders --> EventDispatcher
+    EventDispatcher --> EmailService
+    Orders --> PaymentGateway
+```
+
+---
 
 ## External Integrations
 
 | System | Type | Description | Integration Points |
 |---|---|---|---|
-| [External service] | [Payment / Email / etc.] | [What it does for the domain] | [How this system interacts with it] |
+| [External service] | [Payment / Email / SMS / etc.] | [What it does for the domain] | [How this system interacts with it] |
+
+---
 
 ## Anticorruption Layer
 
-[If any context integrates with external systems, describe protection mechanisms]
-```
-
----
-
-### DDD-Entities.md
-
-**What it is:** The tactical DDD model — entities, aggregates, value objects, relationships,
-and identity strategy. This is where the domain model becomes concrete.
-
-**Why it exists:** While Overview shows contexts, Entities shows what's inside each context.
-It translates the vocabulary into a structure that developers can implement.
-
-**What goes in it:**
-
-1. **Entity index** — table of all entities with type and context
-2. **Aggregates** — clusters of entities treated as a unit, with their invariants
-3. **Entity relationships** — text-based diagram showing how entities connect
-4. **Identity strategy** — how each entity is identified (GUID, int, composite)
-
-**What to extract:**
-
-From the PRD and specs, identify:
-- Nouns become entities
-- Verbs become services or methods
-- Status/category nouns become enums
-- "Has a" relationships become associations
-- "Part of" relationships become child entities within aggregates
-
-**Aggregate rules:**
-- One aggregate root per aggregate
-- Only the aggregate root can modify child entities
-- Invariants are enforced by the aggregate root
-- Children have no public constructors
-
-**Rules:**
-- Only one aggregate root per aggregate
-- Child entities use `internal` visibility for setters and constructors
-- Value objects are immutable and defined by their attributes
-- Do NOT include technical implementation (DTOs, repository interfaces)
-
-**Template:**
-
-```markdown
-# DDD Entities — [Project Name]
-
-> Generated by TemperAI — temper-architect
-> Date: [YYYY-MM-DD]
-> Version: [YYYYMMDD-HHMM]
-> Status: Confirmed
-
----
-
-## Entity Index
-
-| Entity | Type | Bounded Context | Summary |
-|---|---|---|---|
-| [Entity] | [Aggregate Root / Entity / Value Object] | [Context] | [One-line description] |
-
-## Aggregates
-
-### [Aggregate Root Name]
-
-**Type:** Aggregate Root
-**Bounded Context:** [Context name]
-**Responsibility:** [What this aggregate is responsible for]
-**Invariants:** [Rules that must always be true]
-
-**Entities in this aggregate:**
-- [Aggregate Root Entity]
-  - Properties: [list]
-  - [Child Entity]
-    - Properties: [list]
-    - Access: [Only through aggregate root]
-
-**Value Objects in this aggregate:**
-- [VO name]
-  - Properties: [list]
-  - Immutable: [yes]
-
-**State Transitions:**
-- [Status enum if applicable]
-- [Valid transitions with conditions]
-
-## Entity Relationships
-
-```
-[Entity A] 1 ──< [Entity B]
-[Entity A] ──< [Entity C] >── [Entity D]
-```
-
-## Identity Strategy
-
-| Entity | Identity Type | Generation |
-|---|---|---|
-| [Entity] | [GUID / Int / String / Composite] | [Auto / User-provided / Derived] |
-```
-
----
-
-### DDD-Events.md
-
-**What it is:** A catalog of domain events — things that happened in the domain that
-other parts of the system might care about.
-
-**Why it exists:** Domain events are how bounded contexts communicate.
-When something significant happens (order placed, payment received), the event
-announces it so other services can react without tight coupling.
-
-**What goes in it:**
-
-1. **Event index** — table of all events with source, trigger, and when published
-2. **Event definitions** — detailed structure of each event's data
-3. **Integration events** — events that cross bounded context or system boundaries
-
-**When to raise an event:**
-- When the state of an aggregate changes in a way other contexts need to know
-- When an external integration occurs (payment processed, email sent)
-- When a business milestone is reached (order shipped, invoice paid)
-
-**When NOT to raise an event:**
-- When the operation is self-contained with no external reactions
-- When the information is only needed by the same aggregate (internal state)
-
-**Rules:**
-- Events are named in past tense (OrderPlaced, PaymentReceived)
-- Events contain data that happened, not instructions for what to do
-- Events do NOT have behavior — they are just data carriers
-- Events that cross boundaries need integration event handling
-
-**Template:**
-
-```markdown
-# DDD Events — [Project Name]
-
-> Generated by TemperAI — temper-architect
-> Date: [YYYY-MM-DD]
-> Version: [YYYYMMDD-HHMM]
-> Status: Confirmed
-
----
-
-## Event Index
-
-| Event | Source Aggregate | Trigger | Published When |
-|---|---|---|---|
-| [Event name] | [Aggregate] | [What triggers it] | [When raised] |
-
-## Event Definitions
-
-### [Event Name]
-
-**Aggregate:** [Aggregate that raises this event]
-**Trigger:** [When this event is raised]
-**Data:**
-- [field]: [type] — [description]
-
-**Consumers:**
-- [Which bounded contexts or external systems react]
-
----
-
-## Integration Events (Cross-Boundary)
-
-| Event | Destination | Payload | Notes |
-|---|---|---|---|
-| [Event] | [External system or context] | [What data is sent] | [Mapping notes] |
-```
-
----
-
-### DDD-Rules.md
-
-**What it is:** An index of all business rules — invariants, validations, transitions,
-and calculations. Where the domain's logic becomes explicit.
-
-**Why it exists:** Business rules are often buried in edge cases and error cases.
-This document makes them first-class citizens, organized and indexed so
-implementation agents can find them easily.
-
-**What goes in it:**
-
-1. **Invariant rules** — rules enforced by aggregates that must never be violated
-2. **Validation rules** — constraints on entity properties
-3. **Transition rules** — conditions for moving between states
-4. **Calculation rules** — formulas or processes that produce values
-5. **Rules by context** — organization by bounded context
-
-**What to extract:**
-
-From specs, extract:
-- Edge cases → become validation rules
-- Error cases → become validation rules or transition rules
-- Status workflows → become transition rules
-- "Must be" statements → become invariant rules
-
-**Rules:**
-- Each rule has one owner (the aggregate or entity that enforces it)
-- Rules are expressed without technical implementation details
-- If a rule has multiple conditions, list them explicitly
-- Error messages are user-facing and human-readable
-
-**Template:**
-
-```markdown
-# DDD Rules — [Project Name]
-
-> Generated by TemperAI — temper-architect
-> Date: [YYYY-MM-DD]
-> Version: [YYYYMMDD-HHMM]
-> Status: Confirmed
-
----
-
-## Invariant Rules (Enforced by Aggregates)
-
-| Rule | Aggregate | Enforcement | Error When Violated |
-|---|---|---|---|
-| [Rule description] | [Aggregate] | [How enforced] | [What happens] |
-
-## Validation Rules
-
-| Rule | Entity/VO | Constraint | Error Message |
-|---|---|---|---|
-| [Rule] | [Entity] | [Constraint] | [User-facing error] |
-
-## Transition Rules
-
-| Entity | From State | To State | Conditions |
-|---|---|---|---|
-| [Entity] | [State A] | [State B] | [Conditions] |
-
-## Calculation Rules
-
-| Rule | Input | Calculation | Output |
-|---|---|---|---|
-| [Rule] | [Inputs] | [How calculated] | [Result] |
-
----
-
-## Rules by Bounded Context
-
-### [Context Name]
-
-[Rules that belong to this context]
+### [Protection Name]
+
+**Protects:** [Which bounded context is being protected]
+**From:** [Which external system or context]
+**Mechanism:** [How the translation works — domain terms, not technical]
+
+**Translation rules:**
+- [External concept] → [Internal domain concept]
+- [External concept] → [Internal domain concept]
 ```
 
 ---
 
 ## Extraction Patterns
 
-### From PRD to Vocabulary
+All extraction is done from the PRD. The architect does NOT read specs.
+
+### From PRD to DDD-Vocabulary
 
 Read the PRD and extract:
-- Nouns that represent things the system manages → terms
-- Status or category words → enum terms
-- Actions the system performs → service terms
-- "When X happens, Y occurs" → event terms
+- **Nouns that represent things the system manages** → Entity, Aggregate, or Value Object terms
+- **Status or category words** → Enum terms (e.g. "pending", "shipped", "delivered" → OrderStatus enum)
+- **Actions the system performs** → Service terms (e.g. "process payment" → PaymentProcessing service)
+- **"When X happens, Y occurs"** → Event terms (e.g. "When order is placed" → OrderPlaced event)
 
-### From Specs to Events
+### From PRD to domain-model
 
-For each user story:
-- What state changes happen? → events
-- What triggers those changes? → event trigger
-- What data is relevant at that moment? → event data
+Read the PRD and extract:
+- **Nouns the system manages** → Entity candidates
+- **"Has a" / "contains" / "belongs to"** → Relationships between entities
+- **"Part of" / "line item" / "detail"** → Child entities within an aggregate
+- **Status workflows and transitions** → State transitions with Mermaid `stateDiagram-v2`
+- **State changes that other parts of the system need to know about** → Domain events
+- **Business rules section** → Invariants, validation rules, transition rules
+- **Calculations and formulas** → Calculation rules
+- **"Must always be true" statements** → Aggregate invariants
+- **Edge cases and error cases** → Validation rules
 
-### From Specs to Rules
+### From PRD to system-architecture
 
-For each user story's edge cases and error cases:
-- "What happens if X is invalid?" → validation rule
-- "When can X transition to Y?" → transition rule
-- "Must always be true" statements → invariant
-
-### From Design to Entities
-
-When design.md is available:
-- Entities with relationships → aggregate structure
-- Status fields → enum terms
-- Child collections → child entities within aggregate
+Read the PRD and extract:
+- **User roles** → Bounded context signals (different roles often indicate different contexts)
+- **Domain areas that change independently** → Bounded context boundaries
+- **External systems mentioned** → Integration points
+- **Third-party services** → External integrations table
+- **Integration boundaries** → Anticorruption layer candidates
 
 ---
 
@@ -465,38 +534,38 @@ When design.md is available:
 - **Using technical terms in definitions** — "Order ID is a GUID" instead of "Order ID uniquely identifies an order"
 - **Having multiple definitions for the same term** — if a term has two meanings, create two separate terms
 
-### Overview mistakes
-
-- **Describing integrations in technical terms** — "REST API to payment provider" instead of "Processes payments"
-- **Creating too many bounded contexts** — if everything is its own context, the boundaries are meaningless
-- **Forgetting the context map** — showing contexts without relationships doesn't show how they interact
-
-### Entities mistakes
+### Domain model mistakes
 
 - **Mixing aggregate roots and child entities** — child entities should not have their own identity outside the aggregate
-- **Including technical types** — no DTOs, no repository interfaces
-- **Describing implementation** — "Uses EF Core" belongs in architecture, not here
-
-### Events mistakes
-
+- **Including technical types or implementation details** — no DTOs, no repository interfaces, no EF Core references
 - **Commands disguised as events** — "SendOrderConfirmation" is a command, "OrderConfirmationSent" is an event
-- **Including instructions** — events say what happened, not what should happen next
-- **Too many events** — if everything raises an event, events lose their value
-
-### Rules mistakes
-
+- **Events with instructions** — events say what happened, not what should happen next
 - **Vague rules** — "Order must be valid" is not a rule, "Order total must equal sum of item prices" is
 - **Rules without owners** — every rule should have a clear aggregate or entity responsible
-- **Implementation details** — "must be less than 100 characters" is a constraint, not a business rule
+- **Missing Mermaid diagrams** — every entity with state must have a `stateDiagram-v2`, relationships must have a `classDiagram`
+- **Diagram syntax errors** — always validate Mermaid syntax: correct arrow types, proper labels, quoted strings when needed
+- **Abstract diagram examples** — use real domain entities (Order, Product, Customer) never placeholders (A, B, C)
+- **Splitting entity knowledge across documents** — keep all information about an aggregate (structure, events, rules, transitions) together
+
+### System architecture mistakes
+
+- **Describing integrations in technical terms** — "REST API to payment provider" instead of "Processes payments on behalf of orders"
+- **Creating too many bounded contexts** — if everything is its own context, the boundaries are meaningless
+- **Forgetting the context map** — showing contexts without relationships doesn't show how they interact
+- **Flat component diagrams** — must use subgraphs to show architectural layers (API, Domain, Infrastructure, External)
+- **Unlabeled context map edges** — every relationship on the context map must have a type label
 
 ---
 
 ## Absolute Rules
 
-- **ALWAYS generate in order** — Vocabulary first, then Overview, then Entities, then Events, then Rules
+- **ALWAYS generate in order** — Vocabulary first, then domain-model, then system-architecture
 - **ALWAYS load this skill** when generating DDD documents
-- **NEVER generate DDD docs without reading the PRD and specs first**
-- **NEVER mix implementation details** (DTOs, repositories, EF Core) into DDD documentation
+- **NEVER generate DDD docs without reading the PRD first** — the PRD is the only extraction source
+- **NEVER mix implementation details** (DTOs, repositories, EF Core, C# types) into DDD documentation
 - **NEVER use technical types** (GUID, int, string) in Vocabulary definitions
-- **ALWAYS reference existing terms** — when defining a new term, check if a term already exists for that concept
+- **ALWAYS use Mermaid syntax** for diagrams — `stateDiagram-v2`, `classDiagram`, `erDiagram`, `graph`
+- **ALWAYS place DDD-Vocabulary.md in `.temper/`** and other docs in `Docs/`**
 - **ALWAYS keep definitions to one sentence** — if it needs more explanation, the term is too complex
+- **ALWAYS reference existing vocabulary terms** — when defining a new term, check if a term already exists for that concept
+- **ALWAYS use realistic entity names in diagrams** — never use abstract placeholders

@@ -1,32 +1,51 @@
 {
-  "last_updated": "2026-04-25T14:30:00Z",
-  "status": "in-progress",
-  "request_summary": "Refactor TemperAI agent workflow: split discover into analyst/architect, replace constitution with PRD, update spec/tasks",
+  "last_updated": "2026-05-06T14:30:00Z",
+  "status": "complete",
+  "request_summary": "Add SETUP tasks generation for new projects in temper-tasks agent",
   "context": {
     "project": "TemperAI Framework",
     "architecture": "Agent-based SDD workflow",
-    "stack": "Markdown agent definitions",
-    "notes": "Current flow mixes functional/technical. New flow: analyst (functional) -> architect (technical) -> spec -> design -> tasks"
+    "stack": "Markdown agent definitions and skills",
+    "notes": "Implemented SETUP tasks flow: new projects get mandatory foundation tasks (scaffolding, infrastructure patterns, entities) before feature tasks. Existing projects skip SETUP."
   },
   "approved_plan": [
     {
       "step": 1,
-      "agent": "temper-backend",
-      "description": "Update agent definitions: create analyst/architect, update spec/tasks, delete constitution",
-      "status": "pending",
-      "output": "assets/agents/*.agent.md"
+      "agent": "general",
+      "description": "Create setup-tasks skill with full logic",
+      "status": "complete",
+      "output": "assets/skills/setup-tasks/SKILL.md"
+    },
+    {
+      "step": 2,
+      "agent": "general",
+      "description": "Update temper-tasks.agent.md to ask project state and load setup-tasks skill",
+      "status": "complete",
+      "output": "assets/agents/temper-tasks.agent.md"
+    },
+    {
+      "step": 3,
+      "agent": "general",
+      "description": "Update temper-plan.agent.md to handle SETUP tasks as Group 1 (sequential)",
+      "status": "complete",
+      "output": "assets/agents/temper-plan.agent.md"
+    },
+    {
+      "step": 4,
+      "agent": "general",
+      "description": "Update skills/README.md with new setup-tasks skill",
+      "status": "complete",
+      "output": "assets/skills/README.md"
     }
   ],
-  "current_step": 1,
-  "total_steps": 1,
-  "current_task": "T001",
-  "current_agent": "temper-backend",
-  "task_title": "Refactor agent workflow files",
-  "total_tasks": 1,
+  "current_step": 4,
+  "total_steps": 4,
+  "current_agent": null,
+  "current_task": null,
+  "task_title": null,
+  "total_tasks": null,
   "completed_tasks": [],
-  "pending_tasks": [
-    { "task_id": "T001", "agent": "temper-backend", "title": "Update agent workflow definitions" }
-  ],
+  "pending_tasks": [],
   "block_reason": null,
-  "next_action": "Spawn temper-backend to apply agent file changes"
+  "next_action": "All changes complete. SETUP tasks will be generated only for new projects when temper-tasks is executed."
 }

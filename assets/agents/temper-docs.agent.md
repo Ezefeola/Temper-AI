@@ -41,7 +41,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-docs starting
    Skills loaded: [none]
-    Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, .temper/design.md, .temper/tasks/INDEX.md]
+     Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, Docs/domain-model.md, .temper/tasks/INDEX.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -53,7 +53,7 @@ This gives the user full visibility into what you know and what conventions you 
 1. Read `.temper/prd.md` to understand the project vision, scope, and business rules.
 2. Read `.temper/backend-config.md` to understand technical stack and architecture.
 2. Read `.temper/specs/INDEX.md` and individual user story files to understand the user stories and requirements.
-3. Read `.temper/design.md` to understand the architecture, entities, endpoints, and components.
+3. Read `Docs/domain-model.md` to understand the domain model, entities, aggregates, and relationships.
 4. Read `.temper/tasks/INDEX.md` to understand what was implemented.
 5. If available, read the review report from `temper-review` to understand any known issues or limitations.
 

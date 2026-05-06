@@ -259,10 +259,8 @@ Token budget tracking. Loaded for budget management.
 
 | Agent | Skills Loaded |
 |---|---|
-| `temper-analyst` | None |
+| `temper-analyst` | `prd-analyzer` (Phase 1) / `spec-generator` (Phase 2) |
 | `temper-architect` | None |
-| `temper-spec` | `prd-analyzer` |
-| `temper-design` | `dotnet-csharp`, `architecture/[chosen]` + `backend/dotnet/api` |
 | `temper-tasks` | None |
 | `temper-plan` | None |
 | `temper-backend` | `dotnet-csharp` + `backend/dotnet/api` + `backend/dotnet/ef-core` + `backend/dotnet/linq` + `backend/dotnet/ddd` (on demand) + `architecture/[chosen]` |
