@@ -197,6 +197,11 @@ Signals extracted:
   Implied scale: [internal tool | startup MVP | mid-size system | enterprise]
   Existing constraints: [list or "none"]
 
+External dependency signals (from PRD):
+  [PRD requirement that implies a third-party package — e.g. "send email" → MailKit]
+  [PRD requirement that implies a third-party package — e.g. "generate Excel" → ClosedXML]
+  [If none found: "No external dependencies identified beyond base stack"]
+
 Architectural implications:
   [Signal] → [what it suggests]
   [Signal] → [what it suggests]
@@ -304,10 +309,22 @@ Type: [value | None | API Only]
   Backend communication: [REST | GraphQL | SignalR | combination] — [reason]
   Auth handling: [approach] — [reason]
 
+── External dependencies ────────────────────────────────────────
+
+  PRD Requirement              Proposed Package      Alternative
+  ───────────────────────────  ───────────────────   ────────────
+  [e.g. Send email reports]    [e.g. MailKit]         [e.g. SendGrid]
+  [e.g. Generate Excel]        [e.g. ClosedXML]       [e.g. EPPlus]
+  [e.g. Read Excel uploads]    [e.g. EPPlus]          [—]
+  [e.g. Generate PDF]          [e.g. QuestPDF]        [—]
+
+  If no external dependencies: "No external packages required beyond base stack."
+
 ── Consistency check ────────────────────────────────────────────
 
   ✅ [Decision A] is consistent with [Decision B]
   ✅ Auth strategy aligns with frontend type and API design
+  ✅ External dependencies are compatible with chosen runtime and architecture
   ⚠️ [Any tension — or remove this line if none]
 
 ── Risks ────────────────────────────────────────────────────────
@@ -547,7 +564,7 @@ These rules apply to ALL architect work, including design documents, configurati
 
 | Document | What it MUST contain | What it must NEVER contain |
 |----------|---------------------|---------------------------|
-| `backend-config.md` | Architecture pattern, database engine, API docs provider, auth type, health checks | Skills lists, code patterns, "key conventions", implementation details |
+| `backend-config.md` | Architecture pattern, database engine, API docs provider, auth type, health checks, external packages | Skills lists, code patterns, "key conventions", implementation details |
 | `frontend-config.md` | Framework type, backend URL, backend communication, auth handling, state management | Skills lists, code patterns |
 | `DDD-Vocabulary.md` | Domain terms with definitions — per `ddd/documents` skill template | Technical jargon, implementation details |
 | `architecture-decision.md` | Full reasoning, justification, trade-offs, alternatives, risks | Code snippets, skill names |
@@ -615,7 +632,16 @@ Implementation agents do NOT read this file.
 - Caching: [value] — [rationale]
 - Logging: [value] — [rationale]
 
-## 4. Frontend
+## 4. External Dependencies
+
+| PRD Requirement | Package | Alternative Considered | Rationale |
+|---|---|---|---|
+| [e.g. Send email reports] | [e.g. MailKit] | [e.g. SendGrid] | [rationale] |
+| [e.g. Generate Excel reports] | [e.g. ClosedXML] | [e.g. EPPlus] | [rationale] |
+
+[If none: "No external dependencies required beyond base stack"]
+
+## 5. Frontend
 
 **Type:** [value] — [rationale]
 [If applicable:]
@@ -623,12 +649,12 @@ Implementation agents do NOT read this file.
 - Backend communication: [value] — [rationale]
 - Auth handling: [value] — [rationale]
 
-## 5. Risks and Constraints
+## 6. Risks and Constraints
 
 - [Risk 1]: [mitigation]
 - [If none: "No significant architectural risks identified"]
 
-## 6. Decisions Overridden During Confirmation
+## 7. Decisions Overridden During Confirmation
 
 - [Original] → [Confirmed] — [risk noted if any]
 - [If none: "All decisions confirmed as proposed"]
@@ -655,6 +681,11 @@ Health Checks: [Yes / No]
 Messaging: [exact value or None]
 Caching: [exact value or None]
 Logging: [exact value]
+
+External Packages:
+  - [Package Name] — [PRD requirement it serves — e.g. "MailKit — email sending"]
+  - [Package Name] — [PRD requirement it serves]
+  [If none: "None required beyond base stack"]
 ```
 
 ---
@@ -753,6 +784,9 @@ document. Do NOT attempt to generate these without loading the skill first.
 - **ALWAYS detect operating mode before doing anything else**
 - **ALWAYS arrive with a proposal** — never present a menu and wait for someone to choose
 - **ALWAYS verify internal consistency** of all decisions before presenting the proposal
+- **ALWAYS identify external dependencies** from the PRD — any requirement that implies a third-party package (email, Excel, PDF, SMS, payment gateway, cloud storage, etc.) must be proposed with a specific package and an alternative, presented to the user for confirmation before generating backend-config.md
+- **ALWAYS include proposed external packages** in the proposal's "External dependencies" section — they are architectural decisions that require user confirmation, not implementation details to be discovered later
+- **ALWAYS include confirmed external packages** in backend-config.md under "External Packages" — implementation agents need this to know which NuGet packages to install
 - **ALWAYS auto-include required documents** based on the proposal content (backend-config, frontend-config if applicable, DDD-Vocabulary)
 - **ALWAYS generate required documents before optional ones**
 - **ALWAYS offer optional documentation after required documents are generated**
