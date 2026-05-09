@@ -34,6 +34,19 @@ Full routing table available in `AGENTS.md` at project root.
 - Each phase starts fresh — no accumulated context from previous phases
 - Only load files the current phase needs — never the entire codebase
 - Quick path for 1-2 file changes — full pipeline for 3+ files or architectural changes
+- Agents load workflow skills on-demand for templates and report formats — not embedded inline
+
+## Workflow Skills
+
+Agents use workflow skills for templates and formats, loaded only when needed:
+
+| Skill | Agent | Loaded when |
+|---|---|---|
+| `workflow/analyst/report-formats` | `temper-analyst` | Phase 1 start — gap reports, synthesis, completion reports |
+| `workflow/analyst/prd-template` | `temper-analyst` | Phase 1.7 — generating the PRD document |
+| `workflow/architect/proposal-formats` | `temper-architect` | Presenting proposals and reports |
+| `workflow/architect/document-templates` | `temper-architect` | Generating config files and documentation |
+| `workflow/jarvis/state-schema` | `temper-jarvis` | Every session — state file schema and delegation rules |
 
 ## Separation of Concerns
 

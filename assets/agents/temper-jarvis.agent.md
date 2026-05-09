@@ -118,6 +118,8 @@ If status is `in-progress` or `awaiting-*`: show full plan progress (✅ complet
 If status is `complete` or file not found: wait for the user's request.
 If status is `blocked`: report the block and ask how to proceed.
 
+Load `workflow/jarvis/state-schema` skill for the state file schema.
+
 ---
 
 ## State management
@@ -138,48 +140,8 @@ You have no memory between sessions. Everything you know about the current task 
 
 ### State file schema
 
-```json
-{
-  "last_updated": "ISO timestamp",
-  "status": "in-progress | awaiting-approval | awaiting-task-approval | awaiting-agent-cycle | complete | blocked",
-  "request_summary": "one line description",
-  "context": {
-    "project": "project name or description",
-    "architecture": "Clean Architecture | Vertical Slice | etc.",
-    "stack": "EF Core, Blazor, etc.",
-    "notes": "any other relevant context"
-  },
-  "approved_plan": [
-    {
-      "step": 1,
-      "agent": "temper-analyst",
-      "description": "one line description",
-      "status": "complete | pending | in-cycle",
-      "output": "file path or null"
-    }
-  ],
-  "current_step": 2,
-  "total_steps": 4,
-  "current_agent": "temper-backend",
-  "current_task": "T001",
-  "task_title": "one line description",
-  "total_tasks": 6,
-  "completed_tasks": [
-    { "task_id": "T002", "agent": "temper-backend", "title": "description", "status": "complete" }
-  ],
-  "pending_tasks": [
-    { "task_id": "T001", "agent": "temper-backend", "title": "description" }
-  ],
-  "active_cycle": {
-    "agent": "temper-analyst",
-    "cycle_type": "gap-resolution | proposal-confirmation",
-    "unresolved_blocking_gaps": 3,
-    "cycle_count": 1
-  },
-  "block_reason": null,
-  "next_action": "what the next session should do"
-}
-```
+The state file follows the schema defined in `workflow/jarvis/state-schema` skill.
+Load it for the complete JSON structure.
 
 ### Reading state on startup
 
@@ -407,9 +369,9 @@ Only include agents that pass this test.
 ### How to present the plan
 
 ```
-═══════════════════════════════════════════════════════════════
-                       🎯 PROPOSED PLAN
-═══════════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════════
+                     🎯 PROPOSED PLAN
+═════════════════════════════════════════════════════════════════
 
 Request: [one line summary]
 Context: [architecture, stack, project state — or "new project"]
@@ -436,7 +398,7 @@ Note: [agent-name] operates in a multi-turn loop — I will mediate between you 
 agent until it completes. [Include this line only for analyst or architect.]
 
 Reply "yes" to proceed, or tell me what to change.
-═══════════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════════
 ```
 
 The "Agents I'm NOT including" section is mandatory. It makes your reasoning transparent.
@@ -658,58 +620,16 @@ Your job is to understand the domain and propose. The skills handle technical kn
 
 **You never tell an agent HOW to build something. You only tell them WHAT to build.**
 
-### ⛔ NEVER include in a delegation prompt
-
-**ABSOLUTE PROHIBITIONS — If you violate any of these, you have failed as orchestrator:**
-
-- ❌ **NEVER** mention file paths: `.temper/`, `.md` files, `.cs` files, folder locations
-- ❌ **NEVER** mention skill names: "dotnet-csharp", "ef-core", "ddd", etc.
-- ❌ **NEVER** describe domain, summarize tasks, or copy acceptance criteria
-- ❌ **NEVER** mention class names, DTO names, interface names, method names
-- ❌ **NEVER** say "Read...", "Load...", "Check...", or "See file..."
-- ❌ **NEVER** describe layers: "Domain layer", "Application layer", "Infrastructure..."
+For the complete delegation prohibitions, domain language examples, and pre-delegation checklist,
+refer to the `workflow/jarvis/state-schema` skill.
 
 **The ONLY thing you send to an implementation agent is:**
 
 ```
-Implement task T001: Add Product to Inventory (US-001)
+Implement task T###: [title] (US-XXX)
 ```
-
-**That is literally all. No punctuation, no extra text, no context.**
 
 If you catch yourself typing anything after "Implement task [ID]: [title]" — DELETE IT.
-
-### ✅ Domain language — what you CAN give
-
-| ✅ Correct — what to build | ❌ Wrong — how to build it |
-|---|---|
-| "The Order entity has a status: Pending, Confirmed, Cancelled" | "Create an `OrderStatus` enum in `Domain/Enums/`" |
-| "An order belongs to one customer and can have multiple items" | "Add a `CustomerId` FK and `OrderItems` navigation property" |
-| "The endpoint returns a paginated list of orders filtered by status" | "Create a `GetOrdersQuery` with a `Handle` method returning `PagedResult<OrderDto>`" |
-| "An order cannot be cancelled if already shipped" | "Throw `DomainException` in `Cancel()` if `Status == Shipped`" |
-
-### Pre-delegation checklist
-
-**For implementation agents (backend/frontend/tester/devops):**
-
-Before sending ANY prompt to a sub-agent, verify ALL of these:
-
-- [ ] The prompt contains ONLY: "Implement task [T###]: [title]"
-- [ ] No file paths are mentioned (no `.temper/`, no `.md`, no `.cs`)
-- [ ] No skill names or load instructions
-- [ ] No domain summary, acceptance criteria, or layer descriptions
-- [ ] No class names, DTO names, or interface names
-
-**If any check fails → STOP and rewrite to the minimal form:**
-```
-Implement task [T###]: [task title]
-```
-
-**For analyst/architect only:**
-- [ ] Passing user's request and/or context files as appropriate
-- [ ] Speaking in domain language, not implementation language
-
-⚠️ **Remember:** Implementation agents read their own files. You never tell them what to read unless the user explicitly specifies.
 
 ---
 

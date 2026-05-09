@@ -1,0 +1,368 @@
+---
+name: architect-proposal-formats
+description: >
+  Contains all structured proposal and report formats the temper-architect
+  agent emits during its workflow. Includes startup report, mode report,
+  domain analysis, problem analysis, architectural proposal, architectural
+  plan, updated proposal, document offer, required docs completion, and
+  final completion report. Load this skill when the architect needs to
+  format any of these outputs.
+---
+
+# Architect Proposal and Report Formats
+
+These formats define the exact structure of every structured output the architect emits.
+Every output is a **structured report** — never informal conversation.
+
+---
+
+## 1. Startup Report
+
+Emitted at the very start of execution, before Phase 1.
+
+```
+🏗️ temper-architect activated
+   Role: Senior Software Architect
+   Input received: [one-line summary]
+   Context source: .temper/prd.md [exists | not found]
+```
+
+---
+
+## 2. Mode Report
+
+Emitted after Phase 1 — detecting the operating mode.
+
+```
+🔍 Mode detected: [Architectural Design | Problem Solving]
+   Basis: [one sentence explaining what in the input determined this]
+   Context source: [.temper/prd.md | provided description | existing system | mixed]
+
+→ Proceeding to [Phase 2-A | Phase 2-B].
+```
+
+If the mode is genuinely ambiguous, ask one question to clarify before proceeding.
+
+---
+
+## 3. Domain Analysis Format (Phase 2-A)
+
+Emitted during Architectural Design mode after extracting architectural signals from context.
+
+```
+🔍 Domain analysis
+
+Context source: [PRD | provided description | elicited input]
+
+Signals extracted:
+  User roles: [N] — [list]
+  Workflows with state: [N] — [list entities with lifecycle]
+  Business rule complexity: [simple validations | conditional logic | complex invariants]
+  External integrations: [list or "none"]
+  Implied scale: [internal tool | startup MVP | mid-size system | enterprise]
+  Existing constraints: [list or "none"]
+
+External dependency signals (from PRD):
+  [PRD requirement that implies a third-party package — e.g. "send email" → MailKit]
+  [PRD requirement that implies a third-party package — e.g. "generate Excel" → ClosedXML]
+  [If none found: "No external dependencies identified beyond base stack"]
+
+Architectural implications:
+  [Signal] → [what it suggests]
+  [Signal] → [what it suggests]
+
+Risks identified:
+  [Risk 1]
+  [Risk 2 — or "None identified"]
+
+→ Proceeding to proposal.
+```
+
+---
+
+## 4. Problem Analysis Format (Phase 2-B)
+
+Emitted during Problem Solving mode after understanding the problem.
+
+```
+🔍 Problem analysis
+
+Problem statement: [clear description of what is failing or blocking]
+Observable symptom: [what the team is seeing]
+Suspected root cause: [architectural or design cause — not code-level]
+Affected scope: [what parts of the system are involved]
+Constraints on solution: [what cannot be changed or broken]
+
+→ Proceeding to architectural plan.
+```
+
+If critical information is missing, emit a clarification request:
+
+```
+❓ Problem clarification needed
+
+To analyze this properly I need:
+  1. [Specific missing information]
+  2. [Specific missing information]
+```
+
+---
+
+## 5. Architectural Proposal Format (Phase 3-A)
+
+Emitted during Architectural Design mode. Do NOT generate any files yet.
+Do NOT proceed until the proposal is explicitly confirmed.
+
+**Proposal content rule — CRITICAL:**
+The proposal presents DECISIONS only. It must NEVER contain:
+- Folder structures or directory trees
+- File names or file path enumerations
+- Class names, method names, or namespace suggestions
+- Code snippets in any language
+- "Structure is X" or "Files go in Y" descriptions
+
+```
+📐 Architectural proposal
+
+── Architecture pattern ─────────────────────────────────────────
+
+Pattern: [Clean Architecture | Hexagonal | Vertical Slice | Onion | other]
+Justification:
+  [Specific signal that justifies this — tied to domain analysis]
+  [Second signal if applicable]
+Trade-off accepted: [what this pattern costs vs. what it gains here]
+Alternatives considered: [what was rejected and why — one line each]
+
+── Backend stack ────────────────────────────────────────────────
+
+Runtime: [value]
+  Reason: [tied to context]
+Database: [value]
+  Reason: [tied to domain scale and complexity]
+ORM / data access: [value]
+  Reason: [why]
+Auth strategy: [value]
+  Reason: [tied to frontend type and stateless/stateful decision]
+API documentation: [value]
+  Reason: [why]
+
+Additional components:
+  Health checks: [Yes / No] — [reason]
+  Messaging: [value] — [reason tied to domain signals, or "not justified by domain"]
+  Caching: [value] — [reason tied to domain signals, or "not justified by domain"]
+  Logging: [value] — [reason]
+
+── Frontend ─────────────────────────────────────────────────────
+
+Type: [value | None | API Only]
+  Reason: [tied to user roles and interaction patterns]
+
+[If frontend exists:]
+  State management: [approach] — [reason]
+  Backend communication: [REST | GraphQL | SignalR | combination] — [reason]
+  Auth handling: [approach] — [reason]
+
+── External dependencies ────────────────────────────────────────
+
+  PRD Requirement              Proposed Package      Alternative
+  ───────────────────────────  ───────────────────   ────────────
+  [e.g. Send email reports]    [e.g. MailKit]         [e.g. SendGrid]
+  [e.g. Generate Excel]        [e.g. ClosedXML]       [e.g. EPPlus]
+  [e.g. Read Excel uploads]    [e.g. EPPlus]          [—]
+  [e.g. Generate PDF]          [e.g. QuestPDF]        [—]
+
+  If no external dependencies: "No external packages required beyond base stack."
+
+── Consistency check ────────────────────────────────────────────
+
+  ✅ [Decision A] is consistent with [Decision B]
+  ✅ Auth strategy aligns with frontend type and API design
+  ✅ External dependencies are compatible with chosen runtime and architecture
+  ⚠️ [Any tension — or remove this line if none]
+
+── Risks ────────────────────────────────────────────────────────
+
+  [Risk 1 and mitigation — or "No significant risks identified"]
+
+────────────────────────────────────────────────────────────────
+
+Please confirm this proposal or tell me what you want to change.
+I will update any decision without resistance.
+If a change introduces a risk, I will note it once — the decision is yours.
+```
+
+---
+
+## 6. Architectural Plan Format (Phase 3-B)
+
+Emitted during Problem Solving mode. Do NOT generate any files yet.
+
+```
+📋 Architectural plan
+
+── Root cause ───────────────────────────────────────────────────
+
+[Clear identification of the architectural or design cause of the problem.
+Not code-level — structural: wrong layer responsibilities, missing abstraction,
+coupling that should not exist, missing boundary, etc.]
+
+── Proposed solution ────────────────────────────────────────────
+
+[What needs to change architecturally, explained in plain terms]
+
+Step 1: [action — what, where, why]
+Step 2: [action — what, where, why]
+Step N: [action — what, where, why]
+
+── Impact assessment ────────────────────────────────────────────
+
+  What this fixes: [clear outcome]
+  What this affects: [parts of the system touched by this plan]
+  What this does NOT change: [explicit boundaries of the plan]
+
+── Risks ────────────────────────────────────────────────────────
+
+  [Risk 1 and mitigation]
+  [Risk 2 and mitigation — or "No significant risks identified"]
+
+── Alternatives considered ─────────────────────────────────────
+
+  [Alternative 1] — rejected because [reason]
+  [Alternative 2] — rejected because [reason — or "No alternatives evaluated"]
+
+────────────────────────────────────────────────────────────────
+
+Please confirm this plan or tell me what you want to change.
+I will update any decision without resistance.
+If a change introduces a risk, I will note it once — the decision is yours.
+```
+
+---
+
+## 7. Updated Proposal Format (Phase 4)
+
+Emitted when any decision is changed during confirmation feedback.
+
+```
+📝 Proposal updated
+
+Changed: [original] → [new decision]
+
+⚠️ Note: [one sentence about risk or inconsistency, if any — otherwise omit this line]
+This is recorded. The decision stands as confirmed.
+
+[Reprint only the sections that changed]
+
+Please confirm the updated proposal or continue adjusting.
+```
+
+Rules:
+- Accept the change immediately — do NOT argue or re-justify the original decision
+- Note any risk or inconsistency the change introduces — once, clearly, then drop it
+- Never surface the same objection twice
+- Wait for confirmation before proceeding
+
+---
+
+## 8. Document Offer Format (Phase 5)
+
+Emitted after proposal confirmation, before document generation.
+
+**Mode A — Architectural Design:**
+
+```
+📄 Proposal confirmed. Here's what I'll generate:
+
+  Required (for implementation agents):
+    ✅ backend-config.md         — backend implementation agents need this
+    ✅ DDD-Vocabulary.md         — backend agent uses this for domain terminology
+    [✅ frontend-config.md]      — frontend agent needs this (only if frontend exists in proposal)
+
+  Optional documentation (in Docs/ folder):
+    [ ] architecture-decision.md  — ADR: full reasoning, trade-offs, alternatives
+    [ ] domain-model.md          — DDD model: entities, aggregates, events, Mermaid diagrams
+    [ ] system-architecture.md   — bounded contexts, component diagrams, integrations
+
+  Note: These reference documents are the authoritative source for domain and architecture.
+  The docs agent will link to them when generating ARCHITECTURE.md and SYSTEM.md.
+
+  The required documents will be generated now.
+  Select any optional documents you want, or just confirm to proceed with required only.
+```
+
+Required documents are determined automatically:
+- `backend-config.md` — auto-included if the proposal has a backend
+- `frontend-config.md` — auto-included only if the proposal includes a frontend
+- `DDD-Vocabulary.md` — always auto-included
+
+**Mode B — Problem Solving:**
+
+```
+📄 Plan confirmed. Which documents do you want me to generate?
+
+  [ ] architectural-plan.md     — full problem analysis, plan, risks, and alternatives
+
+  Select if needed. If you only needed the analysis, just let me know.
+```
+
+---
+
+## 9. Required Docs Completion Report (Phase 6)
+
+Emitted after required documents are generated.
+
+```
+✅ Required documents generated
+
+Files created:
+  - .temper/backend-config.md
+  - .temper/DDD-Vocabulary.md
+  [- .temper/frontend-config.md]
+
+[If optional documents were selected:]
+→ Ready to generate optional documentation. Say "continue" to proceed.
+[If no optional documents were selected:]
+→ Architect phase complete.
+```
+
+---
+
+## 10. Completion Report (Phase 8)
+
+Emitted at the very end of the architect's execution.
+
+**Mode A — Architectural Design:**
+
+```
+✅ temper-architect complete
+
+Mode: Architectural Design
+Proposal confirmed: Yes
+Required documents generated:
+  - .temper/backend-config.md
+  - .temper/DDD-Vocabulary.md
+  [- .temper/frontend-config.md]
+Optional documents generated (authoritative reference docs in Docs/):
+  [- Docs/architecture-decision.md]
+  [- Docs/domain-model.md]
+  [- Docs/system-architecture.md]
+  [or "None requested"]
+Version: [YYYYMMDD-HHMM]
+
+Note: After the build is complete, you can request api-contracts.md to be generated
+from the built backend code — this is the contract the frontend agent will use.
+The docs agent will link to these reference docs when generating ARCHITECTURE.md and SYSTEM.md.
+```
+
+**Mode B — Problem Solving:**
+
+```
+✅ temper-architect complete
+
+Mode: Problem Solving
+Plan confirmed: Yes
+Documents generated:
+  [- Docs/architectural-plan.md]
+  [or "None requested"]
+Version: [YYYYMMDD-HHMM]
+```

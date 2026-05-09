@@ -196,41 +196,64 @@ After SETUP completes, feature tasks can begin:
 
 ### Group 2 — [Description]
 
-**Agents to spawn:** `temper-backend`, `temper-frontend`, `temper-devops` (parallel)
+**Agents to spawn:** `temper-backend` only — backend is built first, frontend waits for api-contracts
 
 **Tasks:**
 
 | Task | Agent | User Story | Description | Estimated tokens | File |
 |---|---|---|---|---|---|
 | T001 | backend | US-001 | [task description] | 1,500-3,000 | US-001/T001-[slug].md |
-| T003 | frontend | US-001 | [task description] | 1,500-3,000 | US-001/T003-[slug].md |
+| T002 | backend | US-001 | [task description] | 1,500-3,000 | US-001/T002-[slug].md |
+| T003 | backend | US-002 | [task description] | 1,500-3,000 | US-002/T003-[slug].md |
 | T004 | devops | US-003 | [task description] | 500-1,500 | US-003/T004-[slug].md |
 
 **Context per agent:**
-- `temper-backend` (T001): Read `.temper/tasks/US-001/T001-[slug].md` + `.temper/specs/US-001-[slug].md` + relevant design sections.
-- `temper-frontend` (T003): Read `.temper/tasks/US-001/T003-[slug].md` + relevant design sections.
-- `temper-devops` (T004): Read `.temper/tasks/US-003/T004-[slug].md` + constitution.
+- `temper-backend` (T001, T002, T003): Read `.temper/tasks/US-XXX/T###-[slug].md` + `.temper/specs/US-XXX-[slug].md` + relevant design sections.
+- `temper-devops` (T004): Read `.temper/tasks/US-XXX/T###-[slug].md` + constitution. Devops tasks can run in parallel with backend tasks since they don't depend on the API contract.
+
+**Note:** After all backend tasks are complete, the user will be asked if they want to generate `api-contracts.md` before proceeding to frontend. The frontend cannot start without the API contract.
 
 **Verification:** After all tasks complete, run `dotnet build` to verify compilation.
 
 ---
 
+### Contract Extraction (after backend is complete)
+
+After the backend build is complete and the user gives final approval:
+
+**Optional step — ask user:**
+
+```
+📄 Backend build complete. Should I generate api-contracts.md?
+
+This contract document will be used by the frontend agent to ensure
+endpoint compatibility. It is extracted from the actual controller code.
+
+Reply "yes" to generate api-contracts.md and proceed to frontend.
+Reply "no" to skip — the frontend will need to infer endpoints from the domain model.
+```
+
+If user says **yes**: Delegate to `temper-architect` to extract api-contracts from built controllers.
+
+If user says **no**: Proceed to frontend without api-contracts.md (frontend will need explicit endpoint guidance from task files).
+
+---
+
 ### Group 3 — [Description]
 
-**Agents to spawn:** `temper-backend`, `temper-frontend` (parallel)
+**Agents to spawn:** `temper-frontend` (only after api-contracts.md is generated)
 
 **Tasks:**
 
 | Task | Agent | User Story | Description | Estimated tokens | File |
 |---|---|---|---|---|---|
-| T002 | backend | US-001 | [task description] | 1,500-3,000 | US-001/T002-[slug].md |
+| T005 | frontend | US-001 | [task description] | 1,500-3,000 | US-001/T005-[slug].md |
 | T006 | frontend | US-002 | [task description] | 1,500-3,000 | US-002/T006-[slug].md |
 
-**Dependencies:** Group 2 (SETUP) must complete first.
+**Dependencies:** Group 2 (backend + devops) must complete first. api-contracts.md must be generated before this group starts.
 
 **Context per agent:**
-- `temper-backend` (T002): Read `.temper/tasks/US-001/T002-[slug].md` + `.temper/specs/US-001-[slug].md`.
-- `temper-frontend` (T006): Read `.temper/tasks/US-002/T006-[slug].md`.
+- `temper-frontend` (T005, T006): Read `.temper/tasks/US-XXX/T###-[slug].md` + `.temper/api-contracts.md`.
 
 **Verification:** After all tasks complete, run `dotnet build` to verify compilation.
 
