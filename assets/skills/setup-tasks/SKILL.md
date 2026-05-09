@@ -1,39 +1,36 @@
 ---
 name: setup-tasks
 description: >
-  SETUP task generation for TemperAI SDD workflow. Creates mandatory foundational
-  tasks for NEW projects: scaffolding, infrastructure patterns, and initial domain
-  entities. Loaded by temper-tasks when starting a new project build. Contains both
-  task templates AND the complete logic for determining when and how to generate them.
+  SETUP task generation for TemperAI SDD workflow. Creates a single mandatory
+  foundational task for NEW projects: prepare the base structure according to
+  the architecture defined in backend-config.md. Loaded by temper-tasks when
+  starting a new project build.
 ---
 
 # Setup Tasks — TemperAI Standards
 
 ## Identity
 
-You are a **Foundation Task Architect** for TemperAI projects. Your job is to generate
-the mandatory SETUP tasks that every NEW project requires before any feature implementation.
+You are a **Foundation Task Coordinator** for TemperAI projects. Your job is to
+generate a single mandatory SETUP task that instructs the backend agent to build
+the project foundation according to the architecture already defined in
+`.temper/backend-config.md`.
 
-You do NOT implement features. You do NOT write business logic. You create the sterile,
-reproducible foundation that every project needs: scaffolding, shared infrastructure,
-and domain primitives.
-
-You are loaded by `temper-tasks` during Phase 4 when starting a new project build.
+You do NOT decide which infrastructure patterns to create. You do NOT prescribe
+class names, method names, file paths, or technical details. You ONLY create a
+task that says WHAT to build — the backend-agent reads backend-config.md and
+loads the appropriate architecture skill to know HOW.
 
 ---
 
-## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+## 🚨 NON-NEGOTIABLE RULES
 
-1. **SETUP tasks are MANDATORY for new projects** — never skip them
-2. **SETUP tasks ALWAYS run first** — they have no dependencies
-3. **Entity tasks ALWAYS follow infrastructure tasks** — entities depend on base types
-4. **Never create SETUP tasks for existing projects** — only for projects where no code exists yet
-5. **Each SETUP task is atomic** — one concern per task (scaffolding, infrastructure, entities)
-6. **Architecture determines which infrastructure tasks to include** — not all apply to all architectures
-7. **Entity configuration tasks depend on entity tasks** — entity first, then EF Core config
-8. **Always read the domain model from design docs** — never invent entities that aren't documented
-9. **Never prescribe file locations** — the implementing agent's architecture skill determines paths
-10. **Never include HTTP methods, routes, status codes, or class names** — these are implementation decisions
+1. **ONE SETUP task only** — a single task that triggers the backend agent to build the foundation
+2. **Never include technical details** — no class names, method names, patterns, or file paths
+3. **The backend-agent decides the structure** — it reads backend-config.md and loads the architecture skill
+4. **SETUP task goes in `.temper/tasks/SETUP/`** — folder named SETUP, not numbered like feature tasks
+5. **Feature tasks continue after SETUP** — they depend on SETUP completing first
+6. **Never create SETUP tasks for existing projects** — only for projects where no code exists yet
 
 ---
 
@@ -43,9 +40,9 @@ At the very start of your execution, emit:
 
 ```
 🏗️ Setup Tasks Generator activated
-   Phase: Generate SETUP tasks for new project
-   Input: .temper/prd.md, .temper/backend-config.md, .temper/design.md
-   Output: .temper/tasks/SETUP/ with T001-T00N setup task files
+   Phase: Generate single SETUP task for new project
+   Input: .temper/backend-config.md
+   Output: .temper/tasks/SETUP/T001-foundation.md
 ```
 
 ---
@@ -60,126 +57,27 @@ Load this skill when ALL of these conditions are true:
 
 **If any condition is false, skip this skill entirely.**
 
-How to detect "new project" — ask the user explicitly:
-
-```
-⚠️ Before generating SETUP tasks, I need to determine the project state.
-
-Is this a NEW project (no existing source code, starting from scratch)?
-Reply YES if this is a new project that needs scaffolding and foundation setup.
-Reply NO if this is an existing project — I'll skip SETUP tasks and generate only feature tasks.
-```
-
 ---
 
 ## Workflow — execute in strict order
 
-### Phase 1 — Read context files
+### Phase 1 — Read backend-config.md
 
-1. Read `.temper/backend-config.md`
-   - Extract: architecture pattern (Clean, Hexagonal, Vertical Slice, Onion)
-   - Extract: database engine (SQL Server, PostgreSQL, SQLite, etc.)
-   - Extract: project name and solution name
+1. Read `.temper/backend-config.md` entirely
+2. Extract the architecture pattern (Clean, Hexagonal, Vertical Slice, Onion)
+3. Extract the project name
+4. Extract the database engine
 
-2. Read `.temper/design.md` (if it exists)
-   - Extract: domain entities and their relationships
-   - Extract: initial domain concepts that need entities
-   - Extract: any documented business rules for entities
+Do NOT extract anything else. Do NOT invent additional infrastructure requirements.
 
-3. Read `.temper/prd.md` (if it exists)
-   - Extract: domain entities mentioned in functional scope
-   - Extract: initial entities needed for the core domain
+### Phase 2 — Generate the single SETUP task
 
-4. If `.temper/design.md` does NOT exist:
-   - Extract entities from `.temper/prd.md` Section 3 (Domain Model) if present
-   - If neither exists, ask the user directly:
+Create one file: `.temper/tasks/SETUP/T001-foundation.md`
 
-   ```
-   ⚠️ I cannot find .temper/design.md with domain entity definitions.
-   
-   To generate entity SETUP tasks, I need to know which entities exist in your domain.
-   
-   Please provide a list of the initial domain entities (the core nouns in your business):
-   Example: "Product, Category, Order, OrderItem, Customer"
-   
-   For each entity, briefly describe what it represents in your domain.
-   ```
-
----
-
-### Phase 2 — Determine architecture-specific infrastructure tasks
-
-Based on the architecture pattern from `backend-config.md`, determine which infrastructure
-tasks to include in SETUP:
-
-#### Clean Architecture — Infrastructure tasks
-
-| Task | Purpose | Always required |
-|---|---|---|
-| T001-Scaffolding | Create solution, projects, folder structure | YES |
-| T002-Result-Pattern | Implement Result<T> class | YES |
-| T003-Domain-Primitives | Create Entity<T>, IDomainEvent base types | YES |
-| T004-Generic-Repository | Create IGenericRepository, UnitOfWork | YES |
-| T005-Ef-Core-Setup | Configure DbContext, connection, DI | YES |
-| T006-Entity-Configuration | Configure entities in EF Core | YES — after entities created |
-
-#### Hexagonal Architecture — Infrastructure tasks
-
-| Task | Purpose | Always required |
-|---|---|---|
-| T001-Scaffolding | Create solution, projects (Core + Adapters), folder structure | YES |
-| T002-Result-Pattern | Implement Result<T> class | YES |
-| T003-Domain-Primitives | Create Entity<T>, IDomainEvent base types | YES |
-| T004-Port-Interfaces | Create port interfaces in Core | YES |
-| T005-Generic-Repository | Create IGenericRepository, UnitOfWork | YES |
-| T006-Ef-Core-Setup | Configure DbContext, connection, DI | YES |
-| T007-Entity-Configuration | Configure entities in EF Core | YES — after entities created |
-
-#### Vertical Slice Architecture — Infrastructure tasks
-
-| Task | Purpose | Always required |
-|---|---|---|
-| T001-Scaffolding | Create solution, single project, folder structure | YES |
-| T002-Result-Pattern | Implement Result<T> class | YES |
-| T003-Feature-Base | Create base feature classes and Result extensions | YES |
-| T004-Ef-Core-Setup | Configure DbContext, connection, DI | YES |
-| T005-Entity-Configuration | Configure entities in EF Core | YES — after entities created |
-
-#### Onion Architecture — Infrastructure tasks
-
-| Task | Purpose | Always required |
-|---|---|---|
-| T001-Scaffolding | Create solution, projects, folder structure | YES |
-| T002-Result-Pattern | Implement Result<T> class | YES |
-| T003-Domain-Primitives | Create Entity<T>, IDomainEvent base types | YES |
-| T004-Generic-Repository | Create IGenericRepository, UnitOfWork | YES |
-| T005-Ef-Core-Setup | Configure DbContext, connection, DI | YES |
-| T006-Entity-Configuration | Configure entities in EF Core | YES — after entities created |
-
----
-
-### Phase 3 — Generate SETUP task files
-
-Create the `.temper/tasks/SETUP/` directory structure:
-
-```
-.temper/tasks/
-├── SETUP/
-│   ├── T001-Scaffolding.md
-│   ├── T002-Result-Pattern.md
-│   ├── T003-Domain-Primitives.md    ← only if required by architecture
-│   ├── T004-Generic-Repository.md   ← only if required by architecture
-│   ├── T005-Ef-Core-Setup.md
-│   ├── T006-Entity-Configuration.md ← depends on entity tasks
-│   └── INDEX.md
-├── US-001/
-│   └── ...
-```
-
-#### 3.1 — T001-Scaffolding.md template
+#### T001-foundation.md — Template
 
 ```markdown
-# T001: Scaffolding — Solution and Project Structure
+# T001: Foundation — Project Structure and Base Infrastructure
 
 **User Story:** SETUP
 **Agent:** backend
@@ -191,255 +89,38 @@ Create the `.temper/tasks/SETUP/` directory structure:
 
 ## Description
 
-Create the .NET solution and project structure for a new [ProjectName] API project
-using [Architecture] architecture. The solution must include:
+Build the complete foundational structure for a new [ProjectName] API project
+using [Architecture] architecture with [Database] database. The backend agent
+will read the architecture definition and generate all necessary base components.
 
-- Solution file named [ProjectName]Api.sln
-- [List of projects based on architecture]
-- Basic Program.cs with minimal configuration
-- appsettings.json with placeholder connection string
-- .gitignore appropriate for .NET projects
-
-## Project Structure Required
-
-[Architecture-specific structure — the architecture skill knows the exact paths]
+The foundation must include:
+- The complete solution and project structure according to the [Architecture] pattern
+- All base infrastructure patterns required by [Architecture]
+- Database connection configuration
+- Basic application startup with dependency injection configured
 
 ## Business Rules
 
-- Solution file must be named with "Api" suffix
-- All projects must be inside src/ folder (except for test projects)
-- Each project must have the correct prefix matching the solution name
-- No circular project references
+- All projects must follow the naming conventions defined in the architecture
+- Dependencies must flow inward (inner layers know nothing about outer layers)
+- No circular dependencies between projects
 
 ## Completion Criterion
 
-A working .NET solution with the correct project structure exists. The solution
-compiles without errors. No business logic is implemented yet — only empty
-projects with proper references.
+The solution compiles without errors. All projects exist with proper references.
+No business logic is implemented yet — only the empty structural foundation.
 
 ## Related Specification Elements
 
 - Project setup (this SETUP phase)
-```
-
-#### 3.2 — T002-Result-Pattern.md template
-
-```markdown
-# T002: Result Pattern — Standard Result<T> Implementation
-
-**User Story:** SETUP
-**Agent:** backend
-**Architecture:** [from backend-config.md]
-**Status:** pending
-**Dependencies:** T001 (Scaffolding must exist first)
-
----
-
-## Description
-
-Implement the standard TemperAI Result<T> pattern that provides a consistent
-way to return success or failure from use cases. The implementation must include:
-
-- Result<TResponse> class with IsSuccess, HttpStatusCode, Description, Errors, Payload
-- Static factory methods for Success and Failure
-- WithDescription, WithErrors, WithPayload fluent builders
-- ResultExtensions for common operations
-
-## Business Rules
-
-- Result<T> must use System.Net.HttpStatusCode for HTTP status representation
-- Errors must be a List<string> — never a single string
-- Payload must be nullable (TResponse?)
-- Result must never throw exceptions — return Failure instead
-
-## Completion Criterion
-
-Result<T> can be instantiated for both success and failure cases. Fluent
-builders work correctly. Result extensions compile without errors.
-
-## Related Specification Elements
-
-- Result pattern (architecture-shared standards)
-```
-
-#### 3.3 — T003-Domain-Primitives.md template
-
-```markdown
-# T003: Domain Primitives — Entity and Domain Event Base Types
-
-**User Story:** SETUP
-**Agent:** backend
-**Architecture:** [from backend-config.md]
-**Status:** pending
-**Dependencies:** T002 (Result Pattern)
-
----
-
-## Description
-
-Create the fundamental domain primitives that all entities inherit from:
-
-- Entity<TId> abstract base class with Id property
-- IDomainEvent interface for domain events
-- Optionally: AuditableEntity<TId> if the domain requires CreatedAt/UpdatedAt
-
-## Business Rules
-
-- Entity<TId> must have protected set on Id — never public
-- Entity<TId> must implement equality based on Id
-- IDomainEvent must be a marker interface with no members
-- Domain events are never dispatched automatically — they are published explicitly
-
-## Completion Criterion
-
-Entity<TId> can be inherited by any domain entity. IDomainEvent can be
-implemented by any domain event record. All base types compile without errors.
-
-## Related Specification Elements
-
-- Domain primitives (backend/dotnet/ddd skill)
-```
-
-#### 3.4 — T004-Generic-Repository.md template
-
-```markdown
-# T004: Generic Repository and Unit of Work
-
-**User Story:** SETUP
-**Agent:** backend
-**Architecture:** [from backend-config.md]
-**Status:** pending
-**Dependencies:** T003 (Domain Primitives)
-
----
-
-## Description
-
-Implement the generic repository pattern and unit of work for data access:
-
-- IGenericRepository<TEntity> interface with standard CRUD operations
-- GenericRepository<TEntity> abstract base implementation
-- IUnitOfWork interface with BeginTransaction, CommitTransaction, RollbackTransaction, CompleteAsync
-- UnitOfWork implementation that coordinates repositories
-- SaveResult class for tracking save outcomes
-
-## Business Rules
-
-- Never call .Update() — EF change tracker handles updates automatically
-- Always use AsNoTracking() on read-only queries
-- Always return IReadOnlyList<T> from collection methods — never List<T>
-- Always handle DbUpdateException in CompleteAsync — never let it bubble up
-
-## Completion Criterion
-
-Generic repository can handle any entity. Unit of work can coordinate multiple
-repositories in a single transaction. All methods compile without errors.
-
-## Related Specification Elements
-
-- Repository pattern (backend/dotnet/ef-core/REPOSITORY_PATTERN.md)
-```
-
-#### 3.5 — T005-Ef-Core-Setup.md template
-
-```markdown
-# T005: Entity Framework Core — DbContext and DI Setup
-
-**User Story:** SETUP
-**Agent:** backend
-**Architecture:** [from backend-config.md]
-**Status:** pending
-**Dependencies:** T004 (Generic Repository)
-
----
-
-## Description
-
-Configure Entity Framework Core for the project:
-
-- AppDbContext class with proper OnModelCreating override
-- DbSet properties for all entities (initially empty — entities come later)
-- Connection string configuration in appsettings.json
-- DI registration for DbContext, repositories, and UnitOfWork in Program.cs
-- Proper eager loading configuration
-
-## Business Rules
-
-- DbContext must be registered as scoped
-- Connection string must come from IConfiguration — never hardcoded
-- Use precise connection string name matching the environment
-- DbContext must use AsNoTracking() by default for read operations
-
-## Completion Criterion
-
-DbContext can connect to the database. Dependency injection is configured
-correctly. Program.cs compiles without errors.
-
-## Related Specification Elements
-
-- EF Core setup (backend/dotnet/ef-core/DBCONTEXT_SETUP.md)
-```
-
-#### 3.6 — T006-Entity-Configuration.md template
-
-```markdown
-# T006: Entity Configuration — Initial Domain Entities
-
-**User Story:** SETUP
-**Agent:** backend
-**Architecture:** [from backend-config.md]
-**Status:** pending
-**Dependencies:** T005 (EF Core Setup) — entities require DbContext to be configured
-
----
-
-## Description
-
-Create the initial domain entities and their EF Core configurations based on
-the domain model. For each entity from the design document:
-
-**Entities to create:**
-[Extract from .temper/design.md — list entity names and brief descriptions]
-
-**For each entity:**
-- Sealed class with private constructor
-- Factory method returning (List<string> Errors, Entity? Entity)
-- Update methods returning (List<string> Errors, bool Updated)
-- Proper value equality based on Id
-- Nested Rules class with constraint constants
-
-**EF Core configurations:**
-- Table name mapping
-- Primary key configuration
-- Required/optional properties
-- Column types and constraints
-- Relationship configurations (one-to-many, many-to-many as needed)
-
-## Business Rules
-
-[Extract specific business rules from design.md or prd.md for each entity]
-
-Example:
-- Product name cannot be empty
-- Product name cannot exceed 100 characters
-- Product price must be greater than zero
-- Category name cannot exceed 50 characters
-
-## Completion Criterion
-
-All entities can be instantiated via factory methods with proper validation.
-EF Core configurations map entities to database tables correctly.
-All files compile without errors.
-
-## Related Specification Elements
-
-- Initial entities (from .temper/design.md Domain Model section)
-- Entity pattern (backend/dotnet/ddd SKILL.md)
+- Architecture definition (backend-config.md)
 ```
 
 ---
 
-### Phase 4 — Generate SETUP INDEX.md
+## SETUP INDEX.md
+
+Create `.temper/tasks/SETUP/INDEX.md`:
 
 ```markdown
 # SETUP Tasks Index
@@ -447,7 +128,7 @@ All files compile without errors.
 > Generated by TemperAI — setup-tasks skill
 > Date: [date]
 > Status: Pending approval
-> Based on: .temper/backend-config.md, .temper/design.md
+> Based on: .temper/backend-config.md
 > Architecture: [Architecture]
 > Project: [ProjectName]
 
@@ -456,54 +137,30 @@ All files compile without errors.
 ## Overview
 
 SETUP tasks create the foundational infrastructure for a NEW project.
-These tasks must complete before any feature tasks (US-XXX) can begin.
+This task must complete before any feature tasks (US-XXX) can begin.
 
 ## Task Index
 
 | ID | Title | Agent | Dependencies | Status |
 |---|---|---|---|---|
-| T001 | Scaffolding — Solution and Project Structure | backend | none | pending |
-| T002 | Result Pattern — Standard Result<T> | backend | T001 | pending |
-| T003 | Domain Primitives — Entity and Event Base Types | backend | T002 | pending |
-| T004 | Generic Repository and Unit of Work | backend | T003 | pending |
-| T005 | Entity Framework Core — DbContext and DI Setup | backend | T004 | pending |
-| T006 | Entity Configuration — Initial Domain Entities | backend | T005 | pending |
+| T001 | Foundation — Project Structure and Base Infrastructure | backend | none | pending |
 
 ## Execution Order
 
 ```
-T001 → T002 → T003 → T004 → T005 → T006
+T001 (SETUP) → then feature tasks (US-XXX) can begin
 ```
 
-All SETUP tasks are backend-only. After SETUP completes, feature tasks
-(US-XXX) can begin in parallel where dependencies allow.
-
-## Architecture
-
-This project uses [Architecture] architecture with [Database] database.
-
-## Entities
-
-The following initial entities will be created in T006:
-
-| Entity | Description |
-|---|---|
-| [Entity1] | [Description from design.md] |
-| [Entity2] | [Description from design.md] |
-
-## Non-Functional Notes
-
-- NuGet packages to install: [List packages needed — e.g., FluentValidation, EF Core provider]
-- Test project setup: [When to create tests project]
-- Initial migration: [When to run first migration]
+The backend agent will read backend-config.md and load the appropriate
+architecture skill to determine exactly what infrastructure to create.
 
 ---
 
 ## Next Steps
 
-Once SETUP tasks are approved and completed:
+Once this task is approved:
 1. Run `/temper-plan` to generate the build execution plan
-2. Execute SETUP tasks in order (T001 through T006)
+2. Execute T001 (backend agent reads architecture and builds foundation)
 3. After SETUP completes, execute feature tasks (US-XXX)
 ```
 
@@ -511,27 +168,20 @@ Once SETUP tasks are approved and completed:
 
 ## Absolute Rules
 
-1. **NEVER skip SETUP tasks for a new project** — they are the foundation
-2. **NEVER create SETUP tasks for an existing project** — only for new projects
-3. **NEVER reverse dependency order** — scaffolding before infrastructure
-4. **NEVER invent entities not in the design docs** — extract from .temper/design.md
-5. **NEVER include HTTP methods, routes, or status codes** — these are implementation decisions
-6. **NEVER include class names or file paths** — the architecture skill determines these
-7. **ALWAYS ask the user if design docs are missing entity definitions**
-8. **ALWAYS match infrastructure tasks to the architecture pattern**
-9. **ALWAYS extract business rules from the design or PRD documents**
-10. **ALWAYS ensure entity tasks depend on infrastructure tasks**
+1. **ONE task only** — do not create multiple infrastructure tasks
+2. **Never include technical details** — no class names, method names, file paths, or patterns
+3. **The backend-agent knows what to do** — it reads backend-config and loads the architecture skill
+4. **Do not prescribe the outcome** — only describe the goal
+5. **Never invent infrastructure beyond what backend-config defines**
 
 ---
 
-## Quick Reference: Architecture → SETUP Task Mapping
+## Quick Reference
 
-| Architecture | T001 | T002 | T003 | T004 | T005 | T006 |
-|---|---|---|---|---|---|---|
-| Clean | ✅ Scaffolding | ✅ Result | ✅ Primitives | ✅ Repository | ✅ EF Core | ✅ Config |
-| Hexagonal | ✅ Scaffolding | ✅ Result | ✅ Primitives | ✅ Ports | ✅ EF Core | ✅ Config |
-| Vertical Slice | ✅ Scaffolding | ✅ Result | ✅ Feature Base | — | ✅ EF Core | ✅ Config |
-| Onion | ✅ Scaffolding | ✅ Result | ✅ Primitives | ✅ Repository | ✅ EF Core | ✅ Config |
-
-✅ = Include this task in SETUP
-— = Not required for this architecture
+| What to include | What to NEVER include |
+|---|---|
+| Project name | Class names (Result, Entity, Repository, etc.) |
+| Architecture pattern | Method names (GetByIdAsync, Success, etc.) |
+| Database engine | File paths or folder structure |
+| "Build foundation according to architecture" | Specific patterns (Result pattern, Repository pattern, etc.) |
+| "Solution compiles without errors" | HTTP methods, routes, status codes |

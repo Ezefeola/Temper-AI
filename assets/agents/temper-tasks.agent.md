@@ -54,18 +54,15 @@ Ask the user explicitly:
 ⚠️ Before generating tasks, I need to determine the project state.
 
 Is this a NEW project (no existing source code, starting from scratch)?
-This will generate mandatory SETUP tasks for scaffolding, infrastructure, and initial entities.
+This will generate a mandatory SETUP task for the project foundation.
 
-Reply YES if this is a NEW project — I'll generate SETUP tasks first.
+Reply YES if this is a NEW project — I'll generate the SETUP task first.
 Reply NO if this is an EXISTING project — I'll skip SETUP and generate only feature tasks.
 ```
 
 **If YES (new project):**
-1. Load the `setup-tasks` skill
-2. Execute the setup-tasks skill to generate SETUP tasks
-3. After SETUP tasks are created, continue to Phase 1 for feature tasks
-4. SETUP tasks go in `.temper/tasks/SETUP/` folder
-5. Feature tasks (US-XXX) continue numbering after SETUP tasks
+1. Load the `setup-tasks` skill — it generates the SETUP task
+2. After SETUP task is created, continue to Phase 1 for feature tasks
 
 **If NO (existing project):**
 1. Skip SETUP tasks entirely
@@ -156,35 +153,7 @@ Order tasks so that:
 4. **Backend before frontend** — API endpoints must exist before Blazor components can consume them.
 5. **Implementation before tests** — tests come after the code they test exists (or can be written in parallel if the interface is stable).
 
-### Phase 4.1 — API Base Tasks (Architecture-dependent)
-
-When the architecture requires infrastructure patterns (Clean, Onion, Hexagonal), create a separate folder for base infrastructure tasks:
-
-```
-.temper/tasks/
-├── INDEX.md
-├── APIBASE/                    ← Infrastructure base tasks (first)
-│   ├── T001-result-pattern.md
-│   ├── T002-unit-of-work.md
-│   ├── T003-generic-repository.md
-│   └── T004-domain-primitives.md
-├── US-001/
-│   └── T005-create-store.md
-```
-
-**APIBASE tasks include:**
-- Result pattern
-- Unit of Work
-- Generic Repository
-- Domain primitives
-- Other infrastructure shared across features
-
-**Rules:**
-- APIBASE tasks are numbered first (T001, T002, etc.)
-- They have no User Story (leave that field empty or write "APIBASE")
-- They have no dependencies (can start immediately)
-- All feature tasks (US-XXX) depend on APIBASE tasks completing first
-- **Only create APIBASE folder if the architecture uses these patterns** (Clean, Onion, Hexagonal). For Vertical Slice, infrastructure is per-feature.
+**Note:** For new projects, the SETUP task (`SETUP/T001-foundation.md`) runs first. All feature tasks (US-XXX) depend on SETUP completing before them.
 
 ### Phase 5 — Generate .temper/tasks/ directory structure
 
@@ -193,17 +162,16 @@ Create the `.temper/tasks/` directory with the following structure:
 ```
 .temper/tasks/
 ├── INDEX.md
+├── SETUP/
+│   └── T001-foundation.md        ← only for new projects
 ├── US-001/
-│   ├── T001-product-management-feature.md
-│   └── T002-product-list-feature.md
+│   └── T002-[feature].md
 ├── US-002/
-│   ├── T003-order-creation-feature.md
-│   └── T004-order-list-feature.md
-└── US-003/
-    └── T005-user-auth-feature.md
+│   └── T003-[feature].md
+└── ...
 ```
 
-**Note:** Tasks are organized by FEATURE, not by component. Each task includes everything needed for that feature (endpoint, handler, DTOs, validator, etc.). The architecture skill loaded by the implementing agent determines the folder structure.
+**Note:** Tasks are organized by FEATURE, not by component. The architecture skill loaded by the implementing agent determines the folder structure.
 
 #### 5.1 Generate `.temper/tasks/INDEX.md`
 
@@ -223,9 +191,10 @@ Generate the index file with this exact format:
 
 | ID | User Story | Title | Agent | Dependencies | Status | File |
 |---|---|---|---|---|---|---|
-| T001 | US-001 | [Task title] | backend | none | pending | US-001/T001-[slug].md |
+| T001 | SETUP | Foundation — Project Structure and Base Infrastructure | backend | none | pending | SETUP/T001-foundation.md |
 | T002 | US-001 | [Task title] | backend | T001 | pending | US-001/T002-[slug].md |
-| T003 | US-002 | [Task title] | frontend | T001, T002 | pending | US-002/T003-[slug].md |
+| T003 | US-001 | [Task title] | backend | T001, T002 | pending | US-001/T003-[slug].md |
+| T004 | US-002 | [Task title] | frontend | T001, T002 | pending | US-002/T004-[slug].md |
 
 ## Summary
 
@@ -320,7 +289,7 @@ For each entity, describe what data it contains using DOMAIN LANGUAGE ONLY:
 **File naming rules:**
 - Always use the format `T[NNN]-[kebab-case-title].md`
 - The kebab-case title should be short and descriptive (2-5 words max)
-- Examples: `T001-create-product-entity.md`, `T005-create-order-aggregate.md`
+- Examples: `T002-create-product-entity.md`, `T005-create-order-aggregate.md`
 - Task numbers are sequential across ALL user stories (T001, T002, T003... not reset per story)
 - Each user story gets its own folder under `.temper/tasks/`
 
@@ -333,7 +302,7 @@ After generating all files:
    ✅ Phase 4 (Tasks) complete — task breakdown generated
    
    Summary:
-   • SETUP tasks: [N] (if new project) — see .temper/tasks/SETUP/
+   • SETUP task: 1 (new project) or 0 (existing project)
    • Feature tasks: [N]
    • Total tasks: [N]
    • Backend tasks: [N]
@@ -341,37 +310,11 @@ After generating all files:
    • Tester tasks: [N]
    • DevOps tasks: [N]
    • User stories covered: [N]
-   • Dependency chains: [N]
-   • Directory structure: .temper/tasks/ (SETUP/ + US-XXX/)
    
    → Proceed to /temper-plan for Phase 5.
    ```
    
 2. **Do NOT ask for user approval** — the orchestrator handles that.
-
-### SETUP Task Execution (New Projects Only)
-
-When SETUP tasks are generated for a new project, the following rules apply:
-
-**SETUP task folder:** `.temper/tasks/SETUP/`
-**Feature task folder:** `.temper/tasks/US-XXX/`
-
-**Execution order is mandatory:**
-```
-SETUP T001 (Scaffolding) → T002 (Result Pattern) → T003 (Domain Primitives) → T004 (Repository) → T005 (EF Core) → T006 (Entities)
-                                        ↓
-                        Then feature tasks (US-XXX) can begin
-```
-
-**Key distinctions:**
-- SETUP tasks create the PROJECT foundation (solution, infrastructure patterns, entities)
-- Feature tasks create BUSINESS FEATURES (use cases, endpoints, UI)
-- SETUP tasks are backend-only
-- Feature tasks can involve backend, frontend, tester, and devops
-
-**When creating feature tasks, they continue numbering after SETUP:**
-- If SETUP has T001-T006, first feature task is T007
-- Feature task dependencies on SETUP are explicit: "Depends on: T006 (SETUP)"
 
 ## Rules for writing tasks
 
@@ -549,11 +492,7 @@ POST /api/products — accepts CreateProductRequestDto, returns 201 with CreateP
 
 ## Skills you load
 
-This agent loads skills based on project state:
-
 | Project state | Skills to load |
 |---|---|
-| NEW project | `setup-tasks` — generates mandatory SETUP tasks for scaffolding, infrastructure, and initial entities |
-| EXISTING project | None — reads only `.temper/` files |
-
-**Skills are NOT loaded speculatively.** The `setup-tasks` skill is loaded ONLY when the user confirms this is a new project. For existing projects, no skills are loaded — the agent only reads the existing `.temper/` files to understand the project context and generate feature tasks.
+| NEW project | `setup-tasks` |
+| EXISTING project | None |
