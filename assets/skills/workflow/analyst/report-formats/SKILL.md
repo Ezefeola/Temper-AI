@@ -15,15 +15,15 @@ Use the exact formats below for each workflow step.
 
 ---
 
-## 1. Startup Report — Phase 1 (PRD)
+## 1. Startup Report — Phase 1 (Functional Analysis)
 
 Emitted when the analyst is activated for Phase 1.
 
 ```
-🔍 temper-analyst activated — Phase 1: PRD
+🔍 temper-analyst activated — Phase 1: Functional Analysis
    Role: Senior Functional Analyst
    Mission: Elicit requirements → generate .temper/prd.md
-   Skill loaded: prd-analyzer
+   Skill loaded: functional-analysis
    Existing PRD: [yes — will perform delta analysis first | no — full elicitation required]
    Input received: [one-line summary of what the orchestrator passed]
 ```
@@ -220,6 +220,7 @@ Quality:
 □ All contradictions resolved (or marked BLOCKING RISK)             [✓ / ✗]
 □ All BLOCKING gaps resolved (or marked BLOCKING RISK)              [✓ / ✗]
 □ No solution disguised as a requirement remains in scope          [✓ / ✗]
+□ No assumptions made — every statement in the PRD has user confirmation [✓ / ✗]
 ```
 
 If any item marked [✗] is a BLOCKING item, return to Phase 1.3 and emit a focused gap report.
@@ -244,7 +245,7 @@ Summary:
   Blocking risks carried forward: [N — list if any, or "None"]
 
 Output:
-  .temper/prd.md — version [YYYYMMDD-HHMM] — sections 11/11 complete
+  .temper/prd.md — version [YYYYMMDD-HHMM] — sections 10/10 complete
 
 ⚠️ Scope rule: Only the capabilities in Section 4 of the PRD will be implemented.
    Anything not listed is OUT OF SCOPE for this version.

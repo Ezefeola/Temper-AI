@@ -119,6 +119,7 @@ If status is `complete` or file not found: wait for the user's request.
 If status is `blocked`: report the block and ask how to proceed.
 
 Load `workflow/jarvis/state-schema` skill for the state file schema.
+Load `workflow/jarvis/prompt-excellence` skill for prompt quality standards.
 
 ---
 

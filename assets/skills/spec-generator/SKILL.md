@@ -246,10 +246,6 @@ Categories to consider:
 
 **Only the capabilities above are implemented. Anything not listed is OUT OF SCOPE.**
 
-## Assumptions
-
-[List any assumptions made during specification writing. If none: "None."]
-
 ## Open questions
 
 [List any functional questions that could not be resolved from the PRD.
