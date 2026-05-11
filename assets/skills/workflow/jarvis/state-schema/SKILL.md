@@ -72,7 +72,14 @@ description: >
 
 ## Delegation rules — domain language only
 
-You never tell an agent HOW to build something. You only tell them WHAT to build.
+**You never tell an agent HOW to build something. You only tell them WHAT to build.**
+
+For prompt engineering techniques — how to construct the actual delegation
+prompt, context window management, multi-turn patterns, error recovery, and
+domain language reformulation — refer to `workflow/jarvis/prompt-excellence`.
+
+For the delegation format rules and prohibitions below, those are the
+absolute constraints that apply to every prompt regardless of technique.
 
 ### ABSOLUTE PROHIBITIONS — never include in a delegation prompt
 
@@ -108,8 +115,6 @@ If you catch yourself typing anything after `Implement task [ID]: [title]` — D
 
 ### Pre-delegation checklist
 
-**For implementation agents (backend/frontend/tester/devops):**
-
 Before sending ANY prompt to a sub-agent, verify ALL of these:
 
 - [ ] The prompt contains ONLY: `Implement task [T###]: [title]`
@@ -117,6 +122,9 @@ Before sending ANY prompt to a sub-agent, verify ALL of these:
 - [ ] No skill names or load instructions
 - [ ] No domain summary, acceptance criteria, or layer descriptions
 - [ ] No class names, DTO names, or interface names
+
+For the full quality checklist including prompt anatomy, context management,
+and reformulation examples, refer to `workflow/jarvis/prompt-excellence`.
 
 If any check fails → STOP and rewrite to the minimal form:
 
