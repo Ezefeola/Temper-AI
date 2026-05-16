@@ -16,8 +16,8 @@ tests/
 ├── ProjectName.Domain.UnitTests/
 │   ├── Entities/
 │   │   └── ProductTests.cs
-│   └── ValueObjects/
-│       └── MoneyTests.cs
+│   └── Aggregates/
+│       └── OrderTests.cs
 ├── ProjectName.Application.UnitTests/
 │   └── UseCases/
 │       └── Products/
@@ -76,8 +76,9 @@ public sealed class ProductTests
     public void UpdateName_ValidNewName_ReturnsUpdated()
     {
         (_, Product? product) = Product.Create("Original", "Description", 10m);
+        Assert.NotNull(product);
 
-        (List<string> errors, bool updated) = product!.UpdateName("Updated Name");
+        (List<string> errors, bool updated) = product.UpdateName("Updated Name");
 
         Assert.Empty(errors);
         Assert.True(updated);
@@ -88,8 +89,9 @@ public sealed class ProductTests
     public void UpdateName_SameName_ReturnsNotUpdated()
     {
         (_, Product? product) = Product.Create("Original", "Description", 10m);
+        Assert.NotNull(product);
 
-        (List<string> errors, bool updated) = product!.UpdateName("Original");
+        (List<string> errors, bool updated) = product.UpdateName("Original");
 
         Assert.Empty(errors);
         Assert.False(updated);
@@ -138,7 +140,7 @@ public sealed class CreateProductTests
 
         _unitOfWorkMock
             .Setup(u => u.CompleteAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SaveResult { IsSuccess = true, RowsAffected = 1 });
+            .ReturnsAsync(new SaveResult { IsSuccess = true, RowsAffected = 1, ErrorMessage = string.Empty });
 
         Result<CreateProductResponseDto> result = await _createProduct.ExecuteAsync(requestDto);
 

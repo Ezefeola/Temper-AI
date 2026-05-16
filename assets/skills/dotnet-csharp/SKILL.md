@@ -313,7 +313,7 @@ public class CreateProductRequest(string name, decimal price) { }
 // ✅ CORRECT
 public sealed record CreateProductRequestDto
 {
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; }
     public decimal Price { get; init; }
 }
 ```
@@ -322,8 +322,9 @@ public sealed record CreateProductRequestDto
 - Always `sealed record` with explicit properties
 - Always `Dto` suffix — `CreateProductRequestDto`, `ProductResponseDto`
 - Request DTOs: `{ get; init; }` — allows object initializers
-- String properties default to `string.Empty` — never nullable strings in DTOs
+- Non-nullable DTO properties use `required` instead of `!`
+- Use nullable properties only when null is semantically valid
 - File name must match DTO name exactly
 
 For complete DTO rules, naming, mapping patterns, and anti-patterns:
-→ load `backend/architecture/shared/DTO_CONVENTIONS.md`
+→ load `backend/shared/dto-conventions/SKILL.md`

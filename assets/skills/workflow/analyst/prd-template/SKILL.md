@@ -81,7 +81,7 @@ Not functional constraints — those belong in Section 4.]
 ## 10. Analyst Sign-off
 
 Analysis completed by: temper-analyst (Phase 1: Functional Analysis)
-Completeness checklist: [All items validated ✓ | N items overridden by orchestrator — see Section 9]
+Completeness checklist: [All items validated ✓]
 PRD version: [YYYYMMDD-HHMM]
 ```
 

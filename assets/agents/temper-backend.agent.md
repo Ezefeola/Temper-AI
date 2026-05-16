@@ -46,8 +46,10 @@ You do not start writing code until all context files and required skills are lo
 Partial context produces partial — and often incorrect — code.
 
 **4. Self-validate against the actual skill rules — not a fixed checklist**
-Before showing any code, re-read the NON-NEGOTIABLE RULES section of every skill you loaded
-and verify your code against each rule explicitly. The validation lives in the skills, not here.
+Before showing any code, re-read the `NON-NEGOTIABLE RULES` section of every skill you loaded
+and verify your code against each rule explicitly. Some skills also define routing or
+precedence notes that determine when other skills apply. The validation lives in the skills,
+not here.
 
 **5. Load precisely — never speculatively**
 Load only the skills the task actually requires. If it is unclear whether a skill applies,
@@ -86,8 +88,16 @@ Read these files in order. Do not proceed to Phase 2 until all are loaded.
 Extract:
 - Architecture pattern → determines which architecture skill to load
 - Database engine → determines whether EF Core skills are needed
+- API documentation provider → determines which API docs skill to load when the task touches API docs or `Program.cs`
 
-Output: `📄 Config loaded — Architecture: [pattern] | Database: [engine]`
+If architecture pattern is missing or ambiguous, emit and stop:
+```
+⚠️ Backend config is missing a usable architecture pattern.
+   Supported: Clean Architecture | Hexagonal Architecture | Vertical Slice Architecture | Onion Architecture
+   I will not improvise the architecture skill. Please clarify `.temper/backend-config.md`.
+```
+
+Output: `📄 Config loaded — Architecture: [pattern] | Database: [engine] | API Docs: [provider or not-defined]`
 
 **2. Read the task file**
 If no task file was provided, emit and stop:
@@ -173,13 +183,13 @@ If you are unsure, re-read the task — the answer is always there.
 2. `backend/architecture/[chosen]/SKILL.md` — folder structure and dependency rules
    - `Clean Architecture` → `backend/architecture/clean/SKILL.md`
    - `Hexagonal Architecture` → `backend/architecture/hexagonal/SKILL.md`
-   - `Vertical Slice` → `backend/architecture/vertical-slice/SKILL.md`
+   - `Vertical Slice Architecture` → `backend/architecture/vertical-slice/SKILL.md`
    - `Onion Architecture` → `backend/architecture/onion/SKILL.md`
-3. `backend/architecture/shared/RESULT_PATTERN.md` — Result<T> is universal
+3. `backend/shared/result-pattern/SKILL.md` — Result<T> is universal
 4. `ddd/ubiquitous-language/SKILL.md` — domain terminology understanding
    This skill teaches how to interpret domain terms from specs and tasks.
    It is mandatory for every task — domain understanding precedes implementation.
-5. `backend/architecture/shared/SOLID_CLEAN_CODE.md` — SOLID principles and Clean Code standards
+5. `backend/shared/solid-clean-code/SKILL.md` — SOLID principles and Clean Code standards
    This skill provides design principles for method size, class boundaries, and complexity control.
    It applies to every task — good design is not optional.
 
@@ -187,23 +197,36 @@ If you are unsure, re-read the task — the answer is always there.
 
 | Task requires | Load |
 |---|---|
-| Creating or using DTOs | `backend/architecture/shared/DTO_CONVENTIONS.md` |
-| Creating or modifying use cases or controllers | `backend/architecture/shared/USE_CASE_PATTERNS.md` |
-| Creating controllers, middleware, validators, Program.cs | `backend/dotnet/api/SKILL.md` |
+| Creating or using DTOs | `backend/shared/dto-conventions/SKILL.md` |
+| Creating or modifying use cases or controllers | `backend/shared/use-case-patterns/SKILL.md` |
+| Creating controllers, middleware, validators, or API host wiring | `backend/dotnet/api/SKILL.md` |
+| Creating or modifying `Program.cs` API documentation setup | `backend/dotnet/api/SKILL.md` + exactly one provider skill: `backend/dotnet/api-docs/scalar/SKILL.md` or `backend/dotnet/api-docs/swagger/SKILL.md` |
 | Creating entities, domain events, aggregates from scratch | `backend/dotnet/ddd/SKILL.md` |
-| Creating entity configurations, repositories, DbContext, UnitOfWork from scratch | `backend/dotnet/ef-core/SKILL.md` + `ENTITY_CONFIGURATION.md` + `REPOSITORY_PATTERN.md` + `DBCONTEXT_SETUP.md` |
-| Adding query methods to an existing repository | `dotnet-ef-core-queries` |
-| Using existing repositories in use cases | `backend/dotnet/ef-core/REPOSITORY_USAGE.md` |
+| Creating entity configurations | `backend/dotnet/ef-core/entity-configuration/SKILL.md` |
+| Creating repositories or UnitOfWork from scratch | `backend/dotnet/ef-core/repository-pattern/SKILL.md` |
+| Creating or modifying DbContext | `backend/dotnet/ef-core/dbcontext-setup/SKILL.md` |
+| Adding query methods to an existing repository | `backend/dotnet/ef-core/queries/SKILL.md` |
+| Using existing repositories in use cases | `backend/dotnet/ef-core/repository-usage/SKILL.md` |
 | Writing LINQ expressions over in-memory collections | `backend/dotnet/linq/SKILL.md` |
 
 **Notes:**
-- Creating from scratch → full EF Core files. Using what already exists → REPOSITORY_USAGE.md only.
+- Precedence order when rules overlap: `dotnet-csharp` -> chosen architecture skill -> shared/backend leaf skills.
+- `dotnet-csharp` defines universal C# syntax and null-safety rules. No backend skill overrides it.
+- The chosen architecture skill defines structure, dependency direction, and allowed endpoint/data-access style.
+- Shared and leaf skills apply only when they do not conflict with the chosen architecture skill.
+- Creating from scratch → load the specific EF Core leaf skills the task actually touches.
+- Using what already exists → `backend/dotnet/ef-core/repository-usage/SKILL.md` only.
 - A task that touches both (e.g., adds a new method to an existing repo AND uses it in a use case)
-  loads `dotnet-ef-core-queries` + `REPOSITORY_USAGE.md` — not the full creation files.
+  loads `backend/dotnet/ef-core/queries/SKILL.md` + `backend/dotnet/ef-core/repository-usage/SKILL.md` — not the full creation files.
+- If the task needs API documentation wiring and `.temper/backend-config.md` does not clearly specify `Scalar` or `Swagger`, stop and ask. Never choose a provider yourself.
+- If the chosen architecture is `Vertical Slice Architecture`:
+  - Do NOT load `backend/shared/use-case-patterns/SKILL.md` for handlers.
+  - Do NOT load `backend/dotnet/ef-core/repository-pattern/SKILL.md` or `backend/dotnet/ef-core/repository-usage/SKILL.md` for normal feature handlers.
+  - Load `backend/dotnet/api/SKILL.md` only for host-level concerns (`Program.cs`, middleware, FluentValidation registration, or an existing grouped controller). The `vertical-slice` skill decides endpoint style.
 
 #### Load optionally — only if task explicitly mentions it
 
-- `backend/dotnet/ef-core/BULK_OPERATIONS.md` — only for bulk insert / batch (1000+ rows)
+- `backend/dotnet/ef-core/bulk-operations/SKILL.md` — only for bulk insert / batch (1000+ rows)
 
 #### Checkpoint — emit after ALL skills are loaded, before proceeding to Phase 3.5
 
@@ -298,6 +321,11 @@ Before showing ANY code, validate against the rules of every skill you loaded.
 **How to validate correctly:**
 For each skill you loaded, go back to its `🚨 NON-NEGOTIABLE RULES` section
 and verify your code satisfies every single rule listed there.
+
+Then verify architecture precedence was respected where skill scopes overlap. Examples:
+- `Vertical Slice Architecture` must not drift into repository + UnitOfWork + per-endpoint controllers.
+- `dotnet-api` host rules must not override an architecture's endpoint style.
+
 The validation rules live in the skills — not in a fixed list here.
 
 **Emit the validation report in this format:**
@@ -460,7 +488,6 @@ Output:
 - **NEVER output code that has not passed Phase 5 validation**
 - **NEVER mark a task as `done`** — only `pending-review` after completion
 - **NEVER load a skill speculatively** — load only what the task explicitly requires
-- **ALWAYS load the user story spec** — it is mandatory context, not optional
-- **ALWAYS validate against the skill's own rules** — not a fixed internal checklist
+- **ALWAYS load the user story spec** and all required context before loading skills
+- **ALWAYS validate against the loaded skills' own rules** — not a fixed internal checklist
 - **ALWAYS stop and ask** when something is ambiguous or not covered by a skill
-- **ALWAYS read all context files** before loading any skill

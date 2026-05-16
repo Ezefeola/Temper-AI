@@ -1,16 +1,30 @@
 ---
 name: dbcontext-setup
 description: >
-  AppDbContext structure and OnModelCreating configuration.
-  Load when creating or modifying DbContext.
+  Canonical DbContext setup and registration rules for EF Core.
+  Load when creating or modifying DbContext classes or their DI wiring.
+requires: [dotnet-csharp]
+produces: [dbcontext, dbsets, configuration-registration]
 ---
 
 # DbContext Setup — TemperAI
 
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **ALWAYS keep `DbSet<T>` names aligned with EF conventions and the chosen architecture**
+2. **ALWAYS register entity configurations explicitly or via assembly scanning consistently**
+3. **NEVER embed business logic in `DbContext`**
+4. **NEVER let application code depend directly on concrete `DbContext` when repository abstractions are required by the architecture**
+
+## Load when
+
+- Creating a new application DbContext
+- Adding `DbSet<T>` properties
+- Adjusting registration in infrastructure DI
+
 ## AppDbContext structure
 
 ```csharp
-// Infrastructure/Persistence/AppDbContext.cs
 public sealed class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions)
@@ -35,14 +49,13 @@ public sealed class AppDbContext : DbContext
 | Rule | Explanation |
 |---|---|
 | `sealed class` | DbContext should be sealed |
-| `DbSet properties` | Use `=> Set<TEntity>()` expression body |
-| `ApplyConfigurationsFromAssembly` | Auto-discovers all `IEntityTypeConfiguration<T>` |
-| Never `OnConfiguring` | Connection string configured in DI |
+| `DbSet` properties | Prefer `Set<TEntity>()`-backed properties with names aligned to EF conventions |
+| `ApplyConfigurationsFromAssembly` | Auto-discovers `IEntityTypeConfiguration<T>` classes |
+| Never `OnConfiguring` | Provider and connection string belong in DI |
 
-## DI Registration
+## DI registration
 
 ```csharp
-// Infrastructure/DependencyInjection.cs
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
@@ -54,7 +67,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
-        
+
         return services;
     }
 }
@@ -63,41 +76,23 @@ public static class DependencyInjection
 ## Migration commands
 
 ```bash
-# Create migration
 dotnet ef migrations add InitialCreate --project Infrastructure --startup-project Api
-
-# Update database
 dotnet ef database update --project Infrastructure --startup-project Api
-
-# Remove last migration
 dotnet ef migrations remove --project Infrastructure --startup-project Api
 ```
 
-## Anti-patterns — NEVER DO THIS
+## Anti-patterns — never do this
 
 ```csharp
-// ❌ NEVER override OnConfiguring for connection string
+// ❌ NEVER configure provider or connection string in OnConfiguring
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 {
-    optionsBuilder.UseSqlServer("..."); // WRONG
+    optionsBuilder.UseSqlServer("...");
 }
 
-// ✅ CORRECT: Connection string from DI
-public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions)
-    : base(dbContextOptions)
-{
-}
-
-// ❌ NEVER add entities manually in OnModelCreating
+// ❌ NEVER inline entity mappings in AppDbContext
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    modelBuilder.Entity<Product>(entity => { ... }); // WRONG
-}
-
-// ✅ CORRECT: Use ApplyConfigurationsFromAssembly
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-    base.OnModelCreating(modelBuilder);
+    modelBuilder.Entity<Product>(entity => { });
 }
 ```

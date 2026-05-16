@@ -14,6 +14,12 @@ description: >
 These formats define the exact structure of every structured output the architect emits.
 Every output is a **structured report** — never informal conversation.
 
+Canonical architecture pattern values for all architect outputs:
+- `Clean Architecture`
+- `Hexagonal Architecture`
+- `Vertical Slice Architecture`
+- `Onion Architecture`
+
 ---
 
 ## 1. Startup Report
@@ -41,11 +47,37 @@ Emitted after Phase 1 — detecting the operating mode.
 → Proceeding to [Phase 2-A | Phase 2-B].
 ```
 
-If the mode is genuinely ambiguous, ask one question to clarify before proceeding.
+If the mode is genuinely ambiguous, emit the clarification request format below and stop.
 
 ---
 
-## 3. Domain Analysis Format (Phase 2-A)
+## 3. Clarification Request Format
+
+Emitted whenever the architect cannot proceed safely without user input.
+This is the single format for mode ambiguity, missing design context, problem ambiguity,
+or document selection requests that need clarification before the next phase.
+
+```
+❓ [Mode clarification needed | Context needed | Problem clarification needed | Document selection needed]
+
+Reason:
+  [one sentence describing what is blocking progress]
+
+I need:
+  1. [Specific missing information or choice]
+  2. [Specific missing information or choice]
+
+Once you answer, I will continue from [Phase X].
+```
+
+Rules:
+- Keep it specific and minimal
+- Ask only for information that is actually blocking the next step
+- If only one answer is needed, include only one numbered item
+
+---
+
+## 4. Domain Analysis Format (Phase 2-A)
 
 Emitted during Architectural Design mode after extracting architectural signals from context.
 
@@ -80,7 +112,7 @@ Risks identified:
 
 ---
 
-## 4. Problem Analysis Format (Phase 2-B)
+## 5. Problem Analysis Format (Phase 2-B)
 
 Emitted during Problem Solving mode after understanding the problem.
 
@@ -96,19 +128,11 @@ Constraints on solution: [what cannot be changed or broken]
 → Proceeding to architectural plan.
 ```
 
-If critical information is missing, emit a clarification request:
-
-```
-❓ Problem clarification needed
-
-To analyze this properly I need:
-  1. [Specific missing information]
-  2. [Specific missing information]
-```
+If critical information is missing, use the clarification request format above.
 
 ---
 
-## 5. Architectural Proposal Format (Phase 3-A)
+## 6. Architectural Proposal Format (Phase 3-A)
 
 Emitted during Architectural Design mode. Do NOT generate any files yet.
 Do NOT proceed until the proposal is explicitly confirmed.
@@ -126,7 +150,7 @@ The proposal presents DECISIONS only. It must NEVER contain:
 
 ── Architecture pattern ─────────────────────────────────────────
 
-Pattern: [Clean Architecture | Hexagonal | Vertical Slice | Onion | other]
+Pattern: [Clean Architecture | Hexagonal Architecture | Vertical Slice Architecture | Onion Architecture]
 Justification:
   [Specific signal that justifies this — tied to domain analysis]
   [Second signal if applicable]
@@ -193,7 +217,7 @@ If a change introduces a risk, I will note it once — the decision is yours.
 
 ---
 
-## 6. Architectural Plan Format (Phase 3-B)
+## 7. Architectural Plan Format (Phase 3-B)
 
 Emitted during Problem Solving mode. Do NOT generate any files yet.
 
@@ -239,7 +263,7 @@ If a change introduces a risk, I will note it once — the decision is yours.
 
 ---
 
-## 7. Updated Proposal Format (Phase 4)
+## 8. Updated Proposal Format (Phase 4)
 
 Emitted when any decision is changed during confirmation feedback.
 
@@ -264,7 +288,7 @@ Rules:
 
 ---
 
-## 8. Document Offer Format (Phase 5)
+## 9. Document Offer Format (Phase 5)
 
 Emitted after proposal confirmation, before document generation.
 
@@ -286,8 +310,10 @@ Emitted after proposal confirmation, before document generation.
   Note: These reference documents are the authoritative source for domain and architecture.
   The docs agent will link to them when generating ARCHITECTURE.md and SYSTEM.md.
 
-  The required documents will be generated now.
-  Select any optional documents you want, or just confirm to proceed with required only.
+  After you reply, I will generate the required documents automatically and add any
+  optional documents you selected.
+
+  Select any optional documents you want, or confirm to proceed with required only.
 ```
 
 Required documents are determined automatically:
@@ -307,7 +333,7 @@ Required documents are determined automatically:
 
 ---
 
-## 9. Required Docs Completion Report (Phase 6)
+## 10. Required Docs Completion Report (Phase 6)
 
 Emitted after required documents are generated.
 
@@ -320,14 +346,14 @@ Files created:
   [- .temper/frontend-config.md]
 
 [If optional documents were selected:]
-→ Ready to generate optional documentation. Say "continue" to proceed.
+→ Proceeding to optional documentation.
 [If no optional documents were selected:]
 → Architect phase complete.
 ```
 
 ---
 
-## 10. Completion Report (Phase 8)
+## 11. Completion Report (Phase 8)
 
 Emitted at the very end of the architect's execution.
 

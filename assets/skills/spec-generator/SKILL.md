@@ -48,14 +48,8 @@ that contaminates the development agents with implementation decisions that are 
 
 ## Startup report
 
-At the very start of your execution, emit the following:
-
-```
-📝 Spec Generator activated
-   Phase: User Story generation from approved PRD
-   Input: .temper/prd.md (approved)
-   Output: .temper/specs/ with INDEX.md + user story files
-```
+The Phase 2 startup report is defined only in `workflow/analyst/report-formats`.
+Do not emit a separate startup report from this skill.
 
 ---
 
@@ -66,21 +60,24 @@ At the very start of your execution, emit the following:
 1. Read `.temper/prd.md` entirely.
 2. Analyze the project summary, functional scope, business rules, status workflows,
    and external integrations.
-3. Check Section 10 (Open Questions) — if any items are marked `[BLOCKING RISK]`,
+3. Check Section 9 (Open Questions) — if any items are marked `[BLOCKING RISK]`,
    surface them immediately and stop:
 
 ```
 ⚠️ PRD has unresolved blocking items
 
 The following open questions must be resolved before specifications can be written:
-• [Question from Section 10]
-• [Question from Section 10]
+• [Question from Section 9]
+• [Question from Section 9]
 
 Please resolve these before proceeding.
 ```
 
-4. If anything in the PRD scope is ambiguous, ask before proceeding.
-   Do NOT assume. Do NOT infer scope that is not explicitly stated.
+4. If anything in the PRD scope is ambiguous, stop and emit the Phase 2 ambiguity
+   stop report before proceeding. Do NOT assume. Do NOT infer scope that is not
+   explicitly stated.
+5. Any ambiguity that still affects behavior, scope, rules, actors, workflows,
+   or acceptance criteria is BLOCKING and must be resolved before spec generation continues.
 
 ---
 
@@ -163,6 +160,7 @@ As a [role], I want to [action], so that [benefit].
 - Must be verifiable by a human without reading code
 - No technical terms, no HTTP codes, no types
 - Cover both happy path and key rejection scenarios
+- If you cannot write a criterion without inventing missing behavior, stop and ask
 
 **Business Rules:**
 - Extracted from the PRD business rules section and the functional scope
@@ -248,8 +246,7 @@ Categories to consider:
 
 ## Open questions
 
-[List any functional questions that could not be resolved from the PRD.
-If none: "None — all functional questions resolved."]
+None — all functional questions resolved before spec generation.
 ```
 
 #### 5.2 — Individual user story files
@@ -274,7 +271,7 @@ Summary:
 • Business rules documented: [N] total
 • Files generated: .temper/specs/INDEX.md + [N] user story files
 • Non-functional requirements: [list or "none"]
-• Open questions: [N — list if any, or "none"]
+• Open questions: none — unresolved ambiguity is not allowed in final specs
 ```
 
 ---
@@ -290,4 +287,6 @@ Summary:
 - **NEVER skip edge cases or error cases** — every user story must have them
 - **ALWAYS write errors as business conditions** — "the operation is rejected", never "returns 400"
 - **ALWAYS write business rules as specific, executable constraints**
-- **ALWAYS ask if the PRD is ambiguous** — do not assume or invent scope
+- **ALWAYS stop and ask if the PRD or a story is ambiguous** — do not assume or invent scope
+- **NEVER continue with unresolved ambiguity affecting behavior, scope, rules, actors,
+  workflows, or acceptance criteria**

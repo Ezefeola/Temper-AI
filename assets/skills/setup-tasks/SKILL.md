@@ -64,7 +64,7 @@ Load this skill when ALL of these conditions are true:
 ### Phase 1 — Read backend-config.md
 
 1. Read `.temper/backend-config.md` entirely
-2. Extract the architecture pattern (Clean, Hexagonal, Vertical Slice, Onion)
+2. Extract the architecture pattern (`Clean Architecture`, `Hexagonal Architecture`, `Vertical Slice Architecture`, `Onion Architecture`)
 3. Extract the project name
 4. Extract the database engine
 

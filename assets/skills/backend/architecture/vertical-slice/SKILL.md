@@ -5,12 +5,20 @@ description: >
   Use for CRUDs, MVPs, rapid prototypes, or simple systems where
   Clean Architecture would be overkill. Do not use for complex business
   domains — prefer Clean Architecture in that case.
-  For data access implementation, load backend/dotnet/ef-core or your chosen data access skill.
+  For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Vertical Slice Architecture — TemperAI Standards
 
-> For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **ALWAYS keep a single project** for the backend application code in `src/`
+2. **NEVER introduce repositories or UnitOfWork** for normal feature handlers
+3. **ALWAYS use `DbContext` directly in handlers** for normal feature data access
+4. **ALWAYS keep each feature self-contained** with endpoint/controller, handler, DTOs, and validator together
+5. **NEVER let generic API or use-case guidance override Vertical Slice endpoint and handler structure**
 
 ## Project root folder naming — CRITICAL
 
@@ -184,7 +192,7 @@ src/
 
 ## Domain
 
-Each entity lives in its own folder under `Domain/` along with its related enums, events, and value objects. This keeps everything related to an entity together and avoids a flat, unmanageable folder structure.
+Each entity lives in its own folder under `Domain/` along with its related enums and events. This keeps everything related to an entity together and avoids a flat, unmanageable folder structure.
 
 ### Entity folder structure
 
@@ -390,8 +398,8 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 // Features/Products/CreateProduct/CreateProductRequestDto.cs
 public sealed record CreateProductRequestDto
 {
-    public string Name { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
+    public required string Name { get; init; }
+    public required string Description { get; init; }
     public decimal Price { get; init; }
 }
 
@@ -399,9 +407,9 @@ public sealed record CreateProductRequestDto
 public sealed record CreateProductResponseDto
 {
     public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; }
     public decimal Price { get; init; }
-    public string Status { get; init; } = string.Empty;
+    public required string Status { get; init; }
 }
 ```
 
@@ -431,7 +439,7 @@ public static class CreateProductEndpoint
 
 #### Alternative — Single Controller per feature
 
-If you prefer Controllers, **group ALL endpoints for a feature into ONE Controller file**. Never create one Controller per endpoint.
+If the existing project already uses Controllers, **group ALL endpoints for a feature into ONE Controller file**. Never create one Controller per endpoint.
 
 ```csharp
 // Features/Products/ProductsController.cs
@@ -552,10 +560,10 @@ public sealed class CreateProductHandler
 public sealed record GetProductByIdResponseDto
 {
     public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
+    public required string Name { get; init; }
+    public required string Description { get; init; }
     public decimal Price { get; init; }
-    public string Status { get; init; } = string.Empty;
+    public required string Status { get; init; }
 }
 
 // Features/Products/GetProductById/GetProductByIdHandler.cs
@@ -658,10 +666,10 @@ public sealed class CreateProductValidator : AbstractValidator<CreateProductRequ
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(Product.Rules.NAME_MAX_LENGTH);
 
         RuleFor(x => x.Price)
-            .GreaterThanOrEqualTo(0);
+            .GreaterThanOrEqualTo(Product.Rules.MIN_PRICE);
     }
 }
 ```
@@ -727,4 +735,4 @@ For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-cs
 - EF Core configurations in `Persistence/Configurations/`
 - **Never use one Controller per endpoint** — either use Minimal APIs (one file per endpoint) OR one Controller per feature (all endpoints grouped). Never create `CreateProductEndpoint : ControllerBase`, `UpdateProductEndpoint : ControllerBase`, etc.
 - **Never use hardcoded numbers in validators** — always reference `Entity.Rules` constants
-- For data access implementation details, load `backend/dotnet/ef-core`
+- For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

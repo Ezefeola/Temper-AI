@@ -26,7 +26,7 @@ produces: [entities, aggregates, domain-events, enums, domain-rules]
 
 ## When NOT to apply this skill
 
-- You are configuring EF Core mappings — load `dotnet-ef-core` instead
+- You are configuring EF Core mappings — load `backend/dotnet/ef-core/entity-configuration/SKILL.md` instead
 - You are writing repositories or use cases without modifying domain entities
 - You are working on the API or infrastructure layer
 
@@ -131,7 +131,7 @@ public sealed class Product : Entity<Guid>
 ```csharp
 public abstract class Entity<TId>
 {
-    public TId Id { get; protected set; } = default!;
+    public TId Id { get; protected set; } = default;
 }
 ```
 
@@ -203,12 +203,12 @@ public sealed class Order : Entity<Guid>
             return (errors, false);
 
         // Delegate field validation to the child's own factory method
-        var (itemErrors, item) = OrderItem.Create(Id, productId, quantity, unitPrice);
+        (List<string> itemErrors, OrderItem? item) = OrderItem.Create(Id, productId, quantity, unitPrice);
 
-        if (itemErrors.Count > 0)
+        if (item is null)
             return (itemErrors, false);
 
-        _items.Add(item!);
+        _items.Add(item);
         UpdatedAt = DateTime.UtcNow;
         return ([], true);
     }
@@ -446,7 +446,7 @@ public async Task ExecuteAsync(ConfirmOrderCommand command)
     if (order.Items.Count == 0)
         return (["Order has no items"], false);
 
-    var total = order.Items.Sum(i => i.Quantity * i.UnitPrice); // domain calculation leaked out
+    decimal total = order.Items.Sum(i => i.Quantity * i.UnitPrice); // domain calculation leaked out
 
     order.Confirm();
     await _repository.SaveAsync(order);
@@ -457,7 +457,7 @@ public async Task ExecuteAsync(ConfirmOrderCommand command)
 {
     Order order = await _repository.GetByIdAsync(command.OrderId);
 
-    var (errors, confirmed) = order.Confirm(); // all rules live inside Confirm()
+    (List<string> errors, bool confirmed) = order.Confirm(); // all rules live inside Confirm()
 
     if (errors.Count > 0)
         return;
@@ -494,7 +494,7 @@ public sealed record Money { ... }  // DO NOT CREATE
 
 > ⚠️ NOTE FOR EF CORE: Since Value Objects are not used, `OwnsOne` configuration is also never used.
 > The `OwnsOne` API exists in EF Core but does not apply to this project.
-> See `dotnet-ef-core/ENTITY_CONFIGURATION.md` for correct entity configuration.
+> See `backend/dotnet/ef-core/entity-configuration/SKILL.md` for correct entity configuration.
 
 ---
 

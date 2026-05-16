@@ -5,7 +5,9 @@ description: >
   middleware, routing, error handling, DI setup, logging, FluentValidation,
   nullable reference types, and appsettings structure.
   Load when creating or modifying controllers, middleware, Program.cs, or validators.
-  DO NOT load for domain or repository tasks — load dotnet-ef-core or dotnet-ddd instead.
+  DO NOT load for domain or repository tasks — load dotnet-ddd or the required `backend/dotnet/ef-core/*/SKILL.md` leaf instead.
+  For API documentation provider wiring, load exactly one provider skill based on backend config:
+  `backend/dotnet/api-docs/scalar/SKILL.md` or `backend/dotnet/api-docs/swagger/SKILL.md`.
   For general C# conventions, dotnet-csharp must be loaded first.
 requires: [dotnet-csharp]
 produces: [controllers, middleware, validators, program-cs, appsettings, logging]
@@ -15,14 +17,15 @@ produces: [controllers, middleware, validators, program-cs, appsettings, logging
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-1. **ONLY Controllers** — NEVER Minimal APIs. All endpoints must inherit `ControllerBase` with `[ApiController]`
-2. **NEVER Swagger/Swashbuckle** — always Scalar for API documentation
+1. **When this skill governs endpoints, use Controllers only** — endpoints must inherit `ControllerBase` with `[ApiController]`
+2. **NEVER improvise the API documentation provider** — use exactly the provider configured in `.temper/backend-config.md`
 3. **NEVER DataAnnotations on DTOs** — always FluentValidation
 4. **NEVER hardcoded numbers in validators** — always reference `Entity.Rules` constants
 5. **NEVER string interpolation in log messages** — always structured logging with named placeholders
 
 > For general C# conventions (syntax, usings, naming, async, DTOs): `dotnet-csharp` must be loaded.
-> For EF Core specifics (entities, repositories, DbContext): load `dotnet-ef-core`.
+> For EF Core specifics (entities, repositories, DbContext): load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill.
+> For API documentation setup: load one provider skill only, based on backend config.
 
 ---
 
@@ -30,6 +33,14 @@ produces: [controllers, middleware, validators, program-cs, appsettings, logging
 
 - You are working exclusively on domain entities, repositories, or use cases with no controller changes
 - You are working on infrastructure configuration unrelated to the API layer
+- You are implementing Vertical Slice feature endpoints or handlers and the architecture skill already defines the endpoint style
+
+## Architecture precedence
+
+- `dotnet-csharp` still governs universal C# rules.
+- The chosen architecture skill decides endpoint style, project structure, and whether repositories / use cases exist.
+- This skill governs host-level API concerns: controllers, middleware, `Program.cs`, API-facing validators, routing metadata, and logging.
+- In `Vertical Slice`, do not load this skill for Minimal API endpoint files. Load it only for host-level concerns or existing grouped controllers.
 
 ---
 
@@ -69,6 +80,8 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 ---
 
 ## Controllers
+
+This section applies only when the task is controller-based.
 
 ```csharp
 [ApiController]
@@ -149,7 +162,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -168,8 +180,10 @@ app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    // API documentation mapping belongs to the configured provider skill.
+    // Load exactly one of:
+    // - backend/dotnet/api-docs/scalar/SKILL.md
+    // - backend/dotnet/api-docs/swagger/SKILL.md
 }
 
 app.Run();
@@ -182,33 +196,15 @@ app.Run();
 
 ---
 
-## API documentation — Scalar
+## API documentation provider selection
 
-**Always use Scalar. Never use Swagger/Swashbuckle.**
+This skill defines the host-level API rules, but it does not choose the documentation provider.
 
-```xml
-<!-- .csproj -->
-<PackageReference Include="Scalar.AspNetCore" Version="2.+" />
-```
+- If `.temper/backend-config.md` says `Scalar` → also load `backend/dotnet/api-docs/scalar/SKILL.md`
+- If `.temper/backend-config.md` says `Swagger` → also load `backend/dotnet/api-docs/swagger/SKILL.md`
+- If the provider is missing or ambiguous and the task touches `Program.cs` or API docs → stop and ask
 
-```csharp
-// Program.cs
-builder.Services.AddOpenApi();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("YourProject API");
-        options.WithTheme(ScalarTheme.Kepler);
-    });
-}
-```
-
-- OpenAPI JSON: `/openapi/v1.json`
-- Scalar UI: `/scalar/v1`
-- Only expose in Development — never in production
+Never mix both providers in the same host unless a future skill explicitly allows it.
 
 ---
 
@@ -282,8 +278,8 @@ public sealed class CreateProduct : ICreateProduct
 ```
 
 ```csharp
-// ✅ Non-nullable string — always initialize
-public string Name { get; init; } = string.Empty;
+// ✅ Non-nullable property — require initialization
+public required string Name { get; init; }
 
 // ✅ Nullable string — always check before use
 public string? Description { get; init; }
@@ -291,6 +287,13 @@ if (!string.IsNullOrWhiteSpace(Description)) { ... }
 
 // ❌ WRONG — unjustified null-forgiving
 Product product = await _repository.GetByIdAsync(id)!;
+
+// ✅ CORRECT — validate nullable result before use
+Product? product = await _repository.GetByIdAsync(id);
+if (product is null)
+{
+    return Result<ProductDto>.Failure(HttpStatusCode.NotFound);
+}
 ```
 
 ---

@@ -105,7 +105,7 @@ GAP-002 [BLOCKING]
                    Consider: end users, admins, supervisors, external parties, automated processes."
   Why it matters: Capabilities cannot be defined without knowing their actors.
 
-GAP-003 [IMPORTANT]
+GAP-003 [BLOCKING]
   Surface to user: "What does success look like for each type of user?"
   Why it matters: Defines acceptance criteria implicitly and helps prioritize capabilities.
 
@@ -119,7 +119,7 @@ GAP-004 [BLOCKING]
 
 ── Category C: Scope boundaries ───────────────────────────────
 
-GAP-00N [IMPORTANT]
+GAP-00N [BLOCKING]
   Surface to user: "What is explicitly out of scope for this version?"
   Why it matters: Prevents scope creep and sets clear expectations for the architect.
 
@@ -136,6 +136,7 @@ Total gaps: [N] — BLOCKING: [N] | IMPORTANT: [N] | CLARIFYING: [N]
 
 → Please return this report with answers filled in for each gap.
 → I will not proceed to PRD generation until all BLOCKING gaps are resolved.
+→ Any ambiguity affecting behavior, scope, rules, actors, workflows, or acceptance criteria must be treated as BLOCKING.
 ```
 
 ---
@@ -167,6 +168,8 @@ Emitted when the orchestrator returns answers to a gap report.
 
 If follow-up gaps remain, emit a new Gap Report (format #4) covering only the unresolved items.
 Repeat until all BLOCKING gaps are resolved.
+Any unresolved ambiguity that still affects behavior, scope, rules, actors,
+workflows, or acceptance criteria remains BLOCKING.
 
 ---
 
@@ -187,7 +190,6 @@ Options: [if applicable, describe the two possible interpretations]
 ```
 
 Do NOT proceed to completeness validation until all contradictions are resolved.
-**Exception:** explicit orchestrator override — every unresolved contradiction becomes a BLOCKING RISK entry in the PRD.
 
 ---
 
@@ -217,13 +219,16 @@ Rules and structure:
 □ External integrations confirmed or confirmed as "none"            [✓ / ✗]
 
 Quality:
-□ All contradictions resolved (or marked BLOCKING RISK)             [✓ / ✗]
-□ All BLOCKING gaps resolved (or marked BLOCKING RISK)              [✓ / ✗]
+□ All contradictions resolved                                        [✓ / ✗]
+□ All BLOCKING gaps resolved                                         [✓ / ✗]
 □ No solution disguised as a requirement remains in scope          [✓ / ✗]
 □ No assumptions made — every statement in the PRD has user confirmation [✓ / ✗]
 ```
 
 If any item marked [✗] is a BLOCKING item, return to Phase 1.3 and emit a focused gap report.
+
+Ambiguity that still affects behavior, scope, rules, actors, workflows, or acceptance
+criteria is BLOCKING for this checklist even if it was previously labeled IMPORTANT or CLARIFYING.
 
 ---
 
@@ -280,7 +285,55 @@ Stop and wait. Do not proceed without the skill.
 
 ---
 
-## 10. Phase 2 Completion Report (Phase 2.6)
+## 10. Phase 2 Ambiguity Stop Report
+
+Emitted when the PRD or an in-progress story leaves unresolved ambiguity that still affects behavior,
+scope, rules, actors, workflows, or acceptance criteria.
+
+```
+⚠️ Phase 2 ambiguity stop — resolution required
+
+AMB-001 [BLOCKING]
+  Source: [PRD section or user story draft section]
+  Ambiguity: [what is unclear]
+  Surface to user: "[specific question to resolve it]"
+  Why it matters: [what behavior, scope, rule, actor, workflow, or acceptance criterion cannot be specified safely]
+
+[continue for all blocking ambiguities...]
+
+→ Specification generation is paused until these ambiguities are resolved.
+```
+
+Do NOT continue writing specs while this report has unresolved items.
+
+---
+
+## 11. Phase 2 Ambiguity Resolution Status Report
+
+Emitted when the orchestrator returns answers to a Phase 2 ambiguity stop report.
+
+```
+📬 Phase 2 ambiguity resolution status
+
+✅ Resolved ([N]):
+  AMB-001: [one-line summary of the answer received]
+
+⚠️ Partially resolved — follow-up needed ([N]):
+  AMB-00N: [what was answered] / [what is still unclear]
+  → Follow-up: [specific question to surface to the user]
+
+❌ Unresolved ([N]):
+  AMB-00N: No answer received.
+  → Still blocking specification generation.
+
+→ [Resuming spec generation | Emitting follow-up ambiguity stop report]
+```
+
+Repeat until all blocking ambiguities are resolved.
+
+---
+
+## 12. Phase 2 Completion Report (Phase 2.6)
 
 Emitted after `.temper/specs/` files are generated.
 
@@ -293,7 +346,7 @@ Summary:
 • Business rules documented: [N] total
 • Files generated: .temper/specs/INDEX.md + [N] user story files
 • Non-functional requirements: [list or "none"]
-• Open questions: [N — list if any, or "none"]
+• Open questions: [none — unresolved ambiguity is not allowed in final specs]
 
 Output:
   .temper/specs/INDEX.md — version [YYYYMMDD-HHMM]

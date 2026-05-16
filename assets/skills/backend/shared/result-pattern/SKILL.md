@@ -1,15 +1,23 @@
 ---
 name: result-pattern
 description: >
-  Result<T> pattern implementation with HttpStatusCode.
-  This is the ONLY Result pattern allowed in TemperAI projects.
+  Canonical Result<T> pattern for backend tasks.
+  Load on every backend task.
+requires: [dotnet-csharp]
+produces: [result-pattern, action-result-mapping]
 ---
 
 # Result Pattern — TemperAI
 
-## Result<T> class
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-**CRITICAL: This is the ONLY Result pattern allowed. NEVER create variations, alternatives, or simplified versions.**
+1. **ALWAYS use `Result<TResponse>`** for backend success and failure flows
+2. **ALWAYS pass `HttpStatusCode`** to `Success()` and `Failure()`
+3. **NEVER use numeric status codes** in Result creation
+4. **NEVER throw for expected business outcomes** — return failure results instead
+5. **ALWAYS let controllers return `result.ToActionResult()`** — never remap Result manually
+
+## Canonical shape
 
 ```csharp
 public sealed class Result<TResponse>
@@ -56,31 +64,31 @@ public sealed class Result<TResponse>
 }
 ```
 
-## Usage rules — NEVER broken
+## Usage rules — never broken
 
-### 1. HttpStatusCode is MANDATORY
+### 1. HttpStatusCode is mandatory
 
-Every `Success()` and `Failure()` call MUST include an HttpStatusCode parameter.
+Every `Success()` and `Failure()` call must include an `HttpStatusCode`.
 
 - ✅ `Result<UserDto>.Success(HttpStatusCode.Created)`
 - ✅ `Result<UserDto>.Failure(HttpStatusCode.NotFound)`
-- ❌ `Result<UserDto>.Success()` — NEVER omit HttpStatusCode
-- ❌ `Result<UserDto>.Success(201)` — NEVER use numeric codes
+- ❌ `Result<UserDto>.Success()`
+- ❌ `Result<UserDto>.Success(201)`
 
-### 2. Common HttpStatusCode values
+### 2. Flow ownership
 
-| HttpStatusCode | When to use |
-|---|---|
-| `HttpStatusCode.Created` | New resource created |
-| `HttpStatusCode.OK` | Successful query/update |
-| `HttpStatusCode.BadRequest` | Validation errors |
-| `HttpStatusCode.NotFound` | Resource not found |
-| `HttpStatusCode.Conflict` | Business rule violation |
-| `HttpStatusCode.InternalServerError` | Unexpected error |
+- Use case returns `Result<TResponse>` with the final `HttpStatusCode`
+- Controller returns `result.ToActionResult()`
+- Mappers only transform data; they never decide HTTP behavior
 
-### 3. Flow: Use case returns Result, Controller calls ToActionResult()
+## Common status codes
 
-The use case returns a Result with HttpStatusCode. The controller calls `result.ToActionResult()`. NOTHING ELSE.
+- `HttpStatusCode.Created` for resource creation
+- `HttpStatusCode.OK` for successful reads or updates
+- `HttpStatusCode.BadRequest` for validation errors
+- `HttpStatusCode.NotFound` for missing resources
+- `HttpStatusCode.Conflict` for business rule conflicts
+- `HttpStatusCode.InternalServerError` for unexpected persistence or infrastructure failures
 
 ## ResultExtensions.ToActionResult()
 
@@ -116,13 +124,13 @@ public static class ResultExtensions
 
 ## Controller conventions
 
-- Always return `result.ToActionResult()` — never build responses manually
-- **NEVER check `result.IsSuccess` to decide status codes** — ResultExtensions handles this
-- **NEVER create custom error mapping** — Result pattern with HttpStatusCode is the single source of truth
-- **NEVER use switch/if on HttpStatusCode in controllers**
+- Always return `result.ToActionResult()`
+- Never check `result.IsSuccess` in controllers to choose a status code
+- Never create custom switch/if trees on `HttpStatusCode` in controllers
+- Never duplicate `ProblemDetails` mapping in each endpoint
 
 ```csharp
-// ✅ CORRECT — minimal controller
+// ✅ CORRECT — controller delegates response mapping
 [HttpPost]
 public async Task<IActionResult> Create(
     [FromBody] CreateProductRequestDto request,
@@ -133,18 +141,18 @@ public async Task<IActionResult> Create(
     return result.ToActionResult();
 }
 
-// ❌ NEVER DO THIS — manual status code checking
+// ❌ WRONG — controller rebuilds status logic manually
 [HttpPost]
 public async Task<IActionResult> Create(...)
 {
-    var result = await useCase.ExecuteAsync(request, ct);
-    
+    Result<CreateProductResponseDto> result = await useCase.ExecuteAsync(request, ct);
+
     if (result.HttpStatusCode == HttpStatusCode.NotFound)
         return NotFound(result.Description);
-    
+
     if (!result.IsSuccess)
         return BadRequest(result.Errors);
-    
+
     return Ok(result.Payload);
 }
 ```

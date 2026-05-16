@@ -11,6 +11,14 @@ produces: []
 
 # Ubiquitous Language — TemperAI Standards
 
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **ALWAYS map domain terms before implementing**
+2. **NEVER replace a domain term with an unverified synonym**
+3. **ALWAYS stop and flag ambiguous terminology**
+4. **ALWAYS prefer the established project vocabulary** when one exists
+5. **NEVER infer unsupported modeling doctrine** from term classification alone
+
 This skill teaches the concept of Ubiquitous Language and how to apply it
 when reading domain documentation, specs, and tasks.
 
@@ -134,7 +142,7 @@ Nouns: warehouse manager, shipment, Order, inventory levels
 |---|---|---|
 | Entity | Has identity and lifecycle | Order, Product, Customer |
 | Aggregate | Entity that owns other entities | Order (owns OrderItem) |
-| Value Object | Defined by attributes, no identity | Money, Address |
+| Concept term | A domain concept that may exist in specs or docs | Money, Address |
 | Enum | Fixed set of values | OrderStatus, ProductCategory |
 | Service | An action or operation | InventoryService |
 
@@ -304,7 +312,7 @@ Rules:
 | Entity | `sealed class EntityName` | `Product`, `Order` |
 | Aggregate | `sealed class AggregateName : Entity<TId>` | `Order` (root), `Product` (root) |
 | Child Entity | `sealed class ChildName : Entity<TId>` | `OrderItem` inside Order aggregate |
-| Value Object | `sealed record ValueName` | `Money`, `Address` |
+| Concept term | Domain term only; implementation depends on project doctrine | `Money`, `Address` |
 | Enum | `public enum EnumName` | `OrderStatus`, `ProductCategory` |
 | Service | Interface + implementation | `IInventoryService` |
 
@@ -313,7 +321,7 @@ Rules:
 | Phrase in spec | Domain meaning |
 |---|---|
 | "cannot be X if Y" | Invariant — belongs to entity |
-| "must be" | Validation rule — entity or VO |
+| "must be" | Validation rule — usually entity or aggregate rule |
 | "when state is A" | Status transition — entity with state |
 | "update inventory" | Service operation |
 | "calculate total" | Calculation rule |
@@ -325,7 +333,7 @@ Rules:
 
 ---
 
-## Absolute Rules
+## Practical reminders
 
 - **NEVER assume a term's meaning without verifying**
 - **NEVER use synonyms** — use the exact term from the spec or vocabulary

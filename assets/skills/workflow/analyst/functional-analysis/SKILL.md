@@ -167,6 +167,9 @@ before proceeding.
 Example: "The client says orders can be edited, but also says confirmed orders
 are locked — this is a contradiction that must be resolved."
 
+Any ambiguity that still affects behavior, scope, rules, actors, workflows, or
+acceptance criteria is a blocking risk even if the stakeholder considers it minor.
+
 **Never flatten these into a single "Open Questions" list.** Each type has a
 different path to resolution.
 
@@ -214,6 +217,8 @@ Users often describe solutions instead of needs. Your job is to uncover the need
 - **Never** advance past a contradiction — surface it, classify it, wait for resolution
 - **Never** use "reasonable defaults" — always ask the user
 - **Never** invent future scope — only document what the user explicitly deferred
+- **Never** let ambiguity survive into the PRD if it still affects behavior,
+  scope, rules, actors, workflows, or acceptance criteria
 - **Always** group questions by category and ask them all at once
 - **Always** synthesize input before emitting a gap report
 - **Always** resume from your last known state when answers are received —

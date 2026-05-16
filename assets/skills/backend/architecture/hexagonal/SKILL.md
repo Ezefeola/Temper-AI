@@ -5,12 +5,20 @@ description: >
   Use when the project has multiple input channels (API, CLI, message queue),
   need to test the domain in isolation, or when adapters change frequently.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  For implementation details, load backend/dotnet/ef-core or your chosen data access skill.
+  For implementation details, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Hexagonal Architecture — TemperAI Standards
 
-> For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **ALWAYS keep `Core` isolated from adapters**
+2. **NEVER let one adapter depend on another adapter**
+3. **ALWAYS express persistence and external capabilities through ports**
+4. **ALWAYS keep use cases in `Core` depending on abstractions only**
+5. **NEVER let generic shared guidance override Hexagonal port-and-adapter boundaries**
 
 ## Project root folder naming — CRITICAL
 
@@ -243,7 +251,7 @@ The domain defines these base types. They are pure C# — no external dependenci
 // Entity.cs — clean base, no event logic
 public abstract class Entity<TId>
 {
-    public TId Id { get; protected set; } = default!;
+    public TId Id { get; protected set; } = default;
 }
 
 // IDomainEvent.cs — pure contract, no behavior
@@ -319,7 +327,7 @@ public sealed class SaveResult
 {
     public bool IsSuccess { get; init; }
     public int RowsAffected { get; init; }
-    public string ErrorMessage { get; init; } = string.Empty;
+    public required string ErrorMessage { get; init; }
 }
 ```
 
@@ -417,17 +425,17 @@ Defined in `Core/Contracts/Dtos/`.
 ```csharp
 public sealed record CreateProductRequestDto
 {
-    public string Name { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
+    public required string Name { get; init; }
+    public required string Description { get; init; }
     public decimal Price { get; init; }
 }
 
 public sealed record CreateProductResponseDto
 {
     public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; }
     public decimal Price { get; init; }
-    public string Status { get; init; } = string.Empty;
+    public required string Status { get; init; }
 }
 ```
 
@@ -466,7 +474,7 @@ public sealed class CreateProduct : ICreateProduct
                 .WithDescription("A product with that name already exists");
         }
 
-        var (productErrors, product) = Product.Create(
+        (List<string> productErrors, Product? product) = Product.Create(
             createProductRequestDto.Name,
             createProductRequestDto.Description,
             createProductRequestDto.Price);
@@ -732,5 +740,5 @@ When generating actual code, the namespace MUST match the folder structure exact
 - `UnitOfWork` is the single entry point to all repositories within a persistence adapter
 - **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
 - **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
-- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
-- For data access implementation details, load `backend/dotnet/ef-core`
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core/bulk-operations/SKILL.md`
+- For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

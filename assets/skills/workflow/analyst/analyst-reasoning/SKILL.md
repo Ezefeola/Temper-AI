@@ -371,7 +371,8 @@ the missing answer becomes:
 
 - A gap to add to the next gap report (Phase 1.3/1.4)
 - A revision to make before generating the PRD (Phase 1.7)
-- A revision to make before finalizing a user story (Phase 2)
+- A stop signal to surface before finalizing a user story if the missing answer still
+  affects behavior, scope, rules, actors, workflows, or acceptance criteria (Phase 2)
 
 The analyst never mentions the dimensions or self-questions in its output.
 They are invisible scaffolding that shapes the quality of visible deliverables.
@@ -449,3 +450,5 @@ structured report formats defined in that skill.
 - **ALWAYS** run the Pre-Deliverable Checklist before emitting any report,
   PRD, or spec
 - **ALWAYS** treat a failed checklist item as a blocking issue until resolved
+- **ALWAYS** require user clarification when self-questioning reveals uncertainty
+  that still affects behavior, scope, rules, actors, workflows, or acceptance criteria

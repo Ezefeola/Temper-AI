@@ -6,12 +6,20 @@ description: >
   aggregate roots, and the Specification pattern. All dependencies
   point inward toward the domain core.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  For implementation details, load backend/dotnet/ef-core or your chosen data access skill.
+  For implementation details, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Onion Architecture — TemperAI Standards
 
-> For data access implementation, load `backend/dotnet/ef-core` or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **ALWAYS keep dependencies pointing inward toward `Domain`**
+2. **ALWAYS define persistence contracts in `Domain`** for this architecture
+3. **NEVER let `Application` or `Api` bypass Domain-owned rules**
+4. **ALWAYS keep aggregates and specifications as Domain concerns**
+5. **NEVER let generic shared guidance override Onion circle boundaries**
 
 ## Project root folder naming — CRITICAL
 
@@ -190,7 +198,7 @@ Onion Architecture organizes the system in layers that all depend **inward** tow
 
 ### Circle 1 — Domain Model (center)
 
-Entities, Value Objects, Enums, Domain Events, Aggregates. Pure business logic with zero external dependencies.
+Entities, Enums, Domain Events, Aggregates, Specifications. Pure business logic with zero external dependencies.
 
 ### Circle 2 — Domain Services and Contracts
 
@@ -229,7 +237,7 @@ The domain defines these base types. They are pure C# — no external dependenci
 // Domain/Common/Primitives/Entity.cs
 public abstract class Entity<TId>
 {
-    public TId Id { get; protected set; } = default!;
+    public TId Id { get; protected set; } = default;
 }
 
 // Domain/Common/Primitives/IDomainEvent.cs
@@ -238,7 +246,7 @@ public interface IDomainEvent { }
 
 ### Entity pattern
 
-Each entity lives in its own folder under `Domain/Entities/` along with its related enums, events, and value objects.
+Each entity lives in its own folder under `Domain/Entities/` along with its related enums and events.
 
 - `sealed class` with `private` constructor.
 - Nested `Rules` class with constraint constants.
@@ -325,11 +333,29 @@ public interface ISpecification<T>
 // Domain/Specifications/ActiveProductsSpecification.cs
 public sealed class ActiveProductsSpecification : ISpecification<Product>
 {
-    public Expression<Func<Product, bool>> Criteria =>
-        product => product.Status == ProductStatus.Active;
+    public Expression<Func<Product, bool>> Criteria
+    {
+        get
+        {
+            return product => product.Status == ProductStatus.Active;
+        }
+    }
 
-    public List<Expression<Func<Product, object>>> Includes => [];
-    public List<string> IncludeStrings => [];
+    public List<Expression<Func<Product, object>>> Includes
+    {
+        get
+        {
+            return [];
+        }
+    }
+
+    public List<string> IncludeStrings
+    {
+        get
+        {
+            return [];
+        }
+    }
 }
 ```
 
@@ -379,7 +405,7 @@ public sealed class SaveResult
 {
     public bool IsSuccess { get; init; }
     public int RowsAffected { get; init; }
-    public string ErrorMessage { get; init; } = string.Empty;
+    public required string ErrorMessage { get; init; }
 }
 ```
 
@@ -482,7 +508,7 @@ public sealed class CreateProduct : ICreateProduct
                 .WithDescription("A product with that name already exists");
         }
 
-        var (productErrors, product) = Product.Create(
+        (List<string> productErrors, Product? product) = Product.Create(
             createProductRequestDto.Name,
             createProductRequestDto.Description,
             createProductRequestDto.Price);
@@ -602,12 +628,12 @@ public sealed class ProductRepository : GenericRepository<Product>, IProductRepo
 
         query = query.Where(specification.Criteria);
 
-        foreach (var include in specification.Includes)
+        foreach (Expression<Func<Product, object>> include in specification.Includes)
         {
             query = query.Include(include);
         }
 
-        foreach (var includeString in specification.IncludeStrings)
+        foreach (string includeString in specification.IncludeStrings)
         {
             query = query.Include(includeString);
         }
@@ -657,7 +683,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Configure database — see backend/dotnet/ef-core for EF Core implementation
+        // Configure database — see the matching backend/dotnet/ef-core/* leaf skill for EF Core implementation
         return services;
     }
 
@@ -705,5 +731,5 @@ When generating actual code, the namespace MUST match the folder structure exact
 - **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
 - **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - Domain folder names must be **plural** and different from the class name — `Domain/Entities/Products/Product.cs`, never `Domain/Entities/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
-- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core`
-- For data access implementation details, load `backend/dotnet/ef-core`
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core/bulk-operations/SKILL.md`
+- For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

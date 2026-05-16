@@ -18,7 +18,10 @@ These config files are read by implementation agents during build execution:
 - **temper-backend** reads `.temper/backend-config.md` to determine:
   - Architecture pattern (Clean/Hexagonal/Vertical Slice/Onion)
   - Database engine (SQL Server/PostgreSQL/SQLite)
-  - API documentation provider (Scalar/Swagger)
+  - API documentation provider (Scalar/Swagger), when an API host or docs task requires it
+
+If the API documentation provider is missing or ambiguous for a backend API task,
+`temper-backend` must ask instead of selecting a provider implicitly.
 
 - **temper-frontend** reads `.temper/frontend-config.md` to determine:
   - Blazor type (WebAssembly or Server)

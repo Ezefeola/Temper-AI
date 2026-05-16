@@ -1,27 +1,35 @@
 ---
 name: use-case-patterns
 description: >
-  Use case structure, naming conventions, and DI patterns.
-  Load when creating use cases, handlers, or controllers.
+  Canonical use case structure, naming, and DI conventions for backend tasks.
+  Load when creating or modifying use cases or controllers that invoke them.
+  Do not load for Vertical Slice handlers.
+requires: [dotnet-csharp, result-pattern]
+produces: [use-case-classes, use-case-interfaces]
 ---
 
 # Use Case Patterns — TemperAI
 
-## Naming conventions
+## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
+
+1. **NEVER use a `UseCase` suffix** on use case classes
+2. **ALWAYS keep interface and implementation together** in the same folder
+3. **ALWAYS use explicit constructor injection**
+4. **ALWAYS return `Result<TResponse>` with `HttpStatusCode`**
+5. **NEVER place business logic in controllers**
+
+## When NOT to apply this skill
+
+- You are implementing Vertical Slice handlers or Minimal API endpoints
+- The chosen architecture does not use use case classes for this task
+
+## Naming
 
 | Element | Convention | Example |
 |---|---|---|
-| Use cases | No suffix, PascalCase | `CreateProduct`, `UpdateProduct` |
-| Use case interfaces | Prefix `I` | `ICreateProduct`, `IUpdateProduct` |
-| Request DTOs | Suffix `RequestDto` | `CreateProductRequestDto` |
-| Response DTOs | Suffix `ResponseDto` | `CreateProductResponseDto` |
-| Mapping extensions | Prefix `To` + DTO name | `ToCreateProductResponseDto()` |
-
-## Structure
-
-- `sealed class` without `UseCase` suffix
-- Interface in the same folder
-- Explicit constructor injection — never primary constructor
+| Use case | PascalCase, no suffix | `CreateProduct` |
+| Interface | `I` prefix | `ICreateProduct` |
+| Mapping extension | `To` + DTO name | `ToCreateProductResponseDto()` |
 
 ```csharp
 public interface ICreateProduct
@@ -53,50 +61,46 @@ public sealed class CreateProduct : ICreateProduct
 }
 ```
 
-## Result pattern with HttpStatusCode
+## Result flow
 
-**ALWAYS use `Result<TResponse>.Success(HttpStatusCode.Created)` or `Result<TResponse>.Failure(HttpStatusCode.NotFound)`.**
+- Use cases always return `Result<TResponse>.Success(HttpStatusCode.X)` or `Failure(HttpStatusCode.X)`
+- Controllers call `result.ToActionResult()` and nothing else
+- Do not create custom status code branching in use cases or controllers
 
-- **NEVER omit the HttpStatusCode parameter**
-- **NEVER create custom status code logic in use cases**
-- **The use case returns a Result with HttpStatusCode. The controller calls `result.ToActionResult()`. That's it.**
+## Null safety with domain factories
 
-## Null safety in use cases
-
-**CRITICAL: Never validate error count. Always validate nullability.**
-
-When a factory method returns `(List<string> errors, Entity? entity)`, check `if (entity is null)`, NOT `if (errors.Count > 0)`.
+When a factory returns `(List<string> errors, Entity? entity)`, validate the entity reference, not the error count.
 
 ```csharp
-// ❌ WRONG — validates error count, then uses ! (null-forgiving operator)
+// ❌ WRONG — validates error count instead of the nullable entity reference
 (List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
 if (errors.Count > 0)
-{
     return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
-}
-await _repo.AddAsync(item!, ct);  // ⚠️ DANGER — uses ! operator
 
-// ✅ CORRECT — validates nullability of the entity
+// item may still be null here even though the error count check passed
+
+// ✅ CORRECT — validate nullability directly
 (List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
 if (item is null)
-{
     return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
-}
-await _repo.AddAsync(item, ct);
+
+await _repo.AddAsync(item, cancellationToken);
 ```
 
-**Rules:**
-1. **Never use the null-forgiving operator (`!`)** — if you need it, your validation logic is wrong
-2. **Always use `if (entity is null)`** — never `if (errors.Count > 0)`
-3. **The `!` operator is a code smell** — it suppresses the compiler's warning about potential null references
+Rules:
 
-## Entity patterns in use cases
+- Never use the null-forgiving operator (`!`) in use case flows
+- Always prefer `if (entity is null)` over `if (errors.Count > 0)` when the factory returns a nullable entity
 
-- Entities are `sealed class` with `private` constructor
-- Factory method returns `(List<string> Errors, Entity? Entity)`
+## Domain entity interaction patterns
+
+When a use case collaborates with domain entities, keep these legacy rules intact:
+
+- Entities are `sealed class` with `private` constructors
+- Factory methods return `(List<string> Errors, Entity? Entity)`
 - Update methods return `(List<string> Errors, bool Updated)`
-- Nested `Rules` class with constraint constants
-- `UpdatedAt` set explicitly on every update method
+- Constraint constants live in a nested `Rules` class
+- `UpdatedAt` is set explicitly in every successful update method
 
 ```csharp
 public sealed class Product
@@ -110,35 +114,40 @@ public sealed class Product
     public static (List<string> Errors, Product? Entity) Create(string name)
     {
         List<string> errors = [];
-        
+
         if (string.IsNullOrWhiteSpace(name))
             errors.Add("Name is required.");
-        
+
         if (name.Length > Rules.NAME_MAX_LENGTH)
             errors.Add($"Name must not exceed {Rules.NAME_MAX_LENGTH} characters.");
-        
+
         if (errors.Count > 0)
             return (errors, null);
-        
-        return (errors, new Product { Id = Guid.NewGuid(), Name = name, UpdatedAt = DateTime.UtcNow });
+
+        return (errors, new Product
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            UpdatedAt = DateTime.UtcNow
+        });
     }
 
     public (List<string> Errors, bool Updated) UpdateName(string newName)
     {
         List<string> errors = [];
-        
+
         if (string.IsNullOrWhiteSpace(newName))
             errors.Add("Name is required.");
-        
+
         if (newName.Length > Rules.NAME_MAX_LENGTH)
             errors.Add($"Name must not exceed {Rules.NAME_MAX_LENGTH} characters.");
-        
+
         if (Name == newName)
             return (errors, false);
-        
+
         if (errors.Count > 0)
             return (errors, false);
-        
+
         Name = newName;
         UpdatedAt = DateTime.UtcNow;
         return (errors, true);
@@ -153,8 +162,9 @@ public sealed class Product
 
 ## DI conventions
 
-- Private methods per responsibility — `AddDatabase`, `AddRepositories`, `AddUnitOfWork`
-- `AddApplication` → `AddUseCases` → `AddProductUseCases`, etc.
+- Use explicit constructor injection
+- Keep `AddApplication()` small and delegate to grouped private registration methods
+- Register use cases by interface and implementation pair
 
 ```csharp
 public static class DependencyInjection

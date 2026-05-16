@@ -6,7 +6,8 @@ description: >
   conventions and the project specification.   Reads .temper/specs/ and
   Docs/domain-model.md, scans all generated code for convention violations,
   and produces a review report with pass/fail items and exact file
-  references. Loads backend/dotnet/api and backend/architecture/clean skills.
+  references. Loads backend/dotnet/api, the required backend/shared leaf
+  skills, and backend/architecture/clean.
 mode: subagent
 permission:
   read: allow
@@ -37,7 +38,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-review starting
-   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/architecture/shared, backend/architecture/[chosen]]
+   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/shared/result-pattern, backend/shared/dto-conventions, backend/shared/use-case-patterns, backend/shared/solid-clean-code, backend/architecture/[chosen]]
      Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, Docs/domain-model.md, .temper/tasks/INDEX.md]
 ```
 
@@ -84,6 +85,13 @@ Based on the constitution's chosen architecture:
 - **Onion Architecture** → load `backend/architecture/onion` skill
 
 Always load the `backend/dotnet/api` skill.
+
+Always load these shared leaf skills directly:
+
+- `backend/shared/result-pattern`
+- `backend/shared/dto-conventions`
+- `backend/shared/use-case-patterns`
+- `backend/shared/solid-clean-code`
 
 ### Phase 5 — Scan code for convention violations
 
@@ -237,5 +245,8 @@ After generating the review report:
 This agent loads:
 - `dotnet-csharp` — Universal C# / .NET 10 standards
 - `backend/dotnet/api` — ASP.NET Core API standards
-- `backend/architecture/shared` — Result pattern, DTO conventions, naming, controller rules (ALWAYS required)
+- `backend/shared/result-pattern` — Result pattern checks
+- `backend/shared/dto-conventions` — DTO shape checks
+- `backend/shared/use-case-patterns` — use case structure checks where applicable
+- `backend/shared/solid-clean-code` — naming and code quality checks
 - The architecture skill matching the constitution's chosen pattern (`backend/architecture/clean`, `backend/architecture/hexagonal`, `backend/architecture/vertical-slice`, or `backend/architecture/onion`)
