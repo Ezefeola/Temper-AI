@@ -54,11 +54,12 @@ If the mode is genuinely ambiguous, emit the clarification request format below 
 ## 3. Clarification Request Format
 
 Emitted whenever the architect cannot proceed safely without user input.
-This is the single format for mode ambiguity, missing design context, problem ambiguity,
-or document selection requests that need clarification before the next phase.
+This is the single format for mode ambiguity, missing design context, technical preference
+checkpoint questions, problem ambiguity, or document selection requests that need clarification
+before the next phase.
 
 ```
-❓ [Mode clarification needed | Context needed | Problem clarification needed | Document selection needed]
+❓ [Mode clarification needed | Context needed | Technical preference checkpoint | Problem clarification needed | Document selection needed]
 
 Reason:
   [one sentence describing what is blocking progress]
@@ -74,6 +75,9 @@ Rules:
 - Keep it specific and minimal
 - Ask only for information that is actually blocking the next step
 - If only one answer is needed, include only one numbered item
+- For technical preference checkpoints, ask only about the blocking decision buckets:
+  architecture pattern, stack, external dependencies
+- Make it easy for the user to answer `no preference` for any bucket
 
 ---
 
@@ -92,7 +96,13 @@ Signals extracted:
   Business rule complexity: [simple validations | conditional logic | complex invariants]
   External integrations: [list or "none"]
   Implied scale: [internal tool | startup MVP | mid-size system | enterprise]
-  Existing constraints: [list or "none"]
+Existing constraints: [list or "none"]
+
+Technical preference capture:
+  Stack / platform: [explicit requirement/constraint | explicit no preference | not stated]
+  Architecture pattern: [explicit requirement/constraint | explicit no preference | not stated]
+  External dependency constraints: [explicit requirement/constraint | explicit no preference | not stated]
+  Notes: [approved/banned vendors, license limits, managed vs self-hosted, security/compliance, or "none"]
 
 External dependency signals (from PRD):
   [PRD requirement that implies a third-party package — e.g. "send email" → MailKit]
@@ -151,6 +161,7 @@ The proposal presents DECISIONS only. It must NEVER contain:
 ── Architecture pattern ─────────────────────────────────────────
 
 Pattern: [Clean Architecture | Hexagonal Architecture | Vertical Slice Architecture | Onion Architecture]
+Decision source: [user-required | architect recommendation after explicit no preference | architect recommendation after targeted checkpoint]
 Justification:
   [Specific signal that justifies this — tied to domain analysis]
   [Second signal if applicable]
@@ -160,14 +171,19 @@ Alternatives considered: [what was rejected and why — one line each]
 ── Backend stack ────────────────────────────────────────────────
 
 Runtime: [value]
+  Decision source: [user-required | architect recommendation]
   Reason: [tied to context]
 Database: [value]
+  Decision source: [user-required | architect recommendation]
   Reason: [tied to domain scale and complexity]
 ORM / data access: [value]
+  Decision source: [user-required | architect recommendation]
   Reason: [why]
 Auth strategy: [value]
+  Decision source: [user-required | architect recommendation]
   Reason: [tied to frontend type and stateless/stateful decision]
 API documentation: [value]
+  Decision source: [user-required | architect recommendation]
   Reason: [why]
 
 Additional components:
@@ -179,6 +195,7 @@ Additional components:
 ── Frontend ─────────────────────────────────────────────────────
 
 Type: [value | None | API Only]
+  Decision source: [user-required | architect recommendation]
   Reason: [tied to user roles and interaction patterns]
 
 [If frontend exists:]
@@ -188,14 +205,25 @@ Type: [value | None | API Only]
 
 ── External dependencies ────────────────────────────────────────
 
-  PRD Requirement              Proposed Package      Alternative
-  ───────────────────────────  ───────────────────   ────────────
-  [e.g. Send email reports]    [e.g. MailKit]         [e.g. SendGrid]
-  [e.g. Generate Excel]        [e.g. ClosedXML]       [e.g. EPPlus]
-  [e.g. Read Excel uploads]    [e.g. EPPlus]          [—]
-  [e.g. Generate PDF]          [e.g. QuestPDF]        [—]
+  Responsibility / Need        Proposed Choice        Constraint Handling
+  ───────────────────────────  ─────────────────────  ─────────────────────────────────────────
+  [e.g. Send email reports]    [e.g. MailKit]         [approved OSS only | no vendor lock-in]
+  [e.g. Generate Excel]        [e.g. ClosedXML]       [commercial license avoided]
+  [e.g. Auth provider]         [e.g. self-hosted JWT] [managed not allowed | compliance]
+  [e.g. Storage / search]      [e.g. Azure Blob]      [vendor preference | data residency]
+
+  For each row, state whether the choice is:
+  - required by user constraint
+  - selected from an approved/preferred set
+  - recommended by the architect because no preference was given
 
   If no external dependencies: "No external packages required beyond base stack."
+
+  Explicit constraint categories to account for when relevant:
+  - licensing / commercial-use restrictions
+  - approved or banned libraries/vendors
+  - managed service vs self-hosted requirements
+  - security / compliance / procurement / data residency constraints
 
 ── Consistency check ────────────────────────────────────────────
 
@@ -211,6 +239,7 @@ Type: [value | None | API Only]
 ────────────────────────────────────────────────────────────────
 
 Please confirm this proposal or tell me what you want to change.
+If needed, respond by bucket: architecture pattern, stack, external dependencies.
 I will update any decision without resistance.
 If a change introduces a risk, I will note it once — the decision is yours.
 ```

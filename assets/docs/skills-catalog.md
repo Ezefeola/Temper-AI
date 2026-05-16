@@ -40,7 +40,11 @@ Documento de referencia para humanos. No forma parte del arbol de skills consumi
 |---|---|
 | `workflow/analyst/*` | Plantillas y formatos del analista |
 | `workflow/architect/*` | Plantillas y formatos del arquitecto |
-| `workflow/jarvis/*` | Estado y calidad de prompts |
+| `workflow/jarvis/state-schema` | Estado persistente y reglas genericas de delegacion |
+| `workflow/jarvis/prompt-excellence` | Buenas practicas universales de prompt engineering |
+| `workflow/jarvis/implementation-delegation` | Contrato de delegacion JARVIS <-> agentes de ejecucion task-driven |
+| `workflow/jarvis/analyst-communication` | Contrato de comunicacion JARVIS <-> analyst |
+| `workflow/jarvis/architect-communication` | Contrato de comunicacion JARVIS <-> architect |
 | `ddd/*` | Lenguaje ubicuo y documentos DDD |
 | `devops/*` | Docker, GitHub Actions y CI/CD |
 | `setup-tasks` | Tarea fundacional de setup |

@@ -1,11 +1,10 @@
 ---
 name: prompt-excellence
 description: >
-  Prompt engineering techniques for the TemperAI orchestrator. Teaches JARVIS
-  how to construct high-quality delegation prompts for sub-agents. Loaded
-  alongside state-schema when JARVIS needs to write or validate delegation prompts.
-  Covers prompt anatomy, context management, multi-turn patterns, error recovery,
-  and domain language reformulation. Does NOT duplicate state-schema rules.
+  Universal prompt engineering techniques for the TemperAI orchestrator.
+  Teaches JARVIS how to construct high-quality delegation prompts regardless
+  of target agent. Load when JARVIS needs prompt-writing craft, context
+  control, error recovery, or domain-language reformulation.
 ---
 
 # Prompt Excellence — Delegation Prompt Engineering
@@ -13,9 +12,18 @@ description: >
 ## Purpose
 
 This skill teaches JARVIS HOW to construct delegation prompts that work.
-State-schema defines WHAT to include in a delegation prompt (format, rules,
-prohibitions). This skill teaches the craft of building prompts that agents
-actually understand and execute correctly.
+State-schema defines the hard rules and prohibitions. Agent-specific workflow
+skills define specialist communication contracts. This skill stays universal:
+it teaches the craft of building prompts that agents actually understand and
+execute correctly.
+
+State-schema remains authoritative. If an example in this skill would require a
+file path, skill reference, or internal implementation instruction, do not use
+that example. Rewrite it in plain domain language.
+
+When a target agent has its own dedicated workflow contract, that contract owns
+the exact handoff format. This skill stays universal and does not replace those
+agent-specific rules.
 
 A delegation prompt is not "everything the agent needs." It is "exactly what
 the agent does not already have." These are different things.
@@ -32,12 +40,12 @@ What the agent needs to know about the situation.
 Not the domain — the agent's own context window.
 
 ```
-Context: The user wants to add order cancellation. A PRD exists at
-.temper/prd.md. Current step is task breakdown.
+Context: The user wants to add order cancellation. An approved PRD already
+exists, and the current step is task breakdown.
 ```
 
-**When needed**: Analyst, architect, or when the agent has no prior context.
-**When to omit**: Implementation agents that have their task file.
+**When needed**: When the agent lacks enough context in its own inputs.
+**When to omit**: Task-file driven work where the agent already has the context.
 
 ### 2. Task
 
@@ -78,25 +86,20 @@ Constraints: Do not propose any technical architecture. Return only gaps.
 **When needed**: When there are explicit boundaries the agent must respect.
 **When to omit**: When the agent's skill set already enforces the boundary.
 
-### The Two-Part Default
+### The Minimal Default
 
-For most implementation agents, only two parts are needed:
+Some target agents work best from an intentionally tiny prompt. When a
+dedicated workflow contract says the handoff should be one line, follow that
+contract exactly instead of expanding the prompt here.
 
-```
-Task: Implement task T001: Add Product to Inventory (US-001)
-```
-
-The task file contains all context the agent needs. Adding anything else
-is noise.
-
-For analyst and architect, four parts are usually needed:
+For conversational or discovery-oriented delegations, four parts are usually needed:
 
 ```
-Context: User wants to build an order management system for a small
-warehouse. No PRD exists yet.
-Task: Conduct requirements elicitation and produce a PRD.
-Format: Follow the PRD template in workflow/analyst/prd-template.
-Constraints: Do not infer technical stack or architecture.
+Context: User wants to define a new warehouse workflow. No prior structured
+artifact exists for this request.
+Task: Analyze the request and identify what information is still needed.
+Format: Produce your standard structured analysis output.
+Constraints: Stay within the current problem space.
 ```
 
 ---
@@ -108,38 +111,17 @@ Constraints: Do not infer technical stack or architecture.
 Give the agent only what it cannot derive from its own inputs.
 Everything else is noise.
 
-### What Implementation Agents Already Have
+### What Specialized Agents Already Have
 
-Every implementation agent (backend, frontend, tester, devops):
-- Reads its task file directly
-- Knows which user story it belongs to
-- Loads its own skills based on its agent definition
-- Has access to project context through its skills
+Some specialized agents derive most of their context from their own inputs,
+skills, or persisted artifacts. In those cases, JARVIS should pass only the
+smallest task statement that the target workflow contract requires.
 
-When you send:
-```
-Implement task T001: Add Product to Inventory (US-001)
-```
-
-The agent derives from that single line:
-- What to implement (from task file)
-- Which user story (from task file)
-- Which skills to load (from its own agent definition)
-- Where to put the code (from architecture skill)
-- What conventions to follow (from dotnet-csharp, etc.)
-
-You do not need to tell it any of this.
-
-### What Implementation Agents Do NOT Have
-
-- The specific task ID and title from the plan
-- Confirmation that this is the next step to execute
-
-That is all. Everything else is redundant.
+Do not restate information the target agent can already derive reliably.
 
 ### The Cost of Extra Information
 
-Adding context to an implementation prompt does not help. It:
+Adding context to a tightly scoped execution prompt does not help. It:
 
 1. **Consumes context window** — the agent processes your extra text
 2. **Creates ambiguity** — "did they want me to do something different?"
@@ -149,39 +131,30 @@ Adding context to an implementation prompt does not help. It:
 ### When Minimal Is Not Enough
 
 Minimal delegation is insufficient when:
-- The agent has no task file (bugfix, direct request)
-- The user explicitly specified files or context
-- The agent is in a multi-turn loop and needs prior output
+- the target workflow contract requires more than a task reference
+- the agent is in a multi-turn loop and needs prior output
+- the handoff is a bugfix, recovery turn, or clarification turn
 
-For bugfixes (no task file):
-```
-Fix bug: Order total calculates incorrectly when discount applies
-Affected area: Order total calculation
-Expected behavior: Discounted orders show correct total after tax
-```
+For the exact implementation-agent rules in those cases, load
+`workflow/jarvis/implementation-delegation`.
 
-For analyst/architect: always include user's request + available context.
+For conversation-loop agents, include the user's request plus only the minimum
+plain-language context needed for the current turn.
 
 ---
 
 ## Context Window Management
 
-Different agents have different context needs. Matching correctly prevents
-both context overload and context starvation.
+Different delegation modes have different context needs. Matching correctly
+prevents both context overload and context starvation.
 
-### Agent Context Requirements
+### Delegation Context Modes
 
-| Agent | Context to include | Context to omit |
+| Mode | Context to include | Context to omit |
 |---|---|---|
-| `temper-backend` | Task reference only | Domain summary, file paths, skill names, class names |
-| `temper-frontend` | Task reference only | Tech stack details, file paths, component names |
-| `temper-tester` | Task reference + test scope (if user specified) | Implementation details, internal APIs |
-| `temper-devops` | Task reference only | Architecture, language-specific details |
-| `temper-analyst` | User's request + any existing PRD or gap report | Technical stack, architecture, file paths |
-| `temper-architect` | User's request + PRD (if exists) + specs (if exist) | Implementation hints, class names, layer names |
-| `temper-tasks` | PRD + specs (if analyst preceded) | Technical details, code structure |
-| `temper-plan` | Tasks INDEX + domain model | Implementation specifics |
-| `temper-review` | What was built + what to validate against | How it was built |
+| Task-file execution | Only the minimal task reference required by that workflow contract | Restated domain summary, file paths, skill names, class names |
+| Conversation or discovery | User request + minimum plain-language context for the current turn | File paths, internal artifact references, implementation hints |
+| Validation or review | What exists + what to validate against | How it was built unless explicitly needed |
 
 ### Context Overflow Signals
 
@@ -206,56 +179,13 @@ If you see these: you omitted necessary context. Add the minimum required.
 
 ## Multi-Turn Prompt Patterns
 
-Agent loops (analyst, architect) require structured prompts across turns.
-The pattern differs from single-turn delegation.
+Some delegations are loops rather than one-off executions. The specialist loop
+contracts live in dedicated workflow skills. The universal pattern is:
 
-### Analyst Gap Resolution Loop
-
-The loop is: gap report → user answers → pass to analyst → repeat until no blocking gaps.
-
-**Prompt to analyst (first turn):**
-```
-Context: User wants to build an inventory management system for a warehouse.
-No PRD exists. This is the first elicitation cycle.
-Task: Conduct initial requirements elicitation. Identify all gaps in the
-user's description. Produce a gap report organized by category.
-Format: Follow gap report format in workflow/analyst/report-formats.
-```
-
-**Prompt to analyst (subsequent turns — pass answers back exactly as received):**
-```
-Context: User provided answers to the previous gap report.
-Task: Review the answers. Update the gap report. Resolve any gaps that are
-now answered. Flag any new gaps created by the answers.
-Format: Present resolution status report followed by updated gap report if
-blocking gaps remain.
-```
-
-**Key principle**: Pass answers back exactly as the user provided them.
-Do not reformat, summarize, or filter. The analyst's skill is in interpreting
-raw user input.
-
-### Architect Proposal Loop
-
-**Prompt to architect (first turn):**
-```
-Context: User described a system with these requirements: [summary from PRD].
-Existing PRD: .temper/prd.md
-Task: Analyze the requirements. Propose a technical architecture that supports
-the domain. Produce an architectural proposal.
-Format: Follow proposal format in workflow/architect/proposal-formats.
-```
-
-**Prompt to architect (if changes requested):**
-```
-Context: User requested changes to the proposal: [user's feedback, exact].
-Task: Incorporate the requested changes. Produce an updated proposal.
-Format: Follow proposal format in workflow/architect/proposal-formats.
-```
-
-**Key principle**: Present the user's feedback exactly as received. Do not
-interpret "they wanted X" — pass the raw text. The architect's job is to
-interpret and implement.
+1. Preserve the specialist's meaning exactly.
+2. Surface the specialist output without rewriting it into a different artifact.
+3. Reduce the next user interaction to the smallest actionable prompt only when that reduction is reliable.
+4. Pass the user's next reply back exactly as received.
 
 ### Turn Transition Rules
 
@@ -312,30 +242,24 @@ Instruction: Complete the Handle method in CancelOrderHandler. The interface
 and validator already exist. Add only the Handle implementation.
 ```
 
-**Example 2 — Analyst returns incomplete gap report:**
+**Example 2 — Specialist returns incomplete structured output:**
 
 Prompt sent:
 ```
-Task: Produce the complete gap report for inventory management requirements.
-Error: Gap report only covered Category A gaps (actors and purpose). Category
-B (functional capabilities) and Category C (scope boundaries) are missing.
-Existing work: Input synthesis complete. Category A gaps documented.
-Instruction: Continue from Category B. Produce Category B and C gaps.
-Do not regenerate Category A gaps.
+Task: Produce the complete structured analysis for inventory management requirements.
+Error: Output only covered actors and purpose. Functional capabilities and scope boundaries are missing.
+Existing work: Initial synthesis complete. Actors and purpose already documented.
+Instruction: Continue from the missing sections. Do not regenerate the completed section.
 ```
 
-**Example 3 — Architect proposal is ambiguous:**
+**Example 3 — Proposal output is ambiguous:**
 
 Prompt sent:
 ```
-Task: Produce updated architectural proposal incorporating user's feedback.
-Error: Proposal states "use an event-driven approach" but does not specify
-which events, which handlers, or how events propagate between bounded contexts.
-Existing work: Initial proposal produced. User feedback: "clarify how events
-flow between inventory and orders bounded contexts."
-Instruction: Revise the proposal. Add a specific event list (event name,
-source bounded context, target bounded context, payload) and describe the
-handler responsibilities for each event.
+Task: Produce an updated proposal incorporating the user's feedback.
+Error: Proposal states "use an event-driven approach" but does not explain the event flow concretely enough.
+Existing work: Initial proposal produced. User feedback: "clarify how events flow between inventory and orders bounded contexts."
+Instruction: Revise the proposal. Add a specific event list and describe the responsibilities for each event.
 ```
 
 ---
@@ -458,9 +382,9 @@ detail view."
 Before sending any prompt to a sub-agent, verify:
 
 - [ ] Task is a single, specific action (not compound)
-- [ ] Implementation agents: prompt contains ONLY task reference
-- [ ] Analyst/Architect: prompt includes context + task + format + constraints
-- [ ] Bugfix: prompt includes domain description + affected area + expected behavior
+- [ ] If the target agent has a dedicated workflow contract, the prompt matches that contract exactly
+- [ ] Conversation/discovery prompts: include context + task + format + constraints when needed
+- [ ] Bugfix and recovery turns follow the dedicated execution-agent contract when applicable
 - [ ] No file paths, skill names, class names, or layer descriptions
 - [ ] Domain language used throughout (no implementation terms)
 - [ ] Format specified if non-standard

@@ -47,6 +47,10 @@ Agents use workflow skills for templates and formats, loaded only when needed:
 | `workflow/architect/proposal-formats` | `temper-architect` | Presenting proposals and reports |
 | `workflow/architect/document-templates` | `temper-architect` | Generating config files and documentation |
 | `workflow/jarvis/state-schema` | `temper-jarvis` | Every session — state file schema and delegation rules |
+| `workflow/jarvis/prompt-excellence` | `temper-jarvis` | When writing prompts — universal prompt craft only |
+| `workflow/jarvis/implementation-delegation` | `temper-jarvis` | Only when working with task-driven execution agents such as backend/frontend/tester/devops |
+| `workflow/jarvis/analyst-communication` | `temper-jarvis` | Only when working with `temper-analyst` |
+| `workflow/jarvis/architect-communication` | `temper-jarvis` | Only when working with `temper-architect` |
 
 ## Separation of Concerns
 

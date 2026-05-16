@@ -1,9 +1,9 @@
 ---
 name: jarvis-state-schema
 description: >
-  State file JSON schema, status values, and delegation rules for the temper-jarvis
-  orchestrator. Load this skill whenever jarvis needs to read, write, or validate
-  .temper/jarvis-state.json, or when constructing delegation prompts for sub-agents.
+  State file JSON schema, status values, and generic delegation rules for the
+  temper-jarvis orchestrator. Load this skill whenever jarvis needs to read,
+  write, or validate .temper/jarvis-state.json.
 ---
 
 # JARVIS State Schema & Delegation Rules
@@ -27,6 +27,7 @@ description: >
     {
       "step": 1,
       "agent": "temper-analyst",
+      "phase": "phase-1-prd | phase-2-specs | null",
       "description": "one line description",
       "status": "complete | pending | in-cycle",
       "output": "file path or null"
@@ -46,19 +47,20 @@ description: >
   ],
     "active_cycle": {
       "agent": "temper-analyst | temper-architect",
-      "cycle_type": "gap-resolution | architect-loop",
+      "phase": "phase-1-prd | phase-2-specs | null",
+      "cycle_type": "gap-resolution | spec-ambiguity-resolution | architect-loop",
       "mode": "architectural-design | problem-solving | null",
-      "waiting_for": "gap-answer | gap-batch-send | mode-clarification | context-clarification | problem-clarification | proposal-confirmation | document-selection | manual-review | none",
-      "last_report_type": "gap-report | resolution-status | mode-report | clarification-request | domain-analysis | problem-analysis | architectural-proposal | architectural-plan | updated-proposal | document-offer | completion-report",
+      "waiting_for": "gap-answer | gap-batch-send | ambiguity-answer | ambiguity-batch-send | mode-clarification | context-clarification | preference-clarification | problem-clarification | proposal-confirmation | document-selection | manual-review | none",
+      "last_report_type": "gap-report | resolution-status | ambiguity-stop | ambiguity-resolution-status | mode-report | clarification-request | domain-analysis | problem-analysis | architectural-proposal | architectural-plan | updated-proposal | document-offer | completion-report",
       "question_origin": "analyst | architect | null",
       "pending_interaction": {
         "surface_via": "question | plain-text",
-        "interaction_type": "analyst-gap | architect-clarification | architect-decision | parse-fallback",
+        "interaction_type": "analyst-gap | analyst-ambiguity | architect-clarification | architect-decision | parse-fallback",
         "prompt_text": "single actionable prompt or fallback instruction",
-        "expected_reply": "single gap answer | mode details | clarification answer | proposal confirmation/change request | document selection | manual reply",
+        "expected_reply": "single gap answer | single ambiguity answer | mode details | clarification answer | preference bucket answer | proposal confirmation/change request | document selection | manual reply",
         "source_ref": {
-          "report_type": "gap-report | resolution-status | clarification-request | architectural-proposal | architectural-plan | updated-proposal | document-offer",
-          "gap_id": "GAP-001 | null",
+          "report_type": "gap-report | resolution-status | ambiguity-stop | ambiguity-resolution-status | clarification-request | architectural-proposal | architectural-plan | updated-proposal | document-offer",
+          "item_id": "GAP-001 | AMB-001 | null",
           "sequence": 1,
           "total": 3
         },
@@ -75,7 +77,18 @@ description: >
       "collected_gap_answers": {
         "GAP-001": "user answer captured exactly as provided"
       } | null,
+      "ambiguity_queue": [
+        {
+          "ambiguity_id": "AMB-001",
+          "severity": "BLOCKING",
+          "question_text": "single actionable analyst question"
+        }
+      ] | null,
+      "collected_ambiguity_answers": {
+        "AMB-001": "user answer captured exactly as provided"
+      } | null,
       "current_gap_index": 0,
+      "current_ambiguity_index": 0,
       "unresolved_blocking_gaps": 3,
       "cycle_count": 1
     },
@@ -105,15 +118,25 @@ description: >
 **You never tell an agent HOW to build something. You only tell them WHAT to build.**
 
 For prompt engineering techniques — how to construct the actual delegation
-prompt, context window management, multi-turn patterns, error recovery, and
-domain language reformulation — refer to `workflow/jarvis/prompt-excellence`.
+prompt, context window management, error recovery, and domain language
+reformulation — refer to `workflow/jarvis/prompt-excellence`.
+
+For agent-specific loop and communication contracts, refer to:
+- `workflow/jarvis/implementation-delegation`
+- `workflow/jarvis/analyst-communication`
+- `workflow/jarvis/architect-communication`
 
 For the delegation format rules and prohibitions below, those are the
 absolute constraints that apply to every prompt regardless of technique.
 
 ### ABSOLUTE PROHIBITIONS — never include in a delegation prompt
 
-If you violate any of these, you have failed as orchestrator:
+If you violate any of these, you have failed as orchestrator.
+
+These prohibitions apply to every delegated agent, including `temper-analyst`
+and `temper-architect`. The analyst/architect exception is about allowing raw
+user request and plain-language working context, not about allowing file paths,
+skill references, or internal implementation guidance.
 
 - **NEVER** mention file paths: `.temper/`, `.md` files, `.cs` files, folder locations
 - **NEVER** mention skill names: "dotnet-csharp", "ef-core", "ddd", etc.
@@ -121,18 +144,6 @@ If you violate any of these, you have failed as orchestrator:
 - **NEVER** mention class names, DTO names, interface names, method names
 - **NEVER** say "Read...", "Load...", "Check...", or "See file..."
 - **NEVER** describe layers: "Domain layer", "Application layer", "Infrastructure..."
-
-### Correct delegation format
-
-The ONLY thing you send to an implementation agent is:
-
-```
-Implement task T001: Add Product to Inventory (US-001)
-```
-
-That is literally all. No punctuation, no extra text, no context.
-
-If you catch yourself typing anything after `Implement task [ID]: [title]` — DELETE IT.
 
 ### Domain language comparison
 
@@ -143,108 +154,59 @@ If you catch yourself typing anything after `Implement task [ID]: [title]` — D
 | "The endpoint returns a paginated list of orders filtered by status" | "Create a `GetOrdersQuery` with a `Handle` method returning `PagedResult<OrderDto>`" |
 | "An order cannot be cancelled if already shipped" | "Throw `DomainException` in `Cancel()` if `Status == Shipped`" |
 
-### Pre-delegation checklist
+### Pre-send rule
 
-Before sending ANY prompt to a sub-agent, verify ALL of these:
+Before sending any prompt, load the workflow contract that matches the target
+agent and validate the prompt against that contract.
 
-- [ ] The prompt contains ONLY: `Implement task [T###]: [title]`
-- [ ] No file paths are mentioned (no `.temper/`, no `.md`, no `.cs`)
-- [ ] No skill names or load instructions
-- [ ] No domain summary, acceptance criteria, or layer descriptions
-- [ ] No class names, DTO names, or interface names
+- `workflow/jarvis/implementation-delegation` — task-driven execution agents,
+  bugfix turns, and recovery turns
+- `workflow/jarvis/analyst-communication` — analyst Phase 1 and Phase 2 loops
+- `workflow/jarvis/architect-communication` — architect loop turns
 
-For the full quality checklist including prompt anatomy, context management,
-and reformulation examples, refer to `workflow/jarvis/prompt-excellence`.
-
-If any check fails → STOP and rewrite to the minimal form:
-
-```
-Implement task [T###]: [task title]
-```
-
-**For analyst/architect only:**
-
-- [ ] Passing user's request and/or context files as appropriate
-- [ ] Speaking in domain language, not implementation language
-
-Implementation agents read their own files. You never tell them what to read unless the user explicitly specifies.
+Implementation agents read their own files. Agents that work through
+conversation loops may receive plain-language context when needed, but JARVIS
+must never delegate by naming files or telling any agent what to read.
 
 ---
 
-## Analyst loop state contract
+## Agent-specific cycle contracts
 
-When `active_cycle.agent` is `temper-analyst`, JARVIS must treat `active_cycle` as the
-authoritative resume contract for structured gap-resolution interactions.
+`active_cycle` carries enough shared structure for both specialist loops, but
+the authoritative interaction rules live in dedicated JARVIS workflow skills:
 
-Required fields:
-- `cycle_type: "gap-resolution"`
-- `waiting_for: "gap-answer" | "gap-batch-send" | "manual-review"`
-- `last_report_type`
-- `question_origin: "analyst"`
-- `pending_interaction.surface_via`
-- `pending_interaction.interaction_type`
-- `pending_interaction.prompt_text`
-- `pending_interaction.expected_reply`
-- `pending_interaction.source_ref.report_type`
-- `pending_interaction.source_ref.sequence`
-- `pending_interaction.source_ref.total`
-- `pending_interaction.resume_hint`
-- `pending_interaction.fallback_reason` when `waiting_for: "manual-review"`
-- `gap_queue`, `collected_gap_answers`, and `current_gap_index` when `waiting_for: "gap-answer" | "gap-batch-send"`
-- `cycle_count`
+- `workflow/jarvis/analyst-communication` — analyst Phase 1 gap-resolution,
+  analyst Phase 2 ambiguity-resolution, batching, parse fallback, and resume rules
+- `workflow/jarvis/architect-communication` — architect clarification,
+  preference, confirmation, document-selection, parse fallback, and resume rules
 
-Resume rules:
-- If `status` is `awaiting-agent-cycle` and `question_origin` is `analyst`, JARVIS resumes the analyst loop, not normal step execution.
-- JARVIS must use the saved `waiting_for` value to decide what kind of user response is expected.
-- When the analyst emits a gap report, JARVIS must extract each `GAP-XXX` item and each `Surface to user:` question.
-- If extraction is reliable, JARVIS must store the extracted items in `gap_queue`, initialize `collected_gap_answers`, point `current_gap_index` at the current gap, and use the question tool for exactly one gap question at a time.
-- JARVIS must not persist or replay the full analyst report in `pending_interaction`.
-- JARVIS must persist `pending_interaction`, `gap_queue`, `collected_gap_answers`, and `current_gap_index` before stopping on every analyst-originated question turn so a fresh session can resume the same atomic gap deterministically.
-- After the user responds, JARVIS must store that answer under the current `gap_id`, preserve the raw answer text inside that labeled field, and continue to the next unanswered gap without contacting `temper-analyst` yet.
-- When every gap in the current `gap_queue` has an answer, JARVIS must set `waiting_for: "gap-batch-send"`, persist that state, and on the next loop action or resumed session send one consolidated labeled batch to `temper-analyst` for that round.
-- The consolidated payload must identify every answer by `gap_id`; JARVIS must never forward unlabeled raw gap answers as if the analyst can infer the mapping.
-- If extraction is not reliable, JARVIS must not dump the full report into question. It presents the report as plain text, sets `waiting_for: "manual-review"`, stores `interaction_type: "parse-fallback"`, `surface_via: "plain-text"`, `resume_hint`, and `fallback_reason`, and waits for the user's direct reply or rerun decision.
-- When the analyst emits a resolution status with zero blocking gaps, set `waiting_for: "none"`, clear `pending_interaction`, clear `gap_queue`, clear `collected_gap_answers`, clear `active_cycle`, and continue the normal post-execution flow.
+This split is intentional:
+- `assets/agents/temper-jarvis.agent.md` keeps only universal orchestration logic plus high-level routing and transition rules.
+- `workflow/jarvis/implementation-delegation` owns task-driven execution handoff rules.
+- Specialist loop mechanics, resume behavior, and interaction reduction rules live in the dedicated workflow skills above.
 
 ---
 
-## Architect loop state contract
+## Analyst-specific state notes
 
-When `active_cycle.agent` is `temper-architect`, JARVIS must treat `active_cycle` as the
-authoritative resume contract for structured architect interactions.
+`temper-analyst` is modeled as two explicit orchestrator phases, not one generic
+step:
 
-Required fields:
-- `cycle_type: "architect-loop"`
-- `mode: "architectural-design" | "problem-solving"`
-- `waiting_for`
-- `last_report_type`
-- `question_origin: "architect"`
-- `pending_interaction.surface_via`
-- `pending_interaction.interaction_type`
-- `pending_interaction.prompt_text`
-- `pending_interaction.expected_reply`
-- `pending_interaction.source_ref.report_type`
-- `pending_interaction.source_ref.sequence`
-- `pending_interaction.source_ref.total`
-- `pending_interaction.resume_hint`
-- `pending_interaction.fallback_reason` when `waiting_for: "manual-review"`
-- `cycle_count`
+- `phase: "phase-1-prd"` — analyst is eliciting requirements and generating the PRD
+- `phase: "phase-2-specs"` — analyst is generating specs from an approved PRD
 
-`waiting_for` values:
-- `mode-clarification` — architect cannot classify the request yet
-- `context-clarification` — architect needs design context before proposal
-- `problem-clarification` — architect needs problem details before plan
-- `proposal-confirmation` — architect already emitted proposal/plan and is waiting for confirm-or-change
-- `document-selection` — architect already emitted document offer and is waiting for selected docs or required-only confirmation
-- `manual-review` — JARVIS could not safely reduce the architect interaction to one actionable prompt and is waiting for a direct user reply or rerun decision
-- `none` — architect has completed the loop and JARVIS should clear `active_cycle`
+When `active_cycle.agent` is `temper-analyst`, JARVIS must persist both
+`phase` and `cycle_type` so resume logic can distinguish:
+
+- Phase 1 loop: `cycle_type: "gap-resolution"`
+- Phase 2 loop: `cycle_type: "spec-ambiguity-resolution"`
 
 Resume rules:
-- If `status` is `awaiting-agent-cycle` and `question_origin` is `architect`, JARVIS resumes the architect loop, not normal step execution.
-- JARVIS must use the saved `waiting_for` value to decide what kind of user response is expected.
-- JARVIS must present architect reports normally and use question only for the minimal next clarification or decision prompt.
-- JARVIS must not persist or replay the full architect report in `pending_interaction`.
-- JARVIS must persist `pending_interaction` before stopping on every architect-originated interaction turn so a fresh session can re-ask the same minimal prompt deterministically.
-- After the user responds, JARVIS passes that response back to `temper-architect` exactly as received.
-- If the architect interaction cannot be reduced reliably to one actionable prompt, JARVIS must not dump the full report into question. It presents the report as plain text, sets `waiting_for: "manual-review"`, stores `interaction_type: "parse-fallback"`, `surface_via: "plain-text"`, `resume_hint`, and `fallback_reason`, and waits for the user's direct reply or rerun decision.
-- When the architect emits a completion report, set `waiting_for: "none"`, clear `pending_interaction`, clear `active_cycle`, and continue the normal post-execution flow.
+
+- `phase-1-prd` + `waiting_for: "gap-answer"` means ask the next saved `GAP-XXX` question.
+- `phase-1-prd` + `waiting_for: "gap-batch-send"` means send the saved labeled `GAP-XXX` batch first.
+- `phase-2-specs` + `waiting_for: "ambiguity-answer"` means ask the next saved `AMB-XXX` question.
+- `phase-2-specs` + `waiting_for: "ambiguity-batch-send"` means send the saved labeled `AMB-XXX` batch first.
+
+The orchestrator must never infer the analyst phase from the agent name alone.
+The phase must be explicit in plan steps and active-cycle state.

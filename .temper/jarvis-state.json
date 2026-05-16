@@ -1,51 +1,51 @@
 {
-  "last_updated": "2026-05-16T02:53:00Z",
+  "last_updated": "2026-05-16T05:10:00Z",
   "status": "complete",
-  "request_summary": "Adjust JARVIS so analyst gaps are asked one by one but accumulated and sent back to analyst as a labeled batch per round",
+  "request_summary": "Apply analyst Phase 1 to Phase 2 orchestration fixes so JARVIS reinvokes temper-analyst for spec generation instead of stopping after PRD",
   "context": {
     "project": "TemperAI framework maintenance",
     "architecture": "Agent + skill orchestration framework",
     "stack": "Markdown agents and skills",
-    "notes": "Need to refine the analyst loop so JARVIS captures one gap at a time in the UI, accumulates answers by gap ID, and sends one consolidated labeled batch back to analyst instead of forwarding each raw answer immediately. Architect behavior must remain correct."
+    "notes": "Requested fix: keep analyst Phase 1 and Phase 2 orchestration behavior, and continue slimming temper-jarvis.agent.md by moving agent-specific delegation contracts, including implementation-agent handoff rules, into dedicated workflow skills loaded only when needed."
   },
   "approved_plan": [
     {
       "step": 1,
       "agent": "general",
-      "description": "Update the JARVIS analyst loop and state schema so user answers are accumulated by gap ID and sent to analyst as one consolidated labeled batch per round instead of one raw answer at a time",
+      "description": "Apply the analyst Phase 1 to Phase 2 orchestration fixes across JARVIS and its workflow skills",
       "status": "complete",
-      "output": "Updated JARVIS so analyst gaps are still asked one at a time, but answers are accumulated under gap IDs and sent to temper-analyst only as one consolidated labeled batch per round"
+      "output": "Updated JARVIS so temper-analyst remains two explicit invocations, analyst and architect operating contracts live in dedicated workflow skills, and implementation-agent delegation detail now lives in a dedicated implementation-delegation workflow skill instead of bloating temper-jarvis.agent.md."
     },
     {
       "step": 2,
       "agent": "general",
-      "description": "Verify that analyst responses are now batched and labeled correctly, and that architect interaction behavior remains consistent without regression",
+      "description": "Verify the new analyst Phase 1 and Phase 2 orchestration flow for consistency across JARVIS and state contracts",
       "status": "complete",
-      "output": "Verified batched analyst answer behavior and fixed minor wording/schema inconsistencies so analyst collection, batch-send, startup, health-check, and resume behavior remain aligned without regressing architect interactions"
+      "output": "Verification passed for the refactor itself: JARVIS is now more focused and the analyst/architect/implementation-agent contracts are properly split into workflow skills. Remaining issues: old temper-orchestrator and orchestrator-state naming still exists in README, temper-plan, temper-next, and temper-status; pre-refactor analyst cycles without explicit phase would fall back to recovery rather than seamless resume."
     }
   ],
   "current_step": 2,
   "total_steps": 2,
   "current_agent": null,
   "current_task": null,
-  "task_title": "Adjusted plan complete",
+  "task_title": "JARVIS workflow refactor verified",
   "total_tasks": 2,
   "completed_tasks": [
     {
-      "task_id": "batch-analyst-gap-answers",
+      "task_id": "apply-analyst-phase-orchestration-fixes",
       "agent": "general",
-      "title": "Adjust analyst loop to batch labeled gap answers before sending them back to analyst",
+      "title": "Apply analyst Phase 1 to Phase 2 orchestration fixes",
       "status": "complete"
     },
     {
-      "task_id": "verify-batched-analyst-gap-answers",
+      "task_id": "verify-analyst-phase-orchestration-fixes",
       "agent": "general",
-      "title": "Verify batched analyst gap answer behavior and architect no-regression",
+      "title": "Verify analyst Phase 1 and Phase 2 orchestration consistency",
       "status": "complete"
     }
   ],
   "pending_tasks": [],
-  "current_output": "Adjusted plan complete. JARVIS now asks analyst gaps one at a time, accumulates answers by gap ID, sends one labeled batch per round, and preserves structured architect interactions without full report dumps.",
+  "current_output": "Plan complete. JARVIS now keeps specialist operating contracts in dedicated workflow skills instead of carrying them all in temper-jarvis.agent.md. Verification passed, with two remaining follow-up items: stale temper-orchestrator/orchestrator-state references in a few docs and no seamless migration path for legacy analyst cycles without explicit phase state.",
   "active_cycle": null,
   "block_reason": null,
   "next_action": "Wait for the user's next request"
