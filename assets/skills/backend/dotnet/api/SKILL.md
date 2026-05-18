@@ -18,7 +18,7 @@ produces: [controllers, middleware, validators, program-cs, appsettings, logging
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **When this skill governs endpoints, use Controllers only** — endpoints must inherit `ControllerBase` with `[ApiController]`
-2. **NEVER improvise the API documentation provider** — use exactly the provider configured in `.temper/backend-config.md`
+2. **NEVER improvise the API documentation provider** — use exactly the provider configured in `Docs/Application/Architecture/backend-config.md`
 3. **NEVER DataAnnotations on DTOs** — always FluentValidation
 4. **NEVER hardcoded numbers in validators** — always reference `Entity.Rules` constants
 5. **NEVER string interpolation in log messages** — always structured logging with named placeholders
@@ -200,8 +200,8 @@ app.Run();
 
 This skill defines the host-level API rules, but it does not choose the documentation provider.
 
-- If `.temper/backend-config.md` says `Scalar` → also load `backend/dotnet/api-docs/scalar/SKILL.md`
-- If `.temper/backend-config.md` says `Swagger` → also load `backend/dotnet/api-docs/swagger/SKILL.md`
+- If `Docs/Application/Architecture/backend-config.md` says `Scalar` → also load `backend/dotnet/api-docs/scalar/SKILL.md`
+- If `Docs/Application/Architecture/backend-config.md` says `Swagger` → also load `backend/dotnet/api-docs/swagger/SKILL.md`
 - If the provider is missing or ambiguous and the task touches `Program.cs` or API docs → stop and ask
 
 Never mix both providers in the same host unless a future skill explicitly allows it.

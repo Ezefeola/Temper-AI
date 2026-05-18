@@ -237,7 +237,7 @@ Spec mentions "customer" → you assume it links to User entity
 ```
 
 Problem: Without verifying, you can connect to the wrong entity.
-Fix: Check DDD-Vocabulary.md or Docs/domain-model.md for relationships.
+Fix: Check Docs/Application/Domain/DDD-Vocabulary.md or Docs/Application/Domain/domain-model.md for relationships.
 
 ### Ignoring bounded contexts
 

@@ -13,12 +13,12 @@ Inicia el workflow SDD de TemperAI desde cero.
 
 1. El orchestrator lanza `temper-analyst` para analizar lo que el usuario quiere construir.
 2. `temper-analyst` hace preguntas funcionales iterativas hasta que todo esta claro (nunca tecnologia ni arquitectura).
-3. `temper-analyst` genera `.temper/prd.md` con el alcance funcional.
+3. `temper-analyst` genera `Docs/Functional-Analysis/PRD.md` con el alcance funcional.
 4. El usuario aprueba el PRD.
 5. El orchestrator lanza `temper-analyst` Phase 2 (Spec) con skill spec-generator para generar user stories.
 6. El usuario aprueba los specs.
 7. El orchestrator lanza `temper-architect` para definir stack tecnico y arquitectura.
-8. `temper-architect` genera `.temper/backend-config.md` y `.temper/frontend-config.md`.
+8. `temper-architect` genera `Docs/Application/Architecture/backend-config.md` y `Docs/Application/Architecture/frontend-config.md`.
 9. Despues se puede continuar con `/temper-tasks`.
 
 ## Flujo

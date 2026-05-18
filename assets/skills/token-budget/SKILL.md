@@ -105,7 +105,7 @@ Each project has a `.temper/budget.md` file that tracks token usage:
 Count the tokens in:
 1. **System prompt** — the agent's instructions (from the `.agent.md` file)
 2. **Skills loaded** — the combined size of all loaded skill files
-3. **Context files** — the `.temper/` files the phase reads
+3. **Context files** — the workflow files the phase reads (`Docs/` and `Plan/`; `.temper/` only for internal state or budget data)
 4. **Source files** — the code files the phase needs to read
 
 Rough estimation:
@@ -117,9 +117,9 @@ Rough estimation:
 
 Estimate based on the phase's expected output:
 - **prd.md** — 1,500-3,000 tokens
-- **specs/INDEX.md** — 500-1,500 tokens + **US-XXX-*.md** — 300-800 tokens each (depends on number of user stories)
-- **Docs/domain-model.md** — 4,000-8,000 tokens (depends on number of entities and endpoints)
-- **tasks/INDEX.md** — 500-1,500 tokens + **T###-*.md** — 200-500 tokens each (depends on number of tasks)
+- **Plan/INDEX.md** — 500-1,500 tokens + **STORY.md** — 300-800 tokens each (depends on number of user stories)
+- **Docs/Application/Domain/domain-model.md** — 4,000-8,000 tokens (depends on number of entities and endpoints)
+- **Plan task metadata** — 500-1,500 tokens + **T###-*.md** — 200-500 tokens each (depends on number of tasks)
 - **Code per task** — 500-2,000 tokens (depends on complexity)
 - **Review report** — 1,000-3,000 tokens
 - **Documentation** — 3,000-6,000 tokens

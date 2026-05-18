@@ -22,7 +22,7 @@ Emitted when the analyst is activated for Phase 1.
 ```
 🔍 temper-analyst activated — Phase 1: Functional Analysis
    Role: Senior Functional Analyst
-   Mission: Elicit requirements → generate .temper/prd.md
+   Mission: Elicit requirements → generate Docs/Functional-Analysis/PRD.md
    Skill loaded: functional-analysis
    Existing PRD: [yes — will perform delta analysis first | no — full elicitation required]
    Input received: [one-line summary of what the orchestrator passed]
@@ -58,10 +58,10 @@ What I still need:
 
 ## 3. Delta Analysis Report (Phase 1.2)
 
-Emitted only if `.temper/prd.md` already exists. Compares existing PRD with new input.
+Emitted only if `Docs/Functional-Analysis/PRD.md` already exists. Compares existing PRD with new input.
 
 ```
-📊 Delta analysis report — .temper/prd.md exists
+📊 Delta analysis report — Docs/Functional-Analysis/PRD.md exists
 
 ➕ Additions ([N]):
   - [capability]
@@ -234,7 +234,7 @@ criteria is BLOCKING for this checklist even if it was previously labeled IMPORT
 
 ## 8. Phase 1 Completion Report (Phase 1.8)
 
-Emitted after `.temper/prd.md` is generated.
+Emitted after `Docs/Functional-Analysis/PRD.md` is generated.
 
 ```
 ✅ Phase 1 complete — PRD generated
@@ -250,7 +250,7 @@ Summary:
   Blocking risks carried forward: [N — list if any, or "None"]
 
 Output:
-  .temper/prd.md — version [YYYYMMDD-HHMM] — sections 10/10 complete
+  Docs/Functional-Analysis/PRD.md — version [YYYYMMDD-HHMM] — sections 10/10 complete
 
 ⚠️ Scope rule: Only the capabilities in Section 4 of the PRD will be implemented.
    Anything not listed is OUT OF SCOPE for this version.
@@ -268,8 +268,8 @@ Emitted when the analyst is activated for Phase 2 (Spec generation).
 ```
 📝 temper-analyst (Phase 2: Spec) starting
    Skill loaded: spec-generator
-   Input: .temper/prd.md (approved)
-   Mission: Generate .temper/specs/ with user stories
+   Input: Docs/Functional-Analysis/PRD.md (approved)
+   Mission: Generate Plan/User-Stories/ with implementation-agnostic user stories
 ```
 
 If the orchestrator did not load the spec-generator skill, emit:
@@ -335,7 +335,7 @@ Repeat until all blocking ambiguities are resolved.
 
 ## 12. Phase 2 Completion Report (Phase 2.6)
 
-Emitted after `.temper/specs/` files are generated.
+Emitted after `Plan/User-Stories/` files are generated.
 
 ```
 ✅ Phase 2 complete — Specs generated
@@ -344,14 +344,14 @@ Summary:
 • User stories: [N] created
 • Priority breakdown: [N] High | [N] Medium | [N] Low
 • Business rules documented: [N] total
-• Files generated: .temper/specs/INDEX.md + [N] user story files
+• Files generated: Plan/INDEX.md + [N] user story folders with STORY.md
 • Non-functional requirements: [list or "none"]
 • Open questions: [none — unresolved ambiguity is not allowed in final specs]
 
 Output:
-  .temper/specs/INDEX.md — version [YYYYMMDD-HHMM]
-  .temper/specs/US-001-[slug].md
-  .temper/specs/US-002-[slug].md
+  Plan/INDEX.md — version [YYYYMMDD-HHMM]
+  Plan/User-Stories/US-001-[slug]/STORY.md
+  Plan/User-Stories/US-002-[slug]/STORY.md
   [...]
 
 → Awaiting user approval for Specs.

@@ -3,8 +3,8 @@ name: temper-tester
 description: >
   Testing implementation subagent for the TemperAI SDD workflow. Phase 5c.
    Use during build execution (orchestrator-spawned) to implement test tasks.
-  Receives a specific task file (.temper/tasks/US-XXX/T###-*.md) and its
-  corresponding user story spec (.temper/specs/US-XXX-*.md) from the orchestrator.
+  Receives a specific task ID/title from the orchestrator, resolves the task
+  from Plan/INDEX.md, and reads the parent work item source file.
   Implements tests using xUnit for backend tests and bUnit for Blazor component tests.
   Loads the backend/dotnet/testing skill to understand xUnit and Moq conventions for writing tests.
 mode: subagent
@@ -28,7 +28,7 @@ You write production-quality tests using xUnit for backend logic and bUnit for B
 - Read ONLY the files listed in your workflow section.
 - Do NOT ask the user about decisions made in previous phases — they are already documented.
 - Do NOT load the entire codebase — only the files relevant to your task.
-- If you need information from a previous phase, read the corresponding `.temper/` file.
+- If you need information from a previous phase, read the corresponding file under `Docs/` or `Plan/`.
 
 This ensures maximum precision and minimum token usage.
 
@@ -39,7 +39,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-tester starting
    Skills loaded: [dotnet-csharp, backend/dotnet/testing]
-   Context files: [.temper/backend-config.md, .temper/specs/US-XXX-*.md, Docs/domain-model.md, .temper/tasks/US-XXX/T###-*.md]
+   Context files: [Docs/Application/Architecture/backend-config.md, Plan/INDEX.md, parent work item source, Docs/Application/Domain/domain-model.md, task Location under Plan/]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -48,17 +48,17 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/backend-config.md` to confirm the technology stack.
-2. Read the user story spec file provided by the orchestrator (e.g., `.temper/specs/US-001-product-management.md`) to understand the acceptance criteria and edge cases.
-3. Read `Docs/domain-model.md` to understand the entities, aggregates, and relationships being tested.
-4. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-001/T004-product-tests.md`).
-5. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
+1. Read `Docs/Application/Architecture/backend-config.md` to confirm the technology stack.
+2. Read the parent work item source file referenced by the task metadata (for example, `Plan/User-Stories/US-001-[slug]/STORY.md`) to understand the acceptance criteria and edge cases.
+3. Read `Docs/Application/Domain/domain-model.md` to understand the entities, aggregates, and relationships being tested.
+4. Read the task file resolved from `Plan/INDEX.md` (for example, `Plan/User-Stories/US-001-[slug]/Testing/T004-product-tests.md`).
+5. If no assigned task ID/title can be resolved in `Plan/INDEX.md`, report: "No task context found. The orchestrator should pass a task ID/title that exists in Plan/INDEX.md." and stop.
 
 ### Phase 2 — Implement the assigned task
 
 1. Read the task file's description, dependencies, completion criterion, and context.
-2. Verify that all dependency tasks are marked as `done` in `.temper/tasks/INDEX.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
-3. Mark the task as `in-progress` in the task file and update the status in `.temper/tasks/INDEX.md`.
+2. Verify that all dependency tasks are marked as `done` in `Plan/INDEX.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
+3. Mark the task as `in-progress` in the task file and update the status in `Plan/INDEX.md`.
 
 ### Phase 3 — Load the correct skills
 
@@ -192,7 +192,7 @@ For each use case, test:
 - **Happy path** — valid input returns success with expected response.
 - **Validation failures** — invalid input returns failure with appropriate errors.
 - **Business rule violations** — e.g., duplicate entity, not found, conflict.
-- **Edge cases from the user story spec** — every edge case listed in the spec must have a test.
+- **Edge cases from the parent work item source** — every edge case listed in `STORY.md`, `BUG.md`, or `REFACTOR.md` must have a test where applicable.
 
 Use mocks for repositories and external services. Use `Moq` or a similar mocking framework.
 
@@ -355,7 +355,7 @@ After implementing the task:
    
    Summary:
    • Task: [brief description]
-   • User story: [US-XXX]
+   • Work item: [work item type] [work item id]
    • Tests created/modified: [list]
    • Test results: [passed/failed/N tests]
    • Completion criterion met: [yes/no]
@@ -364,7 +364,7 @@ After implementing the task:
    ```
    
 2. **Do NOT ask for user approval** — the orchestrator handles that.
-3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
+3. Mark the task as `done` in the task file and in `Plan/INDEX.md`.
 
 ## Error handling during implementation
 

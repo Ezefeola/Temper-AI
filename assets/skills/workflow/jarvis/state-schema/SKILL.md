@@ -37,23 +37,27 @@ description: >
   "total_steps": 4,
   "current_agent": "temper-backend",
   "current_task": "T001",
+  "current_work_item_type": "user-story | bug | refactor | setup | future-type | null",
+  "current_work_item_id": "US-001 | BUG-001 | REF-001 | SETUP | null",
+  "current_task_category": "Backend | Frontend | Testing | DevOps | null",
+  "current_task_location": "Plan/.../T001-[slug].md | null",
   "task_title": "one line description",
   "total_tasks": 6,
   "completed_tasks": [
-    { "task_id": "T002", "agent": "temper-backend", "title": "description", "status": "complete" }
+    { "task_id": "T002", "work_item_type": "user-story", "work_item_id": "US-001", "category": "Backend", "agent": "temper-backend", "title": "description", "status": "complete", "location": "Plan/User-Stories/US-001-[slug]/Backend/T002-[slug].md" }
   ],
   "pending_tasks": [
-    { "task_id": "T001", "agent": "temper-backend", "title": "description" }
+    { "task_id": "T001", "work_item_type": "user-story", "work_item_id": "US-001", "category": "Backend", "agent": "temper-backend", "title": "description", "status": "pending", "dependencies": ["T000"], "location": "Plan/User-Stories/US-001-[slug]/Backend/T001-[slug].md" }
   ],
-    "active_cycle": {
-      "agent": "temper-analyst | temper-architect",
-      "phase": "phase-1-prd | phase-2-specs | null",
-      "cycle_type": "gap-resolution | spec-ambiguity-resolution | architect-loop",
-      "mode": "architectural-design | problem-solving | null",
-      "waiting_for": "gap-answer | gap-batch-send | ambiguity-answer | ambiguity-batch-send | mode-clarification | context-clarification | preference-clarification | problem-clarification | proposal-confirmation | document-selection | manual-review | none",
-      "last_report_type": "gap-report | resolution-status | ambiguity-stop | ambiguity-resolution-status | mode-report | clarification-request | domain-analysis | problem-analysis | architectural-proposal | architectural-plan | updated-proposal | document-offer | completion-report",
-      "question_origin": "analyst | architect | null",
-      "pending_interaction": {
+  "active_cycle": {
+    "agent": "temper-analyst | temper-architect",
+    "phase": "phase-1-prd | phase-2-specs | null",
+    "cycle_type": "gap-resolution | spec-ambiguity-resolution | architect-loop",
+    "mode": "architectural-design | problem-solving | null",
+    "waiting_for": "gap-answer | gap-batch-send | ambiguity-answer | ambiguity-batch-send | mode-clarification | context-clarification | preference-clarification | problem-clarification | proposal-confirmation | document-selection | manual-review | none",
+    "last_report_type": "gap-report | resolution-status | ambiguity-stop | ambiguity-resolution-status | mode-report | clarification-request | domain-analysis | problem-analysis | architectural-proposal | architectural-plan | updated-proposal | document-offer | completion-report",
+    "question_origin": "analyst | architect | null",
+    "pending_interaction": {
         "surface_via": "question | plain-text",
         "interaction_type": "analyst-gap | analyst-ambiguity | architect-clarification | architect-decision | parse-fallback",
         "prompt_text": "single actionable prompt or fallback instruction",
@@ -113,6 +117,12 @@ description: >
 
 ---
 
+## Task metadata validation
+
+Before delegating task-driven implementation, `current_task`, `task_title`, `current_work_item_type`, `current_work_item_id`, `current_task_category`, `current_task_location`, `pending_tasks`, and task counters must agree with `Plan/INDEX.md`. Each task record must include work item type, work item id, category, agent, status, dependencies, and resolvable location.
+
+---
+
 ## Delegation rules — domain language only
 
 **You never tell an agent HOW to build something. You only tell them WHAT to build.**
@@ -164,7 +174,7 @@ agent and validate the prompt against that contract.
 - `workflow/jarvis/analyst-communication` — analyst Phase 1 and Phase 2 loops
 - `workflow/jarvis/architect-communication` — architect loop turns
 
-Implementation agents read their own files. Agents that work through
+Implementation agents resolve their task from `Plan/INDEX.md`, read the task file at its `Location`, and then read the parent work item source file. Agents that work through
 conversation loops may receive plain-language context when needed, but JARVIS
 must never delegate by naming files or telling any agent what to read.
 

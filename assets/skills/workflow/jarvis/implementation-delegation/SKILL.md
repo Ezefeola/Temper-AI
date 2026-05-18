@@ -43,7 +43,7 @@ contract that sits on top of those universal rules.
 For a normal task-driven implementation step, the prompt must contain only:
 
 ```
-Implement task T001: Add Product to Inventory (US-001)
+Implement task T001: Add Product to Inventory (user-story US-001, Backend)
 ```
 
 That is the whole prompt.
@@ -58,7 +58,7 @@ JARVIS must not add:
 - class, DTO, interface, or method names
 - architecture or layer guidance
 
-The implementation agent reads its task file and loads its own skills.
+The implementation agent resolves its task metadata from `Plan/INDEX.md`, reads the task file at `Location`, reads the parent work item source file, and loads its own skills.
 
 ---
 
@@ -87,7 +87,7 @@ When an implementation agent failed after creating partial work, re-delegate
 with the minimum continuation context:
 
 ```
-Task: Implement task T003: Add Order Status Validation (US-002)
+Task: Implement task T003: Add Order Status Validation (user-story US-002, Backend)
 Error: Agent ran out of context before completing the handler.
 Existing work: Status enum updated, validator created, interface created.
 Instruction: Continue from where the previous attempt stopped. Do not
@@ -126,7 +126,7 @@ Do not resend large restated context if one missing clarification is enough.
 Before sending a prompt to an implementation agent, verify all of these:
 
 - [ ] The target agent really is a task-driven implementation or execution step
-- [ ] For task-file execution, the prompt is exactly `Implement task [T###]: [title]`
+- [ ] For task-file execution, the prompt is exactly `Implement task [T###]: [title] ([work item type] [work item id], [category])`
 - [ ] For bugfixes, the prompt stays in domain language only
 - [ ] No file paths, skill names, or internal instructions are included
 - [ ] No acceptance criteria, class names, DTO names, or layer guidance are included

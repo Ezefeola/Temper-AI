@@ -21,9 +21,9 @@ and the exact structure and templates for each.
 
 | Document | Location | Purpose | Generated From |
 |---|---|---|---|
-| `DDD-Vocabulary.md` | `.temper/DDD-Vocabulary.md` | Single source of truth for domain terminology. Consumed by implementation agents at build time. | PRD nouns, status words, actions |
-| `domain-model.md` | `Docs/domain-model.md` | Entity model, aggregates, state transitions, domain events, business rules, and diagrams. Replaces DDD-Entities + DDD-Events + DDD-Rules. | PRD entities, workflows, rules |
-| `system-architecture.md` | `Docs/system-architecture.md` | Bounded contexts, context map, component diagram, external integrations. Replaces DDD-Overview. | PRD user roles, domain areas, external systems |
+| `DDD-Vocabulary.md` | `Docs/Application/Domain/DDD-Vocabulary.md` | Single source of truth for domain terminology. Consumed by implementation agents at build time. | PRD nouns, status words, actions |
+| `domain-model.md` | `Docs/Application/Domain/domain-model.md` | Entity model, aggregates, state transitions, domain events, business rules, and diagrams. Replaces DDD-Entities + DDD-Events + DDD-Rules. | PRD entities, workflows, rules |
+| `system-architecture.md` | `Docs/Application/System/system-architecture.md` | Bounded contexts, context map, component diagram, external integrations. Replaces DDD-Overview. | PRD user roles, domain areas, external systems |
 
 ---
 
@@ -54,7 +54,7 @@ No synonyms. No ambiguity. Implementation agents read this to understand domain 
 in specs, tasks, and code. This causes confusion and bugs. The vocabulary ensures everyone
 uses the same words for the same things.
 
-**Output location:** `.temper/DDD-Vocabulary.md`
+**Output location:** `Docs/Application/Domain/DDD-Vocabulary.md`
 
 **What goes in it:**
 
@@ -120,7 +120,7 @@ Developers had to cross-reference three files to understand a single aggregate. 
 brings everything together so the full picture of each entity — its structure, behavior, and
 constraints — is visible in one place.
 
-**Output location:** `Docs/domain-model.md`
+**Output location:** `Docs/Application/Domain/domain-model.md`
 
 **Sections:**
 
@@ -356,7 +356,7 @@ Bounded contexts define where certain terms and rules apply. Understanding bound
 prevents accidental coupling and helps teams work independently. This document replaces
 the previous DDD-Overview with richer diagram support.
 
-**Output location:** `Docs/system-architecture.md`
+**Output location:** `Docs/Application/System/system-architecture.md`
 
 **Sections:**
 
@@ -565,7 +565,7 @@ Read the PRD and extract:
 - **NEVER mix implementation details** (DTOs, repositories, EF Core, C# types) into DDD documentation
 - **NEVER use technical types** (GUID, int, string) in Vocabulary definitions
 - **ALWAYS use Mermaid syntax** for diagrams — `stateDiagram-v2`, `classDiagram`, `erDiagram`, `graph`
-- **ALWAYS place DDD-Vocabulary.md in `.temper/`** and other docs in `Docs/`**
+- **ALWAYS place DDD-Vocabulary.md and domain-model.md in `Docs/Application/Domain/`; place system-architecture.md in `Docs/Application/System/`**
 - **ALWAYS keep definitions to one sentence** — if it needs more explanation, the term is too complex
 - **ALWAYS reference existing vocabulary terms** — when defining a new term, check if a term already exists for that concept
 - **ALWAYS use realistic entity names in diagrams** — never use abstract placeholders

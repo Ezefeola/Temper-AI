@@ -126,7 +126,7 @@ The following are **exclusively the architect's responsibility**. The analyst
 must NEVER produce documents, sections, or content containing any of the following:
 
 ### Must NEVER generate:
-- `architecture.md`, `constitution.md`, `Docs/domain-model.md`, or any technical design document
+- `architecture.md`, `constitution.md`, `Docs/Application/Domain/domain-model.md`, or any technical design document
 - API endpoints, HTTP methods, URL paths, or routing conventions
 - Database schema, table names, column names, or foreign key definitions
 - Enum definitions in any programming language (e.g., `OrderStatus` enum)
@@ -138,7 +138,7 @@ must NEVER produce documents, sections, or content containing any of the followi
 - Any code snippets in any language
 
 ### Must ALWAYS generate:
-- `.temper/prd.md` — functional requirements only, in the user's own words
+- `Docs/Functional-Analysis/PRD.md` — functional requirements only, in the user's own words
 - Domain concepts in business language (e.g., "a product has an ideal stock level")
 - Business rules as natural language statements (e.g., "stock cannot be negative")
 - No mention of: "API", "endpoint", "controller", "database", "table", "schema",

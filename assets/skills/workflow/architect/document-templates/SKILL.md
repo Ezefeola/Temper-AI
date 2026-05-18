@@ -46,17 +46,17 @@ Canonical architecture pattern values for machine-readable architect outputs:
 
 ### Document Responsibility Separation
 
-The architect generates **authoritative reference documents** in `Docs/`. The docs agent generates
+The architect generates **authoritative reference documents** under `Docs/Application/`. The docs agent generates
 **developer guides and business overviews** in `Docs/`. They do NOT overlap:
 
 | Architect generates | Docs agent generates |
 |---|---|
-| `architecture-decision.md` — ADR with full reasoning | `ARCHITECTURE.md` — code conventions, testing, deployment |
-| `domain-model.md` — DDD model with Mermaid | `SYSTEM.md` — business overview, users, flow |
-| `system-architecture.md` — bounded contexts, integrations | `API.md` — endpoint reference |
-| `backend-config.md` — machine-readable config | `CHANGELOG.md` — version history |
-| `frontend-config.md` — machine-readable config | `README.md` — project setup |
-| `api-contracts.md` — extracted from built backend | |
+| `Docs/Application/Architecture/architecture-decision.md` — ADR with full reasoning | `ARCHITECTURE.md` — code conventions, testing, deployment |
+| `Docs/Application/Domain/domain-model.md` — DDD model with Mermaid | `SYSTEM.md` — business overview, users, flow |
+| `Docs/Application/System/system-architecture.md` — bounded contexts, integrations | `API.md` — endpoint reference |
+| `Docs/Application/Architecture/backend-config.md` — machine-readable config | `CHANGELOG.md` — version history |
+| `Docs/Application/Architecture/frontend-config.md` — machine-readable config | `README.md` — project setup |
+| `Docs/Application/System/api-contracts.md` — extracted from built backend | |
 
 The docs agent **links** to architect reference docs instead of duplicating their content.
 
@@ -66,7 +66,7 @@ The docs agent **links** to architect reference docs instead of duplicating thei
 
 Authoritative ADR for humans and auditing. Rich, justified, full reasoning.
 Implementation agents do NOT read this file. The docs agent links to it from ARCHITECTURE.md.
-Written to `Docs/architecture-decision.md`.
+Written to `Docs/Application/Architecture/architecture-decision.md`.
 
 ```markdown
 # Architecture Decision Record — [Project Name]
@@ -137,7 +137,7 @@ Written to `Docs/architecture-decision.md`.
 
 For implementation agents only. Minimal, precise, machine-readable.
 No justifications. No context. Only the values agents need.
-Written to `.temper/backend-config.md`.
+Written to `Docs/Application/Architecture/backend-config.md`.
 
 ```markdown
 # Backend Configuration
@@ -165,7 +165,7 @@ External Packages:
 ## Template: `frontend-config.md`
 
 For frontend implementation agent only. Minimal and machine-readable.
-Written to `.temper/frontend-config.md` — only generated if the proposal includes a frontend.
+Written to `Docs/Application/Architecture/frontend-config.md` — only generated if the proposal includes a frontend.
 
 ```markdown
 # Frontend Configuration
@@ -185,7 +185,7 @@ State management: [exact value]
 ## Template: `architectural-plan.md`
 
 For problem solving output. Full reasoning, for humans.
-Written to `Docs/architectural-plan.md`.
+Written to `Docs/Application/Architecture/architectural-plan.md`.
 
 ```markdown
 # Architectural Plan — [Problem Title]
@@ -241,7 +241,7 @@ Shared API contract extracted from the built backend code. Used by the frontend 
 to ensure endpoint compatibility. Generated ONLY when user explicitly requests it
 after all build steps are approved and the backend is complete.
 
-Written to `.temper/api-contracts.md`.
+Written to `Docs/Application/System/api-contracts.md`.
 
 **Domain type reference (NOT C# types — use these domain types in DTO shapes):**
 

@@ -2,7 +2,7 @@
 name: temper-status
 description: >
   Lee .temper/orchestrator-state.md como fuente de verdad principal.
-  Si no existe, lee los archivos .temper/ y muestra el estado actual del proyecto:
+  Si no existe, lee los archivos Docs/ y Plan/ y muestra el estado actual del proyecto:
   fase actual, archivos existentes, progreso de tareas y fases pendientes.
 ---
 
@@ -13,8 +13,8 @@ Muestra el estado actual del proyecto en el workflow SDD de TemperAI.
 ## Que hace
 
 1. Lee `.temper/orchestrator-state.md` (fuente de verdad principal).
-2. Si no existe, detecta el estado leyendo los archivos `.temper/`.
-3. Muestra el progreso de tareas si existe `tasks/INDEX.md`.
+2. Si no existe, detecta el estado leyendo los archivos `Docs/` y `Plan/`.
+3. Muestra el progreso de tareas si existe `Plan/INDEX.md`.
 4. Lista las fases pendientes.
 
 ## Instrucciones para el agente
@@ -30,35 +30,37 @@ Si `.temper/orchestrator-state.md` existe, extraer:
 - `Next action`
 - `Pending phases`
 
-### Paso 2 — Fallback: verificar archivos .temper/ existentes
+### Paso 2 — Fallback: verificar archivos Docs/ y Plan/ existentes
 
 Si `.temper/orchestrator-state.md` NO existe, listar:
-- `.temper/prd.md`
-- `.temper/backend-config.md`
-- `.temper/frontend-config.md` (si aplica)
-- `.temper/specs/INDEX.md`
-- `.temper/Docs/domain-model.md`
-- `.temper/tasks/INDEX.md`
-- `.temper/build-plan.md`
+- `Docs/Functional-Analysis/PRD.md`
+- `Docs/Application/Architecture/backend-config.md`
+- `Docs/Application/Architecture/frontend-config.md` (si aplica)
+- `Docs/Application/Domain/DDD-Vocabulary.md`
+- `Docs/Application/Domain/domain-model.md`
+- `Docs/Application/System/system-architecture.md`
+- `Plan/INDEX.md`
+- `Plan/User-Stories/`
+- `Plan/BUILD.md`
 
 ### Paso 3 — Determinar fase actual (fallback)
 
 | Archivos existentes | Fase |
 |---|---|
 | Ninguno | Fase 0 — Sin iniciar |
-| Solo `prd.md` | Fase 1 — Analisis funcional completado |
-| `prd.md` + `backend-config.md` | Fase 2 — Arquitectura tecnica completada |
-| `prd.md` + config files + `specs/INDEX.md` | Fase 3 — Especificacion completada |
-| `prd.md` + config files + `specs/` + `Docs/domain-model.md` | Fase 4 — Diseno completado |
-| `prd.md` + config files + `specs/` + `Docs/domain-model.md` + `tasks/INDEX.md` | Fase 5 — Tareas definidas |
-| Todos los anteriores + `build-plan.md` | Fase 6 — Plan completado |
+| Solo `Docs/Functional-Analysis/PRD.md` | Fase 1 — Analisis funcional completado |
+| PRD + `Plan/User-Stories/` | Fase 2 — Especificacion completada |
+| PRD + Plan + `Docs/Application/Architecture/backend-config.md` | Fase 3 — Arquitectura tecnica completada |
+| PRD + Plan + config files + `Docs/Application/Domain/domain-model.md` | Fase 4 — Diseno completado |
+| PRD + config files + `Plan/INDEX.md` with task rows | Fase 5 — Tareas definidas |
+| Todos los anteriores + `Plan/BUILD.md` | Fase 6 — Plan completado |
 | Todos + codigo generado | Build Execution — En progreso o completado |
 | Todos + revision aprobada | Fase 7 — Revision completada |
 | Todos + documentacion | Fase 8 — Workflow completo |
 
-### Paso 4 — Analizar tareas (si existe tasks/INDEX.md)
+### Paso 4 — Analizar tareas (si existe Plan/INDEX.md)
 
-Si `.temper/tasks/INDEX.md` existe, contar:
+Si `Plan/INDEX.md` existe, contar:
 - Total de tareas
 - Tareas con estado `pending`
 - Tareas con estado `in-progress`
@@ -95,13 +97,13 @@ Si `.temper/tasks/INDEX.md` existe, contar:
 ### Files
 | File | Status |
 |---|---|
-| prd.md | [Exists / Missing] |
-| backend-config.md | [Exists / Missing] |
-| frontend-config.md | [Exists / Missing / N/A] |
-| specs/INDEX.md | [Exists / Missing] |
-| Docs/domain-model.md | [Exists / Missing] |
-| tasks/INDEX.md | [Exists / Missing] |
-| build-plan.md | [Exists / Missing] |
+| Docs/Functional-Analysis/PRD.md | [Exists / Missing] |
+| Docs/Application/Architecture/backend-config.md | [Exists / Missing] |
+| Docs/Application/Architecture/frontend-config.md | [Exists / Missing / N/A] |
+| Plan/User-Stories/ | [Exists / Missing] |
+| Docs/Application/Domain/domain-model.md | [Exists / Missing] |
+| Plan/INDEX.md | [Exists / Missing] |
+| Plan/BUILD.md | [Exists / Missing] |
 
 ### Tasks
 | Status | Count |
@@ -131,13 +133,13 @@ All phases of the SDD workflow have been completed.
 ### Files
 | File | Status |
 |---|---|
-| prd.md | Exists |
-| backend-config.md | Exists |
-| frontend-config.md | Exists (or N/A) |
-| specs/ | Exists |
-| Docs/ | Exists |
-| tasks/ | Exists (all done) |
-| build-plan.md | Exists |
+| Docs/Functional-Analysis/PRD.md | Exists |
+| Docs/Application/Architecture/backend-config.md | Exists |
+| Docs/Application/Architecture/frontend-config.md | Exists (or N/A) |
+| Plan/User-Stories/ | Exists |
+| Docs/Application/ | Exists |
+| Plan/INDEX.md | Exists (all done) |
+| Plan/BUILD.md | Exists |
 | orchestrator-state.md | Exists (status: complete) |
 
 ### Tasks

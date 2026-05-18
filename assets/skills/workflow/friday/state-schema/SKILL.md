@@ -37,13 +37,17 @@ description: >
   "total_steps": 4,
   "current_agent": "temper-backend",
   "current_task": "T001",
+  "current_work_item_type": "user-story | bug | refactor | setup | future-type | null",
+  "current_work_item_id": "US-001 | BUG-001 | REF-001 | SETUP | null",
+  "current_task_category": "Backend | Frontend | Testing | DevOps | null",
+  "current_task_location": "Plan/.../T001-[slug].md | null",
   "task_title": "one line description",
   "total_tasks": 6,
   "completed_tasks": [
-    { "task_id": "T002", "agent": "temper-backend", "title": "description", "status": "complete" }
+    { "task_id": "T002", "work_item_type": "user-story", "work_item_id": "US-001", "category": "Backend", "agent": "temper-backend", "title": "description", "status": "complete", "location": "Plan/User-Stories/US-001-[slug]/Backend/T002-[slug].md" }
   ],
   "pending_tasks": [
-    { "task_id": "T001", "agent": "temper-backend", "title": "description" }
+    { "task_id": "T001", "work_item_type": "user-story", "work_item_id": "US-001", "category": "Backend", "agent": "temper-backend", "title": "description", "status": "pending", "dependencies": ["T000"], "location": "Plan/User-Stories/US-001-[slug]/Backend/T001-[slug].md" }
   ],
   "active_cycle": {
     "agent": "temper-analyst | temper-architect",
@@ -147,7 +151,7 @@ When `approved_plan` exists:
 - A completed step must have an `output` value when that specialist is expected to produce a durable artifact or completion report.
 - If expected output is missing, mark state as blocked or recovery-needed instead of advancing.
 - If the next step depends on a previous output, verify the previous step is `complete` and has the expected output reference before delegation.
-- `current_task`, `task_title`, `pending_tasks`, and task counters must agree before delegating task-driven implementation.
+- `current_task`, `task_title`, `current_work_item_type`, `current_work_item_id`, `current_task_category`, `current_task_location`, `pending_tasks`, and task counters must agree before delegating task-driven implementation.
 
 FRIDAY does not need to read full artifact contents for this check; it validates that required references and workflow statuses exist and are coherent.
 
@@ -249,7 +253,7 @@ Before sending any prompt, load the workflow contract that matches the target ag
 - `workflow/friday/analyst-communication` for analyst Phase 1 and Phase 2 loops.
 - `workflow/friday/architect-communication` for architect loop turns.
 
-Implementation agents read their own task context. Conversation-loop agents may receive raw user request and minimum plain-language context when their contract requires it.
+Implementation agents resolve their task from `Plan/INDEX.md`, read the task file at its `Location`, and then read the parent work item source file. Conversation-loop agents may receive raw user request and minimum plain-language context when their contract requires it.
 
 ## Agent-Specific Cycle Contracts
 

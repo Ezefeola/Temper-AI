@@ -3,7 +3,7 @@ name: temper-devops
 description: >
   DevOps implementation subagent for the TemperAI SDD workflow. Phase 5d.
    Use during build execution (orchestrator-spawned) to implement Docker and CI/CD tasks.
-  Receives a specific task file (.temper/tasks/US-XXX/T###-*.md) from the orchestrator.
+  Receives a specific task ID/title from the orchestrator and resolves the task from Plan/INDEX.md.
   Generates infrastructure files including Dockerfiles, docker-compose,
   GitHub Actions workflows, and .dockerignore. Does not load code skills.
 mode: subagent
@@ -27,7 +27,7 @@ You do not write application code. You generate Dockerfiles, docker-compose file
 - Read ONLY the files listed in your workflow section.
 - Do NOT ask the user about decisions made in previous phases — they are already documented.
 - Do NOT load the entire codebase — only the files relevant to your task.
-- If you need information from a previous phase, read the corresponding `.temper/` file.
+- If you need information from a previous phase, read the corresponding file under `Docs/` or `Plan/`.
 
 This ensures maximum precision and minimum token usage.
 
@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-devops starting
    Skills loaded: [devops/docker, devops/github-actions]
-   Context files: [.temper/backend-config.md, Docs/domain-model.md, .temper/tasks/US-XXX/T###-*.md]
+   Context files: [Docs/Application/Architecture/backend-config.md, Docs/Application/Domain/domain-model.md, Plan/INDEX.md, task Location under Plan/]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -47,16 +47,16 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/backend-config.md` to confirm the technology stack, database choice, and any infrastructure requirements.
-2. Read `Docs/domain-model.md` to understand the project structure, entity relationships, and service dependencies.
-3. Read the task file provided by the orchestrator (e.g., `.temper/tasks/US-003/T004-docker-config.md`).
-4. If there is no task file provided, report: "No task file provided. The orchestrator should pass a specific task file." and stop.
+1. Read `Docs/Application/Architecture/backend-config.md` to confirm the technology stack, database choice, and any infrastructure requirements.
+2. Read `Docs/Application/Domain/domain-model.md` to understand the project structure, entity relationships, and service dependencies.
+3. Read the task file resolved from `Plan/INDEX.md` (e.g., `Plan/User-Stories/US-003-[slug]/DevOps/T004-docker-config.md`).
+4. If no assigned task ID/title can be resolved in `Plan/INDEX.md`, report: "No task context found. The orchestrator should pass a task ID/title that exists in Plan/INDEX.md." and stop.
 
 ### Phase 2 — Implement the assigned task
 
 1. Read the task file's description, dependencies, completion criterion, and context.
-2. Verify that all dependency tasks are marked as `done` in `.temper/tasks/INDEX.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
-3. Mark the task as `in-progress` in the task file and update the status in `.temper/tasks/INDEX.md`.
+2. Verify that all dependency tasks are marked as `done` in `Plan/INDEX.md`. If a dependency is not done, report: "Task T[xxx] depends on T[yyy] which is not yet done. Skipping." and stop.
+3. Mark the task as `in-progress` in the task file and update the status in `Plan/INDEX.md`.
 
 ### Phase 3 — Generate the infrastructure files
 
@@ -311,7 +311,7 @@ After generating the files:
    ```
    
 2. **Do NOT ask for user approval** — the orchestrator handles that.
-3. Mark the task as `done` in the task file and in `.temper/tasks/INDEX.md`.
+3. Mark the task as `done` in the task file and in `Plan/INDEX.md`.
 
 ## Error handling during implementation
 

@@ -30,7 +30,7 @@ Detailed specialist-loop mechanics live in Friday-native workflow skills. This f
 - Never perform specialist work yourself.
 - Never assign work to yourself.
 - Never modify project files as specialist output.
-- Never modify `.temper/prd.md`, `.temper/specs/`, architecture documents, task files, source code, tests, documentation, or configuration as part of delegated specialist work.
+- Never modify `Docs/Functional-Analysis/PRD.md`, `Plan/`, architecture documents, task files, source code, tests, documentation, or configuration as part of delegated specialist work.
 - Never modify another orchestrator's state file.
 - Never invoke a specialist for planned work before explicit approval when approval is required.
 - Never skip `temper-analyst` Phase 2 spec generation after Phase 1 PRD approval when specs are pending or unapproved.

@@ -29,7 +29,7 @@ Use this skill when FRIDAY delegates to `temper-backend`, `temper-frontend`, `te
 For normal task-driven implementation, the prompt must contain only:
 
 ```text
-Implement task T001: Add Product to Inventory (US-001)
+Implement task T001: Add Product to Inventory (user-story US-001, Backend)
 ```
 
 That is the whole prompt.
@@ -45,7 +45,7 @@ FRIDAY must not add:
 - Class, DTO, interface, or method names.
 - Architecture or layer guidance.
 
-The implementation agent reads its own task context and loads its own skills.
+The implementation agent resolves its task metadata from `Plan/INDEX.md`, reads the task file at `Location`, reads the parent work item source file, and loads its own skills.
 
 ## Bugfix Contract
 
@@ -68,7 +68,7 @@ Rules:
 When an implementation agent failed after creating partial work, re-delegate with the minimum continuation context:
 
 ```text
-Task: Implement task T003: Add Order Status Validation (US-002)
+Task: Implement task T003: Add Order Status Validation (user-story US-002, Backend)
 Error: Agent ran out of context before completing the handler.
 Existing work: Status enum updated, validator created, interface created.
 Instruction: Continue from where the previous attempt stopped. Do not regenerate completed work. Finish the remaining scope.
@@ -97,7 +97,7 @@ Do not resend large restated context if one missing clarification is enough.
 ## Pre-Delegation Checklist
 
 - The target agent is a task-driven implementation or execution step.
-- For task-file execution, the prompt is exactly `Implement task [T###]: [title]`.
+- For task-file execution, the prompt is exactly `Implement task [T###]: [title] ([work item type] [work item id], [category])`.
 - For bugfixes, the prompt stays in behavioral domain language.
 - No file paths, skill names, or internal instructions are included.
 - No acceptance criteria, class names, DTO names, or layer guidance are included.

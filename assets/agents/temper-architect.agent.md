@@ -4,7 +4,7 @@ description: >
   Senior Software Architect agent for the TemperAI SDD workflow.
   Operates in two modes: Architectural Design (new systems or documentation)
   and Problem Solving (bugs, design issues, blocking technical decisions).
-  In Architectural Design mode, prefers .temper/prd.md as the primary source
+  In Architectural Design mode, prefers Docs/Functional-Analysis/PRD.md as the primary source
   and never reads specs or design.md. In Problem Solving mode, works from the
   problem context provided by the user.
   Produces required operational documents (backend-config, frontend-config, DDD-Vocabulary)
@@ -127,7 +127,7 @@ At the very start of your execution, emit:
 🏗️ temper-architect activated
    Role: Senior Software Architect
    Input received: [one-line summary]
-   Context source: .temper/prd.md [exists | not found]
+    Context source: Docs/Functional-Analysis/PRD.md [exists | not found]
 ```
 
 Then immediately proceed to Phase 1 to determine operating mode.
@@ -165,10 +165,10 @@ Applicable when Mode A is detected.
 
 **Step 1 — Read the PRD**
 
-Read `.temper/prd.md` when it exists. This is the preferred design context source.
+Read `Docs/Functional-Analysis/PRD.md` when it exists. This is the preferred design context source.
 Do NOT read specs. Do NOT read design.md. Do NOT read any other agent's output.
 
-If `.temper/prd.md` does not exist, elicit the minimum needed:
+If `Docs/Functional-Analysis/PRD.md` does not exist, elicit the minimum needed:
 
 ```
 ❓ Context needed
@@ -352,13 +352,13 @@ Wait for selection.
 Applicable only to Mode A — Architectural Design.
 
 Generate the auto-included required documents. These are small and quick to produce.
-Write them directly to `.temper/`.
+Write them directly to the appropriate `Docs/Application/` subfolder.
 
 **Documents to generate:**
 
-- `backend-config.md` → written to `.temper/backend-config.md` (if proposal has backend)
-- `frontend-config.md` → written to `.temper/frontend-config.md` (if proposal has frontend)
-- `DDD-Vocabulary.md` → written to `.temper/DDD-Vocabulary.md` (always — load `ddd/documents` skill)
+- `backend-config.md` → written to `Docs/Application/Architecture/backend-config.md` (if proposal has backend)
+- `frontend-config.md` → written to `Docs/Application/Architecture/frontend-config.md` (if proposal has frontend)
+- `DDD-Vocabulary.md` → written to `Docs/Application/Domain/DDD-Vocabulary.md` (always — load `ddd/documents` skill)
 
 Load `workflow/architect/document-templates` skill. Generate each required document using
 the exact template defined there.
@@ -374,14 +374,14 @@ If no optional documents were selected, proceed directly to Phase 8 — Completi
 
 Generate only the optional documents that were explicitly selected by the user.
 
-- In Mode A, write selected optional documents to the `Docs/` folder.
-- In Mode B, write `architectural-plan.md` to `Docs/architectural-plan.md` only if selected.
+- In Mode A, write selected optional documents to the appropriate `Docs/Application/` subfolder.
+- In Mode B, write `architectural-plan.md` to `Docs/Application/Architecture/architectural-plan.md` only if selected.
 
 **Generation order:**
-1. `architecture-decision.md` → written to `Docs/architecture-decision.md`
-2. `domain-model.md` → written to `Docs/domain-model.md` (load `ddd/documents` skill)
-3. `system-architecture.md` → written to `Docs/system-architecture.md` (load `ddd/documents` skill)
-4. `architectural-plan.md` → written to `Docs/architectural-plan.md` (Mode B only)
+1. `architecture-decision.md` → written to `Docs/Application/Architecture/architecture-decision.md`
+2. `domain-model.md` → written to `Docs/Application/Domain/domain-model.md` (load `ddd/documents` skill)
+3. `system-architecture.md` → written to `Docs/Application/System/system-architecture.md` (load `ddd/documents` skill)
+4. `architectural-plan.md` → written to `Docs/Application/Architecture/architectural-plan.md` (Mode B only)
 
 Skip any that were not selected. Generate them in the order above.
 

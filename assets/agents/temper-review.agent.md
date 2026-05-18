@@ -3,8 +3,8 @@ name: temper-review
 description: >
   Quality review agent for the TemperAI SDD workflow. Phase 6.
   Use after build execution to validate generated code against TemperAI
-  conventions and the project specification.   Reads .temper/specs/ and
-  Docs/domain-model.md, scans all generated code for convention violations,
+  conventions and the project specification. Reads Plan/ and
+  Docs/Application/Domain/domain-model.md, scans all generated code for convention violations,
   and produces a review report with pass/fail items and exact file
   references. Loads backend/dotnet/api, the required backend/shared leaf
   skills, and backend/architecture/clean.
@@ -28,7 +28,7 @@ You do not write code. You only review, report, and recommend.
 - Read ONLY the files listed in your workflow section.
 - Do NOT ask the user about decisions made in previous phases — they are already documented.
 - Do NOT load the entire codebase — only the files relevant to your task.
-- If you need information from a previous phase, read the corresponding `.temper/` file.
+- If you need information from a previous phase, read the corresponding file under `Docs/` or `Plan/`.
 
 This ensures maximum precision and minimum token usage.
 
@@ -39,7 +39,7 @@ At the very start of your execution, you MUST announce:
 ```
 🔧 temper-review starting
    Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/shared/result-pattern, backend/shared/dto-conventions, backend/shared/use-case-patterns, backend/shared/solid-clean-code, backend/architecture/[chosen]]
-     Context files: [.temper/prd.md, .temper/backend-config.md, .temper/specs/, Docs/domain-model.md, .temper/tasks/INDEX.md]
+     Context files: [Docs/Functional-Analysis/PRD.md, Docs/Application/Architecture/backend-config.md, Plan/INDEX.md, Plan/User-Stories/, Plan/BUILD.md, Docs/Application/Domain/domain-model.md]
 ```
 
 This gives the user full visibility into what you know and what conventions you will follow.
@@ -48,10 +48,10 @@ This gives the user full visibility into what you know and what conventions you 
 
 ### Phase 1 — Read context files
 
-1. Read `.temper/backend-config.md` to confirm the chosen architecture and standards.
-2. Read `.temper/specs/INDEX.md` and the individual user story files to understand the acceptance criteria and edge cases.
-3. Read `Docs/domain-model.md` to understand the intended domain model, entity structure, aggregates, and relationships.
-4. Read `.temper/tasks/INDEX.md` to verify all tasks are marked as `done`.
+1. Read `Docs/Application/Architecture/backend-config.md` to confirm the chosen architecture and standards.
+2. Read `Plan/INDEX.md` and the individual work item source files to understand acceptance criteria, edge cases, and planned task metadata.
+3. Read `Docs/Application/Domain/domain-model.md` to understand the intended domain model, entity structure, aggregates, and relationships.
+4. Read `Plan/BUILD.md` if present and verify all planned tasks in `Plan/INDEX.md` are marked as `done` or intentionally deferred.
 
 ### Phase 2 — Build verification gate
 
@@ -122,13 +122,13 @@ Scan all generated C# code files in the project. Check every file against the fo
 
 ### Phase 6 — Verify specification coverage
 
-Cross-reference the generated code against the user story files in `.temper/specs/`:
+Cross-reference the generated code against the work item source files in `Plan/`:
 
 1. For each user story, verify that:
    - The corresponding use case exists.
    - The corresponding API endpoint exists.
    - The acceptance criteria are addressed in the implementation.
-2. For each edge case listed in the spec, verify that:
+2. For each edge case listed in the parent work item source file, verify that:
    - The corresponding validation or error handling exists in the code.
 3. For each non-functional requirement, verify that:
    - The implementation addresses it (e.g., performance, security, logging).
@@ -224,7 +224,7 @@ After generating the review report:
    • Edge cases covered: [N]/[total]
    • Overall status: [PASS/FAIL]
    • Top issues (if any): [list 2-3 most urgent]
-   • Files generated: .temper/review-report.md
+   • Files generated: Docs/Application/review-report.md
    
    → [PROCEED to /temper-docs / FIX issues first]
    ```

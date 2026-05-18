@@ -30,7 +30,7 @@ Emitted at the very start of execution, before Phase 1.
 🏗️ temper-architect activated
    Role: Senior Software Architect
    Input received: [one-line summary]
-   Context source: .temper/prd.md [exists | not found]
+   Context source: Docs/Functional-Analysis/PRD.md [exists | not found]
 ```
 
 ---
@@ -42,7 +42,7 @@ Emitted after Phase 1 — detecting the operating mode.
 ```
 🔍 Mode detected: [Architectural Design | Problem Solving]
    Basis: [one sentence explaining what in the input determined this]
-   Context source: [.temper/prd.md | provided description | existing system | mixed]
+   Context source: [Docs/Functional-Analysis/PRD.md | provided description | existing system | mixed]
 
 → Proceeding to [Phase 2-A | Phase 2-B].
 ```
@@ -327,14 +327,14 @@ Emitted after proposal confirmation, before document generation.
 📄 Proposal confirmed. Here's what I'll generate:
 
   Required (for implementation agents):
-    ✅ backend-config.md         — backend implementation agents need this
-    ✅ DDD-Vocabulary.md         — backend agent uses this for domain terminology
-    [✅ frontend-config.md]      — frontend agent needs this (only if frontend exists in proposal)
+    ✅ Docs/Application/Architecture/backend-config.md  — backend implementation agents need this
+    ✅ Docs/Application/Domain/DDD-Vocabulary.md        — backend agent uses this for domain terminology
+    [✅ Docs/Application/Architecture/frontend-config.md] — frontend agent needs this (only if frontend exists in proposal)
 
-  Optional documentation (in Docs/ folder):
-    [ ] architecture-decision.md  — ADR: full reasoning, trade-offs, alternatives
-    [ ] domain-model.md          — DDD model: entities, aggregates, events, Mermaid diagrams
-    [ ] system-architecture.md   — bounded contexts, component diagrams, integrations
+  Optional documentation:
+    [ ] Docs/Application/Architecture/architecture-decision.md  — ADR: full reasoning, trade-offs, alternatives
+    [ ] Docs/Application/Domain/domain-model.md                 — DDD model: entities, aggregates, events, Mermaid diagrams
+    [ ] Docs/Application/System/system-architecture.md          — bounded contexts, component diagrams, integrations
 
   Note: These reference documents are the authoritative source for domain and architecture.
   The docs agent will link to them when generating ARCHITECTURE.md and SYSTEM.md.
@@ -346,16 +346,16 @@ Emitted after proposal confirmation, before document generation.
 ```
 
 Required documents are determined automatically:
-- `backend-config.md` — auto-included if the proposal has a backend
-- `frontend-config.md` — auto-included only if the proposal includes a frontend
-- `DDD-Vocabulary.md` — always auto-included
+- `Docs/Application/Architecture/backend-config.md` — auto-included if the proposal has a backend
+- `Docs/Application/Architecture/frontend-config.md` — auto-included only if the proposal includes a frontend
+- `Docs/Application/Domain/DDD-Vocabulary.md` — always auto-included
 
 **Mode B — Problem Solving:**
 
 ```
 📄 Plan confirmed. Which documents do you want me to generate?
 
-  [ ] architectural-plan.md     — full problem analysis, plan, risks, and alternatives
+  [ ] Docs/Application/Architecture/architectural-plan.md — full problem analysis, plan, risks, and alternatives
 
   Select if needed. If you only needed the analysis, just let me know.
 ```
@@ -370,9 +370,9 @@ Emitted after required documents are generated.
 ✅ Required documents generated
 
 Files created:
-  - .temper/backend-config.md
-  - .temper/DDD-Vocabulary.md
-  [- .temper/frontend-config.md]
+  - Docs/Application/Architecture/backend-config.md
+  - Docs/Application/Domain/DDD-Vocabulary.md
+  [- Docs/Application/Architecture/frontend-config.md]
 
 [If optional documents were selected:]
 → Proceeding to optional documentation.
@@ -394,17 +394,17 @@ Emitted at the very end of the architect's execution.
 Mode: Architectural Design
 Proposal confirmed: Yes
 Required documents generated:
-  - .temper/backend-config.md
-  - .temper/DDD-Vocabulary.md
-  [- .temper/frontend-config.md]
-Optional documents generated (authoritative reference docs in Docs/):
-  [- Docs/architecture-decision.md]
-  [- Docs/domain-model.md]
-  [- Docs/system-architecture.md]
+  - Docs/Application/Architecture/backend-config.md
+  - Docs/Application/Domain/DDD-Vocabulary.md
+  [- Docs/Application/Architecture/frontend-config.md]
+Optional documents generated (authoritative reference docs in Docs/Application/):
+  [- Docs/Application/Architecture/architecture-decision.md]
+  [- Docs/Application/Domain/domain-model.md]
+  [- Docs/Application/System/system-architecture.md]
   [or "None requested"]
 Version: [YYYYMMDD-HHMM]
 
-Note: After the build is complete, you can request api-contracts.md to be generated
+Note: After the build is complete, you can request Docs/Application/System/api-contracts.md to be generated
 from the built backend code — this is the contract the frontend agent will use.
 The docs agent will link to these reference docs when generating ARCHITECTURE.md and SYSTEM.md.
 ```
@@ -417,7 +417,7 @@ The docs agent will link to these reference docs when generating ARCHITECTURE.md
 Mode: Problem Solving
 Plan confirmed: Yes
 Documents generated:
-  [- Docs/architectural-plan.md]
+  [- Docs/Application/Architecture/architectural-plan.md]
   [or "None requested"]
 Version: [YYYYMMDD-HHMM]
 ```

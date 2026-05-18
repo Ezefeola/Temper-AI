@@ -4,12 +4,12 @@ description: >
   PRD (Product Requirements Document) template for the temper-analyst agent.
   Contains the full 10-section PRD structure generated during Phase 1.7,
   including header metadata, all required sections, and the scope rule note.
-  Load when generating or validating .temper/prd.md files.
+  Load when generating or validating Docs/Functional-Analysis/PRD.md files.
 ---
 
 # PRD Template
 
-Use this exact structure when generating `.temper/prd.md` in Phase 1.7.
+Use this exact structure when generating `Docs/Functional-Analysis/PRD.md` in Phase 1.7.
 
 ```markdown
 # Product Requirements Document — [Project Name]

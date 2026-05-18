@@ -11,7 +11,7 @@ produces: [scalar-api-docs]
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
-1. **ONLY use this skill when `.temper/backend-config.md` selects `Scalar`**
+1. **ONLY use this skill when `Docs/Application/Architecture/backend-config.md` selects `Scalar`**
 2. **ALWAYS expose docs only in Development unless a future skill says otherwise**
 3. **NEVER wire Swagger UI together with Scalar in the same host**
 
