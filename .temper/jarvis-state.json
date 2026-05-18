@@ -1,52 +1,54 @@
 {
-  "last_updated": "2026-05-16T05:10:00Z",
+  "last_updated": "2026-05-17T00:00:00Z",
   "status": "complete",
-  "request_summary": "Apply analyst Phase 1 to Phase 2 orchestration fixes so JARVIS reinvokes temper-analyst for spec generation instead of stopping after PRD",
+  "request_summary": "Apply follow-up corrections to Friday so it keeps clean structure while recovering Jarvis-level safeguards and improving Friday-native skills",
   "context": {
     "project": "TemperAI framework maintenance",
     "architecture": "Agent + skill orchestration framework",
     "stack": "Markdown agents and skills",
-    "notes": "Requested fix: keep analyst Phase 1 and Phase 2 orchestration behavior, and continue slimming temper-jarvis.agent.md by moving agent-specific delegation contracts, including implementation-agent handoff rules, into dedicated workflow skills loaded only when needed."
+    "notes": "User accepted comparison and wants follow-up corrections: add startup announcement without saying 'FRIDAY online', strengthen health checks, resolve approval ambiguity, clarify non-approval examples, explain strict post-execution protocol, perfect Friday analyst/architect skills without duplicating mechanics, and provide prompt diagnostic examples."
   },
   "approved_plan": [
     {
       "step": 1,
       "agent": "general",
-      "description": "Apply the analyst Phase 1 to Phase 2 orchestration fixes across JARVIS and its workflow skills",
+      "phase": null,
+      "description": "Apply Friday corrections for state health checks, approval ambiguity, post-execution strictness, specialist skill precision, and prompt diagnostics",
       "status": "complete",
-      "output": "Updated JARVIS so temper-analyst remains two explicit invocations, analyst and architect operating contracts live in dedicated workflow skills, and implementation-agent delegation detail now lives in a dedicated implementation-delegation workflow skill instead of bloating temper-jarvis.agent.md."
+      "output": "Applied Friday follow-up corrections. Modified temper-friday.agent.md plus Friday state-schema, prompt-excellence, analyst-communication, and architect-communication skills. Added mandatory startup state announcement without 'FRIDAY online', stronger state health checks, approval ambiguity fix, explicit non-approval examples, strict post-execution sequence, improved analyst/architect resume mechanics, and prompt diagnostics examples. No stale JARVIS references; temper-jarvis.agent.md unchanged."
     },
     {
       "step": 2,
-      "agent": "general",
-      "description": "Verify the new analyst Phase 1 and Phase 2 orchestration flow for consistency across JARVIS and state contracts",
+      "agent": "explore",
+      "phase": null,
+      "description": "Verify Friday corrections against Jarvis-level safeguards and clean-structure requirements",
       "status": "complete",
-      "output": "Verification passed for the refactor itself: JARVIS is now more focused and the analyst/architect/implementation-agent contracts are properly split into workflow skills. Remaining issues: old temper-orchestrator and orchestrator-state naming still exists in README, temper-plan, temper-next, and temper-status; pre-refactor analyst cycles without explicit phase would fall back to recovery rather than seamless resume."
+      "output": "Verification passed. All 12 requested Friday follow-up corrections are present. No stale JARVIS/jarvis references exist in Friday files. temper-jarvis.agent.md was not modified. No blocking gaps found. Friday is production-ready as a cleaner orchestrator prototype. Recommended follow-ups: fixture-based friday-state validation tests and dry workflow simulations for analyst, architect, and post-agent approval/session-mode handling."
     }
   ],
   "current_step": 2,
   "total_steps": 2,
-  "current_agent": null,
+  "current_agent": "explore",
   "current_task": null,
-  "task_title": "JARVIS workflow refactor verified",
+  "task_title": "Verify Friday follow-up corrections",
   "total_tasks": 2,
   "completed_tasks": [
     {
-      "task_id": "apply-analyst-phase-orchestration-fixes",
+      "task_id": "apply-friday-followup-corrections",
       "agent": "general",
-      "title": "Apply analyst Phase 1 to Phase 2 orchestration fixes",
+      "title": "Apply Friday follow-up corrections for production-grade orchestration behavior",
       "status": "complete"
     },
     {
-      "task_id": "verify-analyst-phase-orchestration-fixes",
-      "agent": "general",
-      "title": "Verify analyst Phase 1 and Phase 2 orchestration consistency",
+      "task_id": "verify-friday-followup-corrections",
+      "agent": "explore",
+      "title": "Verify Friday follow-up corrections against Jarvis parity and clean structure",
       "status": "complete"
     }
   ],
   "pending_tasks": [],
-  "current_output": "Plan complete. JARVIS now keeps specialist operating contracts in dedicated workflow skills instead of carrying them all in temper-jarvis.agent.md. Verification passed, with two remaining follow-up items: stale temper-orchestrator/orchestrator-state references in a few docs and no seamless migration path for legacy analyst cycles without explicit phase state.",
+  "current_output": "Step 2 verification passed. All requested Friday follow-up corrections passed. No blocking gaps. Friday is production-ready as a cleaner orchestrator prototype. Non-blocking follow-ups: state fixture validation tests and dry workflow simulations.",
   "active_cycle": null,
   "block_reason": null,
-  "next_action": "Wait for the user's next request"
+  "next_action": "Plan complete. User may restart opencode to load temper-friday and optionally run dry workflow simulations."
 }
