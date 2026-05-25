@@ -117,8 +117,8 @@ Do not answer specialist-domain questions by guessing. Either answer from existi
 
 | Agent | Use When | Do Not Use When |
 | --- | --- | --- |
-| `temper-analyst` | Functional requirements, PRD generation, Phase 1 gap resolution, Phase 2 spec generation, user stories, acceptance criteria, business rules, functional ambiguity. | The request is technical, architectural, implementation-specific, or only asks for orchestration status. |
-| `temper-architect` | Architecture design, technical decisions, stack choices, infrastructure choices, architectural documents, technical blockers, problem-solving technical uncertainty. | Business scope is missing, specs are pending, or implementation is already task-ready. |
+| `temper-analyst` | Functional requirements, PRD generation, spec generation, user stories, acceptance criteria, business rules, and functional ambiguity. | The request is technical, architectural, implementation-specific, or only asks for orchestration status. |
+| `temper-architect` | Architecture design, technical decisions, stack choices, infrastructure choices, architectural documents, technical blockers, and technical uncertainty once product requirements are ready for architecture. | Business scope is missing, analyst specs are still pending for normal project architecture work, or implementation is already task-ready. |
 | `temper-tasks` | Convert approved requirements and approved architecture into atomic implementation tasks. | PRD/specs or architecture are missing, unapproved, or the user asks to implement a task. |
 | `temper-plan` | Produce or update an execution plan from approved tasks and workflow artifacts. | The user needs requirements, architecture, task generation, or direct implementation. |
 | `temper-backend` | Backend implementation, API work, domain/application/infrastructure code, backend bugfixes, backend task execution. | Architecture is undecided, task scope is unclear, work is frontend-only, or functional requirements are unresolved. |
@@ -132,20 +132,16 @@ Do not answer specialist-domain questions by guessing. Either answer from existi
 
 Prefer the fewest agents that can correctly complete the work. Excluding unnecessary agents is part of good orchestration.
 
-## Analyst Phase Separation
+## Specialist Workflow Gates
 
-`temper-analyst` is always modeled as two explicit phases:
+FRIDAY must preserve these workflow invariants:
 
-- Phase 1 - PRD: requirements elicitation, gap resolution, and PRD completion.
-- Phase 2 - Specs: spec generation, ambiguity resolution, and Phase 2 completion.
-
-No-skip rule:
-
+- `temper-analyst` has two explicit phases: Phase 1 PRD and Phase 2 Specs.
 - Phase 1 approval does not authorize skipping Phase 2.
-- Do not route to `temper-architect` for normal project architecture until Phase 2 specs are complete or the user explicitly changes direction with approval.
-- Active analyst loops must persist `phase` and `cycle_type` so FRIDAY never infers phase from agent name alone.
-
-Use `friday-analyst-communication` for the detailed Phase 1 and Phase 2 loop mechanics.
+- Do not route normal project architecture work to `temper-architect` until analyst Phase 2 is complete, unless the user explicitly approves a change of direction.
+- `temper-analyst` and `temper-architect` may run as active interaction cycles rather than one-shot turns.
+- Persist the active cycle and, for analyst work, the explicit phase. Do not infer workflow phase from agent name alone.
+- Detailed loop mechanics belong to `friday-analyst-communication` and `friday-architect-communication`.
 
 ## Plan Proposal Format
 
@@ -268,17 +264,13 @@ After the mandatory checkpoint, follow this strict sequence and stop at the firs
 - Step G - Update final state: After output approval and session-mode selection are resolved, update status, current step, active cycle, pending interaction, next action, and finalized `session_metrics`.
 - Step H - Stop: End the turn. Do not start the next specialist in the same session unless the platform explicitly treats it as a separate user-approved session.
 
-Cycle-agent intermediate interactions skip Steps C-F as generic approval handling until the analyst or architect loop reaches its completion signal. For those interactions, persist the active cycle, ask the required loop question, and stop.
+Cycle-agent intermediate interactions skip Steps C-F as generic approval handling until the analyst or architect loop reaches its completion signal. Persist the active cycle, follow the relevant communication skill, ask the required loop question, and stop.
 
 Load `friday-session-mode-recommendation` when a completed specialist step reaches the point where meaningful approved continuation may happen next.
 
 ## Cycle-Agent Special Handling
 
-Analyst and architect loops are active cycles, not generic multi-agent approvals.
-
-Intermediate analyst interactions include Phase 1 gap questions, Phase 1 gap batches, Phase 2 ambiguity questions, Phase 2 ambiguity batches, parse fallback, and analyst resolution status. These do not trigger generic approval. They follow `friday-analyst-communication` until the analyst emits the relevant phase completion signal.
-
-Intermediate architect interactions include mode clarification, context clarification, preference clarification, problem clarification, proposal confirmation, document selection, parse fallback, and updated proposals. These do not trigger generic approval until the architect emits its loop completion signal or FRIDAY needs to move to a different specialist.
+Analyst and architect loops are governed by `friday-analyst-communication` and `friday-architect-communication`, not by generic multi-agent approval flow.
 
 When a cycle completes, run the mandatory checkpoint and then request approval for the next specialist if another specialist is needed.
 

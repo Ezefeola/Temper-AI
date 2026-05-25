@@ -1,18 +1,20 @@
 {
   "last_updated": "2026-05-25T00:00:00Z",
-  "status": "fresh",
-  "request_summary": "Friday session-mode recommendation policy was implemented, approved, and the workflow state was cleared for the next request.",
+  "status": "complete",
+  "request_summary": "FRIDAY agent markdown routing and cycle-handling sections were refactored and approved.",
   "context": {
     "project": "temper-ai Friday agent and workflow assets",
     "architecture": "unknown",
     "stack": "agent and workflow markdown assets",
-    "notes": "Friday now uses a dedicated session-mode recommendation skill plus persisted session_metrics guidance in workflow assets. User approved the implementation and requested a clean orchestration state."
+    "notes": "The FRIDAY agent markdown was refactored to keep routing focused on agent selection and move analyst/architect loop detail behind communication-skill references."
   },
   "session_metrics": {
-    "specialist_runs_total": 0,
-    "specialist_runs_current_thread": 0,
-    "distinct_specialists": [],
-    "distinct_specialist_count": 0,
+    "specialist_runs_total": 1,
+    "specialist_runs_current_thread": 1,
+    "distinct_specialists": [
+      "general"
+    ],
+    "distinct_specialist_count": 1,
     "cycle_rounds_total": 0,
     "recovery_attempts": 0,
     "prompt_failure_retries": 0,
@@ -25,5 +27,5 @@
     "risk_score": 0
   },
   "block_reason": null,
-  "next_action": "Wait for the next user request with a clean FRIDAY orchestration state."
+  "next_action": "Wait for the next user request; no further specialist step is active."
 }
