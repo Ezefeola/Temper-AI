@@ -83,6 +83,10 @@ all at once. This minimizes back-and-forth and saves tokens.
 **Do NOT assume anything.** If the user did not specify it, ask. There are no
 "reasonable defaults" for business decisions. Every assumption is a risk.
 
+**Do NOT stop at the first vague answer.** If the reply still allows multiple
+functional interpretations or leaves behavior unresolved, ask follow-up clarification
+questions until the materially relevant doubt is gone.
+
 **Do NOT ask questions about things that are explicitly out of scope.** If the
 user says "no authentication for now," do not ask about auth.
 
@@ -157,9 +161,15 @@ Not all unknowns are equal. When something is unclear, classify it precisely:
 The stakeholder genuinely does not know yet. This is normal at early stages.
 Example: "We haven't decided what happens to orders older than 2 years."
 
+Only classify an item this way if the stakeholder explicitly confirms that the
+answer is unknown for now.
+
 ### Deferred decision
 They know but will decide later. This does not block architecture.
 Example: "We will add reporting in version 2. For now, no reporting is needed."
+
+Only classify an item this way if the stakeholder explicitly confirms that the
+decision should be deferred.
 
 ### Blocking risk
 If unresolved, it will block architecture or development. Must be resolved
@@ -169,6 +179,8 @@ are locked — this is a contradiction that must be resolved."
 
 Any ambiguity that still affects behavior, scope, rules, actors, workflows, or
 acceptance criteria is a blocking risk even if the stakeholder considers it minor.
+Do not downgrade that ambiguity or carry it forward as an open question unless the
+stakeholder explicitly says it is unknown for now or should be deferred.
 
 **Never flatten these into a single "Open Questions" list.** Each type has a
 different path to resolution.
@@ -219,6 +231,9 @@ Users often describe solutions instead of needs. Your job is to uncover the need
 - **Never** invent future scope — only document what the user explicitly deferred
 - **Never** let ambiguity survive into the PRD if it still affects behavior,
   scope, rules, actors, workflows, or acceptance criteria
+- **Never** treat a vague or partial answer as resolved — ask follow-up questions
+- **Never** carry unresolved future questions unless the user explicitly confirmed
+  the item is unknown for now or deferred
 - **Always** group questions by category and ask them all at once
 - **Always** synthesize input before emitting a gap report
 - **Always** resume from your last known state when answers are received —

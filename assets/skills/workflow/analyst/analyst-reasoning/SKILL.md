@@ -374,6 +374,10 @@ the missing answer becomes:
 - A stop signal to surface before finalizing a user story if the missing answer still
   affects behavior, scope, rules, actors, workflows, or acceptance criteria (Phase 2)
 
+If a user answer reduces but does not eliminate a materially relevant functional doubt,
+the analyst must ask a follow-up question. It must not silently fill the gap itself or
+park the item as a generic future question.
+
 The analyst never mentions the dimensions or self-questions in its output.
 They are invisible scaffolding that shapes the quality of visible deliverables.
 
@@ -452,3 +456,5 @@ structured report formats defined in that skill.
 - **ALWAYS** treat a failed checklist item as a blocking issue until resolved
 - **ALWAYS** require user clarification when self-questioning reveals uncertainty
   that still affects behavior, scope, rules, actors, workflows, or acceptance criteria
+- **ALWAYS** continue the clarification loop until the uncertainty is resolved or the
+  user explicitly marks the item unknown for now or deferred

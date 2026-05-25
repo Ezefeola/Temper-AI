@@ -1,15 +1,15 @@
 {
   "last_updated": "2026-05-25T00:00:00Z",
   "status": "complete",
-  "request_summary": "FRIDAY agent markdown routing and cycle-handling sections were refactored and approved.",
+  "request_summary": "Analyst instruction files were hardened to forbid assumptions and require clarification until functional certainty is reached.",
   "context": {
     "project": "temper-ai Friday agent and workflow assets",
     "architecture": "unknown",
     "stack": "agent and workflow markdown assets",
-    "notes": "The FRIDAY agent markdown was refactored to keep routing focused on agent selection and move analyst/architect loop detail behind communication-skill references."
+    "notes": "Analyst workflow instructions now require explicit clarification of missing or ambiguous functional behavior and allow deferred unknowns only when the user explicitly chooses that path."
   },
   "session_metrics": {
-    "specialist_runs_total": 1,
+    "specialist_runs_total": 2,
     "specialist_runs_current_thread": 1,
     "distinct_specialists": [
       "general"

@@ -73,10 +73,11 @@ Not functional constraints — those belong in Section 4.]
 
 ## 9. Open Questions
 
-[Every unresolved item, classified by type.]
-- **[Business uncertainty]**: [Question — stakeholder genuinely doesn't know yet]
-- **[Deferred decision]**: [Question — will be decided later, does not block architecture]
-- **[BLOCKING RISK]**: [Question — must be resolved before architecture begins]
+[Only include items the stakeholder explicitly confirmed as unknown for now or explicitly deferred.]
+- **[Business uncertainty]**: [Question — stakeholder explicitly said they genuinely do not know yet]
+- **[Deferred decision]**: [Question — stakeholder explicitly said it will be decided later and is out of current scope]
+
+> No blocking functional ambiguity may remain in this section at Phase 1 completion.
 
 ## 10. Analyst Sign-off
 

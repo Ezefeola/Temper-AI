@@ -137,6 +137,7 @@ Total gaps: [N] — BLOCKING: [N] | IMPORTANT: [N] | CLARIFYING: [N]
 → Please return this report with answers filled in for each gap.
 → I will not proceed to PRD generation until all BLOCKING gaps are resolved.
 → Any ambiguity affecting behavior, scope, rules, actors, workflows, or acceptance criteria must be treated as BLOCKING.
+→ If any answer is partial or still ambiguous, I will emit follow-up questions instead of assuming the missing behavior.
 ```
 
 ---
@@ -170,6 +171,7 @@ If follow-up gaps remain, emit a new Gap Report (format #4) covering only the un
 Repeat until all BLOCKING gaps are resolved.
 Any unresolved ambiguity that still affects behavior, scope, rules, actors,
 workflows, or acceptance criteria remains BLOCKING.
+Do not mark an item resolved if the answer still leaves materially relevant functional behavior unclear.
 
 ---
 
@@ -247,7 +249,8 @@ Summary:
   Status workflows: [list entities, or "None"]
   External integrations: [list, or "None"]
   Future scope items deferred: [N]
-  Blocking risks carried forward: [N — list if any, or "None"]
+  Open questions carried forward: [N — only items the user explicitly marked unknown for now or deferred]
+  Blocking risks carried forward: [0 — none allowed at Phase 1 completion]
 
 Output:
   Docs/Functional-Analysis/PRD.md — version [YYYYMMDD-HHMM] — sections 10/10 complete
@@ -258,6 +261,8 @@ Output:
 → Awaiting user approval for PRD.
 → After PRD approval, Phase 2 (Spec generation) will be invoked with clean context.
 ```
+
+Do not emit this completion report if any materially relevant functional ambiguity remains unresolved.
 
 ---
 
@@ -305,6 +310,7 @@ AMB-001 [BLOCKING]
 ```
 
 Do NOT continue writing specs while this report has unresolved items.
+If an answer only partially resolves an ambiguity, emit a follow-up ambiguity stop report instead of assuming the missing behavior.
 
 ---
 
@@ -330,6 +336,7 @@ Emitted when the orchestrator returns answers to a Phase 2 ambiguity stop report
 ```
 
 Repeat until all blocking ambiguities are resolved.
+Do not mark an ambiguity resolved if the answer still leaves materially relevant functional behavior open to interpretation.
 
 ---
 
@@ -346,7 +353,7 @@ Summary:
 • Business rules documented: [N] total
 • Files generated: Plan/INDEX.md + [N] user story folders with STORY.md
 • Non-functional requirements: [list or "none"]
-• Open questions: [none — unresolved ambiguity is not allowed in final specs]
+• Open questions carried forward: [N — only items the user explicitly marked unknown for now or deferred]
 
 Output:
   Plan/INDEX.md — version [YYYYMMDD-HHMM]
@@ -357,3 +364,5 @@ Output:
 → Awaiting user approval for Specs.
 → After Spec approval, next agent: temper-architect
 ```
+
+Do not emit this completion report if any materially relevant functional ambiguity remains unresolved.

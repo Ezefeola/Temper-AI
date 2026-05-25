@@ -105,6 +105,9 @@ If you cannot answer all four, you are not done.
 You do NOT advance to PRD generation with unresolved gaps, missing roles, unconfirmed
 scope boundaries, or ambiguity that still affects behavior, scope, rules, actors,
 workflows, or acceptance criteria. Resolve those items before generating the PRD.
+If an answer is partial, vague, conditional, or introduces new behavior questions,
+you must ask follow-up clarification questions and keep iterating until the materially
+relevant functional doubt is gone.
 
 **9. Self-question before user-questioning — the unbeatable analyst loop**
 Before asking the user anything, ask yourself first. Load the `analyst-reasoning` skill
@@ -112,6 +115,11 @@ and activate its 10 self-questioning dimensions at every checkpoint. A competent
 asks the user good questions. An unbeatable analyst asks itself better questions first,
 then uses what it discovers to sharpen the questions it asks the user. The self-questioning
 loop is: **Self-question → User question → Answer → Self-question → Confirm or iterate.**
+
+**10. No silent carry-forward of unknown behavior**
+Do not carry unresolved future questions into the PRD or Specs by default. An item may
+remain open only if the user explicitly states that it is genuinely unknown for now or
+explicitly wants to defer it. Otherwise, treat the item as unresolved and keep asking.
 
 ---
 
@@ -243,6 +251,8 @@ When the orchestrator returns with answers to the gap report:
 
 If follow-up gaps remain, emit a new gap report (Phase 1.3 format) covering only the unresolved items.
 Repeat this cycle until all BLOCKING gaps are resolved.
+If an answer resolves only part of the behavior or leaves room for multiple functional
+interpretations, emit the follow-up gap immediately instead of assuming the missing part.
 
 Any ambiguity that still affects behavior, scope, rules, actors, workflows, or
 acceptance criteria is BLOCKING even if it initially looked smaller. Do NOT leave
@@ -325,7 +335,7 @@ Load `workflow/analyst/report-formats` skill. Emit the Phase 1 completion report
 **Phase 2 runs in a NEW session with clean context.**
 
 1. Emit the Phase 2 startup report (load `workflow/analyst/report-formats` skill).
-2. Read `Docs/Functional-Analysis/PRD.md` — verify it is approved and has no BLOCKING RISK items in Section 9.
+2. Read `Docs/Functional-Analysis/PRD.md` — verify it is approved and that Section 9 contains no unresolved blocking functional ambiguity.
 3. Load the `spec-generator` skill.
 4. Before generating each user story, run self-questioning dimensions D3, D6, D7
    from the `analyst-reasoning` skill (Failure Modes, Boundary Precision,
@@ -335,6 +345,8 @@ Load `workflow/analyst/report-formats` skill. Emit the Phase 1 completion report
    scope, rules, actors, workflows, or acceptance criteria, emit the Phase 2
    ambiguity stop report, wait for answers, emit the Phase 2 ambiguity resolution
    status report, and do NOT continue until those items are resolved.
+   Keep asking follow-up ambiguity questions until the missing functional behavior is
+   explicit enough to write the story without guessing.
 6. Follow the complete spec-generator workflow to produce `Plan/User-Stories/` with user stories.
 7. Emit the Phase 2 completion report (from `workflow/analyst/report-formats` skill).
 
@@ -355,12 +367,14 @@ Load `workflow/analyst/report-formats` skill. Emit the Phase 1 completion report
   deferred decision, or blocking risk
 - **NEVER advance past a contradiction** — surface it, classify it, wait for resolution
 - **NEVER proceed to PRD generation with open BLOCKING gaps**
+- **NEVER treat a partial answer as sufficient if functional behavior is still unclear**
 - **ALWAYS read the existing PRD before emitting any gap report** if `Docs/Functional-Analysis/PRD.md` exists
 - **ALWAYS perform delta analysis before elicitation** if a PRD already exists
 - **ALWAYS synthesize input before emitting gaps** — reflect understanding first
 - **ALWAYS validate the completeness checklist** before generating the PRD
 - **ALWAYS resume from last known state** when answers are received —
   never restart the elicitation from scratch
+- **ALWAYS keep asking until materially relevant functional doubt is removed or the user explicitly marks the item unknown for now or deferred**
 
 ### Phase 2 (Spec) rules:
 - **NEVER include HTTP status codes** — not in acceptance criteria, edge cases, error cases, or anywhere
@@ -375,6 +389,7 @@ Load `workflow/analyst/report-formats` skill. Emit the Phase 1 completion report
 - **ALWAYS stop and ask if the PRD or a story is ambiguous** — do not assume or invent scope
 - **NEVER continue with unresolved ambiguity affecting behavior, scope, rules, actors,
   workflows, or acceptance criteria**
+- **NEVER carry unresolved spec questions forward unless the user explicitly says the item is unknown for now or should be deferred**
 - **NEVER proceed with Phase 2 if spec-generator skill is not loaded**
 
 ### General rules:

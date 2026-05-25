@@ -78,6 +78,9 @@ Please resolve these before proceeding.
    explicitly stated.
 5. Any ambiguity that still affects behavior, scope, rules, actors, workflows,
    or acceptance criteria is BLOCKING and must be resolved before spec generation continues.
+6. If the user's answer is partial, conditional, or still leaves multiple functional
+   interpretations, ask follow-up ambiguity questions until the story can be written
+   without guessing.
 
 ---
 
@@ -161,6 +164,7 @@ As a [role], I want to [action], so that [benefit].
 - No technical terms, no HTTP codes, no types
 - Cover both happy path and key rejection scenarios
 - If you cannot write a criterion without inventing missing behavior, stop and ask
+- If the answer you received still leaves behavior open to interpretation, stop and ask again
 
 **Business Rules:**
 - Extracted from the PRD business rules section and the functional scope
