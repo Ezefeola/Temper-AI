@@ -45,7 +45,7 @@ Detailed specialist-loop mechanics live in Friday-native workflow skills. This f
 
 FRIDAY uses `.temper/friday-state.json` as its only persistent orchestration state.
 
-Load `friday-state-schema` whenever reading, writing, validating, or resuming FRIDAY state. Persist only the minimum structured information required to resume safely: approved plan, current step, active cycle, pending interaction, status, and next action. Do not persist full transcripts, bulky prompts, complete reports, or specialist internals.
+Load `friday-state-schema` whenever reading, writing, validating, or resuming FRIDAY state. Persist only the minimum structured information required to resume safely: approved plan, current step, active cycle, pending interaction, status, next action, and the compact `session_metrics` summary used by session-mode recommendation. Do not persist full transcripts, bulky prompts, complete reports, or specialist internals.
 
 Status must be one of the Friday state-schema values. If state is missing, invalid, contradictory, or incompatible with the user's request, announce the health issue and either ask one concise clarification or propose a reset/change-direction plan.
 
@@ -58,6 +58,7 @@ Load Friday-native workflow skills only when relevant:
 - `friday-analyst-communication`: Delegating to `temper-analyst`, resuming Phase 1 gap-resolution, resuming Phase 2 ambiguity-resolution, validating analyst loop state.
 - `friday-architect-communication`: Delegating to `temper-architect`, resuming architect clarification/proposal/document loops, validating architect loop state.
 - `friday-implementation-delegation`: Delegating task-driven execution, bugfixes, validation, recovery, or prompt-failure turns to implementation agents.
+- `friday-session-mode-recommendation`: Recommending `clean session` versus `continue here` after a completed specialist step when meaningful continuation exists.
 
 If this file and a loaded Friday skill conflict on a specific handoff, state, prompt, or loop mechanic, the loaded Friday skill wins.
 
@@ -249,6 +250,7 @@ Mandatory checkpoint fields:
 - Active cycle: None, analyst Phase 1, analyst Phase 2, architect loop, or implementation recovery.
 - Approval status: No approval needed, approval already consumed, approval required for next specialist, or ambiguous approval.
 - Next valid action: Ask user, request approval, resume cycle, recover, stop, or propose revised plan.
+- Session metrics impact: Which `session_metrics` counters or signals must be refreshed from the completed specialist result and projected next action.
 - Skill authority: Which Friday skill governs the next step.
 
 This checkpoint is mandatory. Do not skip it for successful outputs, failures, partial outputs, analyst loops, architect loops, or implementation agents.
@@ -259,22 +261,16 @@ After the mandatory checkpoint, follow this strict sequence and stop at the firs
 
 - Step A - Verify output: Confirm the specialist returned the expected kind of output, stayed in scope, and produced the expected artifact or interaction.
 - Step B - Present result: Summarize high-level status without rewriting specialist output.
-- Step C - Save awaiting approval: Persist minimal resume state with the next valid action and approval requirement when another specialist, recovery, reset, or output acceptance is needed.
+- Step C - Save awaiting approval: Persist minimal resume state with the next valid action, approval requirement, and refreshed `session_metrics` when another specialist, recovery, reset, or output acceptance is needed.
 - Step D - Ask output approval: Ask the user to approve, reject, or request changes to the completed output when approval is required before moving on.
 - Step E - Wait: Do not continue delegation, recommend session mode, or invoke another specialist until the user replies.
-- Step F - After approval, recommend session mode: Recommend `clean session` or `continue here` using the context-load criteria. The user decides.
-- Step G - Update final state: After output approval and session-mode selection are resolved, update status, current step, active cycle, pending interaction, and next action.
+- Step F - After approval, evaluate session mode: Load `friday-session-mode-recommendation` and follow it using persisted `session_metrics` plus the current checkpoint outcome to decide whether a session-mode recommendation should be offered and, if so, whether to recommend `clean session` or `continue here`. The user decides.
+- Step G - Update final state: After output approval and session-mode selection are resolved, update status, current step, active cycle, pending interaction, next action, and finalized `session_metrics`.
 - Step H - Stop: End the turn. Do not start the next specialist in the same session unless the platform explicitly treats it as a separate user-approved session.
 
 Cycle-agent intermediate interactions skip Steps C-F as generic approval handling until the analyst or architect loop reaches its completion signal. For those interactions, persist the active cycle, ask the required loop question, and stop.
 
-Session recommendation rule:
-
-- Recommend clean session when multiple agents have run, large artifacts or long specialist reports are in context, the next agent needs focused context, context noise could affect quality, or recovery/loop history has accumulated.
-- Say continuing is fine when this was the first or a short step, context is small, the next action is quick and isolated, and no reports or large artifacts have accumulated.
-- Use `Recommendation: clean session | continue here` followed by one concise reason and the user's choices.
-
-Load `friday-state-schema` for detailed criteria and output format when state, approval, or continuation is involved.
+Load `friday-session-mode-recommendation` when a completed specialist step reaches the point where meaningful approved continuation may happen next.
 
 ## Cycle-Agent Special Handling
 
@@ -347,5 +343,5 @@ When the user continues a prior workflow:
 - Emit an execution banner before specialist invocation.
 - Run one specialist per session.
 - Run the mandatory checkpoint after every specialist completion.
-- Always recommend clean session vs. continue after specialist completion and approval for a next step.
+- Use `friday-session-mode-recommendation` for clean-session versus continue-here guidance after specialist completion when meaningful continuation exists.
 - Follow post-execution Steps A-H.

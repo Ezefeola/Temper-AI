@@ -96,6 +96,22 @@ description: >
     "unresolved_blocking_gaps": 3,
     "cycle_count": 1
   },
+  "session_metrics": {
+    "specialist_runs_total": 2,
+    "specialist_runs_current_thread": 1,
+    "distinct_specialists": ["temper-analyst", "temper-architect"],
+    "distinct_specialist_count": 2,
+    "cycle_rounds_total": 3,
+    "recovery_attempts": 1,
+    "prompt_failure_retries": 1,
+    "long_outputs_count": 2,
+    "large_summaries_count": 1,
+    "last_output_class": "completion-report | proposal | task-result | gap-report | ambiguity-report | failure | partial-output | unclear-output | recovery-report | none",
+    "next_action_type": "none | direct-answer | output-approval | approved-next-specialist | approved-exact-continuation | analyst-cycle-input | architect-cycle-input | recovery-approval | repair-or-reset | blocked-input | change-direction",
+    "scope_confusion_signals": 1,
+    "mixed_scope_signal": false,
+    "risk_score": 3
+  },
   "block_reason": null,
   "next_action": "what the next session should do"
 }
@@ -138,9 +154,40 @@ Before resuming, delegating, or writing state, validate these fields:
 - `approved_plan[].step` must be unique, sequential, and match its order.
 - `approved_plan[].status` must be `complete`, `pending`, or `in-cycle`.
 - `current_agent` is required when `status` is `in-progress` or a pending approval targets a specific next agent.
+- `session_metrics` is optional but allowed at the root and should be persisted once FRIDAY has enough checkpoint data to maintain session-mode recommendations safely.
+- When `session_metrics` exists, it must be an object with non-negative integer counters, a boolean `mixed_scope_signal`, and a non-negative integer `risk_score`.
 - `block_reason` is required and non-empty when `status` is `blocked`.
 
 If required fields are missing or contradictory, stop delegation, warn that state cannot be resumed safely, and ask for repair/reset approval or one concise clarification.
+
+## Session Metrics
+
+`session_metrics` is the persisted summary FRIDAY uses for clean-session versus continue-here recommendation behavior.
+
+Allowed fields:
+
+- `specialist_runs_total`: Total completed specialist runs captured in the active workflow state.
+- `specialist_runs_current_thread`: Completed specialist runs in the current conversation thread since the latest clean restart boundary.
+- `distinct_specialists`: Distinct specialist agent names already used in the current thread.
+- `distinct_specialist_count`: Count of `distinct_specialists`.
+- `cycle_rounds_total`: Total analyst/architect cycle rounds accumulated in the active workflow.
+- `recovery_attempts`: Recovery or re-delegation attempts after unusable output, failure, or blocked continuation.
+- `prompt_failure_retries`: Retries specifically caused by FRIDAY prompt-quality failure.
+- `long_outputs_count`: Count of long specialist outputs or reports that materially increase live context load.
+- `large_summaries_count`: Count of broad FRIDAY summaries or synthesis turns that materially increase live context load.
+- `last_output_class`: Class of the most recent completed specialist output.
+- `next_action_type`: Normalized next-step class used by the recommendation policy.
+- `scope_confusion_signals`: Count of recent drift, ambiguity, duplication, or scope-blur indicators.
+- `mixed_scope_signal`: `true` when the conversation mixed materially different scopes or specialist concerns in a way that raises continuation risk.
+- `risk_score`: Computed non-negative integer summarizing continuation risk for the session-mode recommendation policy.
+
+Persistence rules:
+
+- Older state files may omit `session_metrics`; FRIDAY may initialize it lazily from zero/default values when the next completed specialist checkpoint is written.
+- Keep `session_metrics` compact and derived. It is a summary layer, not a transcript or second workflow log.
+- Refresh `last_output_class`, `next_action_type`, and `risk_score` whenever FRIDAY writes post-execution state after a specialist completion.
+- Keep `distinct_specialists` and `distinct_specialist_count` consistent.
+- Do not store bulky excerpts, raw reports, or free-form narrative inside `session_metrics`.
 
 ## Pending Step And Output Validation
 
@@ -264,36 +311,14 @@ Implementation agents resolve their task from `Plan/INDEX.md`, read the task fil
 
 ## Session Mode Recommendation
 
-After a specialist completes and the user approves any next step, FRIDAY must evaluate context load and recommend one of two session modes:
+When FRIDAY reaches post-completion continuation handling, load `workflow/friday/session-mode-recommendation`.
 
-- `clean session`: save or rely on `.temper/friday-state.json`, then continue later from state with focused context.
-- `continue here`: proceed in the same conversation because context is still small and useful.
+That skill is authoritative for:
 
-FRIDAY recommends; the user decides. Do not ask passively with neutral wording like "Do you want to continue?" Always give a clear recommendation and the reason.
-
-Recommend `clean session` when any of these are true:
-
-- Multiple specialists have already executed in the current conversation.
-- Large generated artifacts, long reports, or extensive file summaries are in context.
-- The next specialist needs focused context and should not inherit prior report noise.
-- Context noise could cause prompt drift, duplicated work, or scope confusion.
-- Analyst or architect loops produced long specialist reports or multiple interaction rounds.
-- Recovery loops, failed attempts, or prompt-failure analysis accumulated in context.
-
-Say `continue here` is fine when all of these are true:
-
-- This was the first specialist step or a short isolated step.
-- Context is small and directly relevant to the next action.
-- The next action is quick, narrow, and isolated.
-- No long specialist reports, large artifacts, or recovery history have accumulated.
-
-Use this output format:
-
-```text
-Recommendation: clean session | continue here
-Reason: [one concise reason tied to context load]
-Choices: Reply "clean" to continue from saved state with focused context, or "continue" to proceed in this session.
-```
+- Whether a session-mode recommendation should be offered.
+- The default recommendation bias.
+- Thresholds, hard exceptions, and context-load signals.
+- The required recommendation output format.
 
 ## Analyst-Specific State Notes
 

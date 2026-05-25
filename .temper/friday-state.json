@@ -1,26 +1,29 @@
 {
-  "last_updated": "2026-05-18T00:00:00Z",
-  "status": "complete",
-  "request_summary": "Improve frontend agent assets to support Blazor .NET 10 and Angular with selective skill loading and reduced redundancy.",
+  "last_updated": "2026-05-25T00:00:00Z",
+  "status": "fresh",
+  "request_summary": "Friday session-mode recommendation policy was implemented, approved, and the workflow state was cleared for the next request.",
   "context": {
-    "project": "temper-ai frontend agent and skill assets",
+    "project": "temper-ai Friday agent and workflow assets",
     "architecture": "unknown",
-    "stack": "frontend agent and skill markdown assets",
-    "notes": "User approved changing direction from the previous workflow-assets approval checkpoint. Work scope was limited to assets/agents and assets/skills; specialist reported no documentation Markdown outside those asset areas was used. Frontend agent now supports selective Blazor .NET 10 and Angular skill loading."
+    "stack": "agent and workflow markdown assets",
+    "notes": "Friday now uses a dedicated session-mode recommendation skill plus persisted session_metrics guidance in workflow assets. User approved the implementation and requested a clean orchestration state."
   },
-  "approved_plan": [
-    {
-      "step": 1,
-      "agent": "general",
-      "phase": null,
-      "description": "Update frontend agent and frontend skills for Blazor .NET 10 and Angular selective skill loading.",
-      "status": "complete",
-      "output": "frontend agent and frontend skill assets updated"
-    }
-  ],
-  "current_step": 1,
-  "total_steps": 1,
-  "current_agent": "general",
+  "session_metrics": {
+    "specialist_runs_total": 0,
+    "specialist_runs_current_thread": 0,
+    "distinct_specialists": [],
+    "distinct_specialist_count": 0,
+    "cycle_rounds_total": 0,
+    "recovery_attempts": 0,
+    "prompt_failure_retries": 0,
+    "long_outputs_count": 0,
+    "large_summaries_count": 0,
+    "last_output_class": "none",
+    "next_action_type": "none",
+    "scope_confusion_signals": 0,
+    "mixed_scope_signal": false,
+    "risk_score": 0
+  },
   "block_reason": null,
-  "next_action": "Frontend agent and skill asset update approved by user; wait for next request."
+  "next_action": "Wait for the next user request with a clean FRIDAY orchestration state."
 }
