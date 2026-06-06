@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$manifestUrl = 'https://github.com/ezefeDev/temper-ai/releases/latest/download/manifest.json'
+$manifestUrl = '__TEMPERAI_MANIFEST_URL__'
 $targetRid = 'win-x64'
 $installDir = Join-Path $env:LOCALAPPDATA 'Programs\TemperAI'
 $targetExe = Join-Path $installDir 'temper-ai.exe'
@@ -62,6 +62,7 @@ $now = [System.DateTimeOffset]::UtcNow.ToString('o')
 $metadata = [ordered]@{
     channel = $manifest.channel
     sourceMode = 'remote'
+    manifestUrl = $manifestUrl
     installedCliVersion = $manifest.cli.version
     installedAssetsVersion = $manifest.assets.version
     installedAt = $now

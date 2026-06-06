@@ -186,14 +186,14 @@ The exact schema may evolve, but every public manifest must represent the same o
     "platforms": [
       {
         "rid": "win-x64",
-        "url": "https://github.com/ezefeDev/temper-ai/releases/download/v1.2.0/temper-ai-win-x64.zip",
+        "url": "https://github.com/Ezefeola/temper-ai/releases/download/v1.2.0/temper-ai-win-x64.zip",
         "sha256": "<cli-sha256>"
       }
     ]
   },
   "assets": {
     "version": "1.2.0",
-    "url": "https://github.com/ezefeDev/temper-ai/releases/download/v1.2.0/temper-ai-assets-1.2.0.zip",
+    "url": "https://github.com/Ezefeola/temper-ai/releases/download/v1.2.0/temper-ai-assets-1.2.0.zip",
     "sha256": "<assets-sha256>"
   },
   "compatibility": {

@@ -61,7 +61,7 @@ public sealed class UpdateCommand : Command<UpdateSettings>
             try
             {
                 ReleaseManifestService manifestService = new();
-                manifest = manifestService.DownloadStableManifest();
+                manifest = manifestService.DownloadStableManifest(metadata?.ManifestUrl);
                 cliNeedsUpdate = IsRemoteVersionDifferent(localCliVersion, manifest.Cli.Version);
                 assetsNeedUpdate = assetsNeedUpdate || metadata?.InstalledAssetsVersion != manifest.Assets.Version;
             }
@@ -135,6 +135,7 @@ public sealed class UpdateCommand : Command<UpdateSettings>
                 {
                     Channel = manifest.Channel,
                     SourceMode = sourceMode,
+                    ManifestUrl = metadata?.ManifestUrl ?? ReleaseManifestService.StableManifestUrl,
                     InstalledCliVersion = manifest.Cli.Version,
                     InstalledAssetsVersion = manifest.Assets.Version,
                     InstalledAt = metadata?.InstalledAt ?? DateTimeOffset.UtcNow,
@@ -153,6 +154,7 @@ public sealed class UpdateCommand : Command<UpdateSettings>
             {
                 Channel = manifest.Channel,
                 SourceMode = sourceMode,
+                ManifestUrl = metadata?.ManifestUrl ?? ReleaseManifestService.StableManifestUrl,
                 InstalledCliVersion = localCliVersion,
                 InstalledAssetsVersion = manifest.Assets.Version,
                 InstalledAt = metadata?.InstalledAt ?? DateTimeOffset.UtcNow,
