@@ -143,7 +143,7 @@ See [docs/community-release-model.md](docs/community-release-model.md) for the p
 
 ### Quick install (recommended)
 
-Use the published **one-line PowerShell bootstrap command** from the latest [Releases](https://github.com/ezefeDev/temper-ai/releases) page.
+Use the published **one-line PowerShell bootstrap command** from the latest [Releases](https://github.com/Ezefeola/temper-ai/releases) page.
 
 That bootstrap flow is the supported public install path. It resolves the current **stable** release manifest, installs the self-contained CLI globally for the current user, and configures TemperAI to use **remote assets by default**.
 

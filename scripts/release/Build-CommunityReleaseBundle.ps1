@@ -39,6 +39,7 @@ foreach ($requiredPath in @($cliProject, $assetsRoot, $bootstrapTemplate)) {
 
 $releaseTag = "v$normalizedVersion"
 $releaseBaseUrl = "https://github.com/$Repository/releases/download/$releaseTag"
+$stableManifestUrl = "https://github.com/$Repository/releases/latest/download/manifest.json"
 $cliAssetName = 'temper-ai-win-x64.zip'
 $assetsAssetName = "temper-ai-assets-$normalizedVersion.zip"
 
@@ -81,7 +82,10 @@ $bootstrapOutputPath = Join-Path $resolvedOutputRoot 'install.ps1'
 
 Compress-Archive -Path $cliExecutable -DestinationPath $cliZipPath -CompressionLevel Optimal
 Compress-Archive -Path $assetsRoot -DestinationPath $assetsZipPath -CompressionLevel Optimal
-Copy-Item -LiteralPath $bootstrapTemplate -Destination $bootstrapOutputPath -Force
+
+$bootstrapContent = Get-Content -LiteralPath $bootstrapTemplate -Raw
+$bootstrapContent = $bootstrapContent.Replace('__TEMPERAI_MANIFEST_URL__', $stableManifestUrl)
+Set-Content -LiteralPath $bootstrapOutputPath -Value $bootstrapContent -Encoding utf8
 
 $cliHash = (Get-FileHash -LiteralPath $cliZipPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $assetsHash = (Get-FileHash -LiteralPath $assetsZipPath -Algorithm SHA256).Hash.ToLowerInvariant()

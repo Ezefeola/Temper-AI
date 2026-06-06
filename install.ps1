@@ -20,7 +20,7 @@ if (-not (Test-Path $sourceExe)) {
     Write-Host ""
     Write-Host "X No se encontro temper-ai.exe junto al installer." -ForegroundColor Red
     Write-Host "  Asegurate de descargar el paquete completo desde:" -ForegroundColor Red
-    Write-Host "  https://github.com/ezefeDev/temper-ai/releases" -ForegroundColor Cyan
+    Write-Host "  https://github.com/Ezefeola/temper-ai/releases" -ForegroundColor Cyan
     Write-Host ""
     exit 1
 }

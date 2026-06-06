@@ -5,17 +5,21 @@ namespace TemperAI.Installer;
 
 public sealed class ReleaseManifestService
 {
-    public const string StableManifestUrl = "https://github.com/ezefeDev/temper-ai/releases/latest/download/manifest.json";
+    public const string StableManifestUrl = "https://github.com/Ezefeola/temper-ai/releases/latest/download/manifest.json";
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    public ReleaseManifest DownloadStableManifest()
+    public ReleaseManifest DownloadStableManifest(string? manifestUrl = null)
     {
         using HttpClient httpClient = CreateClient();
-        string json = httpClient.GetStringAsync(StableManifestUrl).GetAwaiter().GetResult();
+        string resolvedManifestUrl = string.IsNullOrWhiteSpace(manifestUrl)
+            ? StableManifestUrl
+            : manifestUrl;
+
+        string json = httpClient.GetStringAsync(resolvedManifestUrl).GetAwaiter().GetResult();
 
         ReleaseManifest? manifest = JsonSerializer.Deserialize<ReleaseManifest>(json, _jsonOptions);
 

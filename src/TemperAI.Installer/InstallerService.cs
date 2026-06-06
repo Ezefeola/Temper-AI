@@ -65,6 +65,9 @@ public sealed class InstallerService
                 {
                     Channel = "stable",
                     SourceMode = normalizedSourceMode,
+                    ManifestUrl = normalizedSourceMode.Equals(InstallSourceMode.Remote, StringComparison.OrdinalIgnoreCase)
+                        ? ReleaseManifestService.StableManifestUrl
+                        : string.Empty,
                     InstalledCliVersion = cliVersion,
                     InstalledAssetsVersion = installedAssetsVersion,
                     InstalledAt = now,
