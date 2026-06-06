@@ -2,7 +2,7 @@ using TemperAI.Core.Incremental;
 
 namespace TemperAI.Core.UnitTests.Incremental;
 
-public sealed class IncrementalUpdateServiceTests
+public sealed class IncrementalUpdateServiceTests : IDisposable
 {
     private readonly IncrementalUpdateService _service = new();
     private readonly string _testDirectory;
@@ -65,9 +65,8 @@ public sealed class IncrementalUpdateServiceTests
         string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_analyst");
         Directory.CreateDirectory(snapshotDir);
         File.WriteAllText(Path.Combine(snapshotDir, "prd.md"), "original");
-        File.WriteAllText(Path.Combine(snapshotDir, "specs/INDEX.md"), "original");
-
         Directory.CreateDirectory(Path.Combine(snapshotDir, "specs"));
+        File.WriteAllText(Path.Combine(snapshotDir, "specs/INDEX.md"), "original");
         File.WriteAllText(Path.Combine(_testDirectory, "prd.md"), "modified");
 
         Directory.CreateDirectory(Path.Combine(_testDirectory, "specs"));
@@ -90,21 +89,19 @@ public sealed class IncrementalUpdateServiceTests
     {
         string snapshotDir = Path.Combine(_snapshotsDirectory, "20260404-120000_tasks");
         Directory.CreateDirectory(snapshotDir);
+        Directory.CreateDirectory(Path.Combine(snapshotDir, "specs"));
+        Directory.CreateDirectory(Path.Combine(snapshotDir, "tasks"));
         File.WriteAllText(Path.Combine(snapshotDir, "prd.md"), "same");
         File.WriteAllText(Path.Combine(snapshotDir, "specs/INDEX.md"), "same");
         File.WriteAllText(Path.Combine(snapshotDir, "backend-config.md"), "same");
         File.WriteAllText(Path.Combine(snapshotDir, "tasks/INDEX.md"), "original");
         File.WriteAllText(Path.Combine(snapshotDir, "build-plan.md"), "original");
 
-        Directory.CreateDirectory(Path.Combine(snapshotDir, "specs"));
-        Directory.CreateDirectory(Path.Combine(snapshotDir, "tasks"));
-
         File.WriteAllText(Path.Combine(_testDirectory, "prd.md"), "same");
-        File.WriteAllText(Path.Combine(_testDirectory, "specs/INDEX.md"), "same");
-        File.WriteAllText(Path.Combine(_testDirectory, "backend-config.md"), "same");
-
         Directory.CreateDirectory(Path.Combine(_testDirectory, "specs"));
         Directory.CreateDirectory(Path.Combine(_testDirectory, "tasks"));
+        File.WriteAllText(Path.Combine(_testDirectory, "specs/INDEX.md"), "same");
+        File.WriteAllText(Path.Combine(_testDirectory, "backend-config.md"), "same");
 
         File.WriteAllText(Path.Combine(_testDirectory, "tasks/INDEX.md"), "modified");
         File.WriteAllText(Path.Combine(_testDirectory, "build-plan.md"), "original");
