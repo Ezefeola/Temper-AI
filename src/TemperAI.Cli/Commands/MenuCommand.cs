@@ -16,8 +16,8 @@ public sealed class MenuCommand : Command<MenuSettings>
 
         List<CommandOption> commands =
         [
-            new("install", "Instala skills y agentes en tu agente AI", ["--dry-run", "--agent copilot"]),
-            new("update", "Actualiza skills y agentes instalados", ["--force", "--dry-run"]),
+            new("install", "Instala skills y agentes en OpenCode", ["--dry-run", "--source local"]),
+            new("update", "Actualiza CLI y assets instalados", ["--force", "--dry-run", "--source local"]),
             new("status", "Muestra el estado de la instalacion actual", []),
             new("neuralcore", "Gestiona NeuralCore MCP server (memoria persistente)", []),
             new("budget", "Muestra el uso de tokens del proyecto", ["--reset"]),
@@ -91,10 +91,10 @@ public sealed class MenuCommand : Command<MenuSettings>
             config.PropagateExceptions();
 
             config.AddCommand<InstallCommand>("install")
-                  .WithDescription("Instala skills y agentes en tu agente AI");
+                  .WithDescription("Instala skills y agentes en OpenCode");
 
             config.AddCommand<UpdateCommand>("update")
-                  .WithDescription("Actualiza skills y agentes instalados");
+                  .WithDescription("Actualiza CLI y assets instalados");
 
             config.AddCommand<StatusCommand>("status")
                   .WithDescription("Muestra el estado de la instalacion actual");

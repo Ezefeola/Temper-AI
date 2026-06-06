@@ -48,7 +48,7 @@ public sealed class NeuralCoreSettings : CommandSettings
     public bool Logs { get; init; }
 
     [CommandOption("-a|--agent")]
-    [Description("ID del agente para instalacion MCP (copilot, claude, opencode)")]
+    [Description("ID del agente para instalacion MCP (opencode)")]
     public string? AgentId { get; init; }
 }
 
@@ -397,16 +397,6 @@ public sealed class NeuralCoreCommand : Command<NeuralCoreSettings>
             "MCP: OpenCode",
             status.IsConfiguredForOpenCode ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
             status.IsConfiguredForOpenCode ? "Listo" : "Ejecutá --install");
-
-        table.AddRow(
-            "MCP: Copilot",
-            status.IsConfiguredForCopilot ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
-            status.IsConfiguredForCopilot ? "Listo" : "Ejecutá --install");
-
-        table.AddRow(
-            "MCP: Claude",
-            status.IsConfiguredForClaude ? "[green]Configurado[/]" : "[yellow]No configurado[/]",
-            status.IsConfiguredForClaude ? "Listo" : "Ejecutá --install");
 
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();

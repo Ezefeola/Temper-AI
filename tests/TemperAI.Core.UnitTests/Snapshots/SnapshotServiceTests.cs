@@ -2,7 +2,7 @@ using TemperAI.Core.Snapshots;
 
 namespace TemperAI.Core.UnitTests.Snapshots;
 
-public sealed class SnapshotServiceTests
+public sealed class SnapshotServiceTests : IDisposable
 {
     private readonly SnapshotService _service = new();
     private readonly string _testDirectory;

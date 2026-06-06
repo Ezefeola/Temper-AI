@@ -1,12 +1,14 @@
-﻿using TemperAI.Core.Assets;
-using TemperAI.Core.Models;
+﻿using TemperAI.Core.Models;
 
 namespace TemperAI.Installer;
 public sealed class InstallerService
 {
     private readonly bool _dryRun;
+    private readonly LocalAssetSourceService _localAssetSourceService = new();
+    private readonly RemoteAssetPackageService _remoteAssetPackageService = new();
+    private readonly ReleaseManifestService _releaseManifestService = new();
+    private readonly InstallMetadataService _installMetadataService = new();
 
-    // Archivos que existen solo para que el embed funcione — no se instalan
     private static readonly HashSet<string> _ignoredFiles = new(StringComparer.OrdinalIgnoreCase)
     {
         "README.md"
@@ -17,14 +19,63 @@ public sealed class InstallerService
         _dryRun = dryRun;
     }
 
-    public InstallResult Install(AgentTarget target)
+    public InstallResult Install(AgentTarget target, string sourceMode = InstallSourceMode.Remote, bool overwriteExisting = false)
     {
         List<string> installed = [];
         List<string> skipped = [];
         List<string> errors = [];
 
-        InstallDirectory("skills", target.SkillsPath, installed, skipped, errors);
-        InstallDirectory("agents", target.AgentsPath, installed, skipped, errors);
+        string normalizedSourceMode = InstallSourceMode.Normalize(sourceMode);
+        string installedAssetsVersion = normalizedSourceMode.Equals(InstallSourceMode.Local, StringComparison.OrdinalIgnoreCase)
+            ? "local"
+            : string.Empty;
+
+        try
+        {
+            string assetsRoot = normalizedSourceMode.Equals(InstallSourceMode.Local, StringComparison.OrdinalIgnoreCase)
+                ? _localAssetSourceService.ResolveAssetsRoot()
+                : ResolveRemoteAssetsRoot(out installedAssetsVersion);
+
+            assetsRoot = NormalizeAssetsRoot(assetsRoot);
+
+            InstallDirectory(
+                Path.Combine(assetsRoot, "skills"),
+                target.SkillsPath,
+                installed,
+                skipped,
+                errors,
+                overwriteExisting);
+
+            InstallDirectory(
+                Path.Combine(assetsRoot, "agents"),
+                target.AgentsPath,
+                installed,
+                skipped,
+                errors,
+                overwriteExisting);
+
+            if (!_dryRun && errors.Count == 0)
+            {
+                string cliVersion = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
+                    ?? typeof(InstallerService).Assembly.GetName().Version?.ToString()
+                    ?? string.Empty;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+
+                _installMetadataService.Save(new InstallMetadata
+                {
+                    Channel = "stable",
+                    SourceMode = normalizedSourceMode,
+                    InstalledCliVersion = cliVersion,
+                    InstalledAssetsVersion = installedAssetsVersion,
+                    InstalledAt = now,
+                    LastUpdatedAt = now
+                });
+            }
+        }
+        catch (Exception exception)
+        {
+            errors.Add(exception.Message);
+        }
 
         return new InstallResult
         {
@@ -37,26 +88,29 @@ public sealed class InstallerService
     }
 
     private void InstallDirectory(
-        string assetPrefix,
+        string sourceDirectory,
         string destinationDirectory,
         List<string> installed,
         List<string> skipped,
-        List<string> errors)
+        List<string> errors,
+        bool overwriteExisting)
     {
-        IReadOnlyList<string> assetPaths = EmbeddedAssets.ListPaths(assetPrefix);
-
-        foreach (string assetPath in assetPaths)
+        if (!Directory.Exists(sourceDirectory))
         {
-            string fileName = Path.GetFileName(assetPath);
+            errors.Add($"Directorio de origen no encontrado: {sourceDirectory}");
+            return;
+        }
+
+        foreach (string sourcePath in Directory.GetFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            string fileName = Path.GetFileName(sourcePath);
 
             if (_ignoredFiles.Contains(fileName))
             {
                 continue;
             }
 
-            // Construimos el path relativo desde el prefijo
-            // assets/skills/dotnet-api/SKILL.md → dotnet-api/SKILL.md
-            string relativePath = assetPath[(assetPrefix.Length + 1)..];
+            string relativePath = Path.GetRelativePath(sourceDirectory, sourcePath);
             string destinationPath = Path.Combine(destinationDirectory, relativePath);
 
             if (_dryRun)
@@ -65,23 +119,54 @@ public sealed class InstallerService
                 continue;
             }
 
-            // Si el archivo ya existe lo saltamos — no sobreescribimos configs del usuario
-            if (File.Exists(destinationPath))
+            if (File.Exists(destinationPath) && !overwriteExisting)
             {
                 skipped.Add(destinationPath);
                 continue;
             }
 
-            var (success, error) = EmbeddedAssets.CopyToDisk(assetPath, destinationPath);
-
-            if (success)
+            try
             {
+                string? directory = Path.GetDirectoryName(destinationPath);
+
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                File.Copy(sourcePath, destinationPath, overwrite: overwriteExisting);
                 installed.Add(destinationPath);
             }
-            else
+            catch (Exception exception)
             {
-                errors.Add($"{destinationPath}: {error}");
+                errors.Add($"{destinationPath}: {exception.Message}");
             }
         }
+    }
+
+    private string ResolveRemoteAssetsRoot(out string assetsVersion)
+    {
+        ReleaseManifest manifest = _releaseManifestService.DownloadStableManifest();
+        assetsVersion = manifest.Assets.Version;
+        return _remoteAssetPackageService.DownloadAndExtract(manifest.Assets.Url);
+    }
+
+    private static string NormalizeAssetsRoot(string assetsRoot)
+    {
+        if (Directory.Exists(Path.Combine(assetsRoot, "skills")) ||
+            Directory.Exists(Path.Combine(assetsRoot, "agents")))
+        {
+            return assetsRoot;
+        }
+
+        string nestedAssetsRoot = Path.Combine(assetsRoot, "assets");
+
+        if (Directory.Exists(Path.Combine(nestedAssetsRoot, "skills")) ||
+            Directory.Exists(Path.Combine(nestedAssetsRoot, "agents")))
+        {
+            return nestedAssetsRoot;
+        }
+
+        return assetsRoot;
     }
 }

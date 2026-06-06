@@ -2,7 +2,7 @@ using TemperAI.Core.Skills;
 
 namespace TemperAI.Core.UnitTests.Skills;
 
-public sealed class SkillCreatorServiceTests
+public sealed class SkillCreatorServiceTests : IDisposable
 {
     private readonly SkillCreatorService _service = new();
     private readonly string _testDirectory;

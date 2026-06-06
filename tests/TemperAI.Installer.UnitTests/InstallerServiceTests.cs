@@ -16,7 +16,7 @@ public sealed class InstallerServiceTests
     }
 
     [Fact]
-    public void Install_WithEmbeddedAssets_CreatesFiles()
+    public void Install_WithLocalAssets_CreatesFiles()
     {
         AgentTarget target = new()
         {
@@ -28,7 +28,7 @@ public sealed class InstallerServiceTests
             Supported = true
         };
 
-        InstallResult result = _service.Install(target);
+        InstallResult result = _service.Install(target, InstallSourceMode.Local);
 
         Assert.True(result.IsSuccess);
     }
@@ -46,7 +46,7 @@ public sealed class InstallerServiceTests
             Supported = true
         };
 
-        _service.Install(target);
+        _service.Install(target, InstallSourceMode.Local);
 
         Assert.True(Directory.Exists(Path.Combine(_testDirectory, "skills")));
         Assert.True(Directory.Exists(Path.Combine(_testDirectory, "agents")));
@@ -67,7 +67,7 @@ public sealed class InstallerServiceTests
             Supported = true
         };
 
-        InstallResult result = dryRunService.Install(target);
+        InstallResult result = dryRunService.Install(target, InstallSourceMode.Local);
 
         Assert.True(result.IsSuccess);
     }
@@ -85,7 +85,7 @@ public sealed class InstallerServiceTests
             Supported = true
         };
 
-        InstallResult result = _service.Install(target);
+        InstallResult result = _service.Install(target, InstallSourceMode.Local);
 
         Assert.DoesNotContain(result.Installed, f => f.Contains("README.md", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(result.Skipped, f => f.Contains("README.md", StringComparison.OrdinalIgnoreCase));
@@ -109,7 +109,7 @@ public sealed class InstallerServiceTests
             Supported = true
         };
 
-        InstallResult result = _service.Install(target);
+        InstallResult result = _service.Install(target, InstallSourceMode.Local);
 
         Assert.DoesNotContain(result.Installed, f => f.Contains("existing.md"));
     }

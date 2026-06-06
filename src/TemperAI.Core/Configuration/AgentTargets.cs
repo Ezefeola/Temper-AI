@@ -13,28 +13,6 @@ public static class AgentTargets
         {
             new()
             {
-                Id = "copilot",
-                Name = "GitHub Copilot CLI",
-                SkillsPath = Path.Combine(homeDirectory, ".copilot", "skills"),
-                AgentsPath = Path.Combine(homeDirectory, ".copilot", "agents"),
-                ConfigPath = Path.Combine(homeDirectory, ".copilot"),
-                McpConfigFile = Path.Combine(homeDirectory, ".github", "copilot", "mcp.json"),
-                McpConfigFormat = "copilot",
-                Supported = true
-            },
-            new()
-            {
-                Id = "claude",
-                Name = "Claude Code",
-                SkillsPath = Path.Combine(homeDirectory, ".claude", "skills"),
-                AgentsPath = Path.Combine(homeDirectory, ".claude", "agents"),
-                ConfigPath = Path.Combine(homeDirectory, ".claude"),
-                McpConfigFile = Path.Combine(homeDirectory, ".claude", "mcp.json"),
-                McpConfigFormat = "claude",
-                Supported = true
-            },
-            new()
-            {
                 Id = "opencode",
                 Name = "OpenCode",
                 SkillsPath = Path.Combine(homeDirectory, ".config", "opencode", "skills"),
