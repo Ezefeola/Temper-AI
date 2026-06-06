@@ -1,9 +1,11 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Reflection;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using TemperAI.Core.Assets;
 using TemperAI.Core.Configuration;
 using TemperAI.Core.Models;
-using System.ComponentModel;
+using TemperAI.Installer;
 
 namespace TemperAI.Cli.Commands;
 
@@ -18,29 +20,28 @@ public sealed class UpdateSettings : CommandSettings
     public bool DryRun { get; init; }
 
     [CommandOption("-a|--agent")]
-    [Description("ID del agente a actualizar (copilot, claude, opencode)")]
+    [Description("ID del agente a actualizar (opencode)")]
     public string? AgentId { get; init; }
+
+    [CommandOption("--source")]
+    [Description("Origen de assets: remote (default) o local")]
+    public string? SourceMode { get; init; }
 }
 
 public sealed class UpdateCommand : Command<UpdateSettings>
 {
-    private static readonly HashSet<string> _ignoredFiles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "README.md"
-    };
-
     public override int Execute(CommandContext context, UpdateSettings settings)
     {
         PrintHeader();
 
-        IReadOnlyList<AgentTarget> supportedTargets = AgentTargets.Supported();
-
-        if (supportedTargets.Count == 0)
+        if (!string.IsNullOrWhiteSpace(settings.SourceMode) && !InstallSourceMode.IsValid(settings.SourceMode))
         {
-            AnsiConsole.MarkupLine("[red]No se encontraron agentes soportados en este sistema.[/]");
+            AnsiConsole.MarkupLine("[red]Source invalido. Usá 'remote' o 'local'.[/]");
             return 1;
         }
 
+        string sourceMode = InstallSourceMode.Normalize(settings.SourceMode);
+        IReadOnlyList<AgentTarget> supportedTargets = AgentTargets.Supported();
         List<AgentTarget> selectedTargets = ResolveTargets(settings, supportedTargets);
 
         if (selectedTargets.Count == 0)
@@ -48,162 +49,189 @@ public sealed class UpdateCommand : Command<UpdateSettings>
             return 1;
         }
 
-        if (settings.DryRun)
+        InstallMetadataService metadataService = new();
+        InstallMetadata? metadata = metadataService.Load();
+        ReleaseManifest? manifest = null;
+        string localCliVersion = GetCliVersion();
+        bool cliNeedsUpdate = false;
+        bool assetsNeedUpdate = metadata is null || !string.Equals(metadata.SourceMode, sourceMode, StringComparison.OrdinalIgnoreCase);
+
+        if (sourceMode.Equals(InstallSourceMode.Remote, StringComparison.OrdinalIgnoreCase))
         {
-            AnsiConsole.MarkupLine("[yellow]  Modo dry-run — no se escribirá nada al disco[/]");
-            AnsiConsole.WriteLine();
-        }
-
-        foreach (AgentTarget agentTarget in selectedTargets)
-        {
-            UpdateResult updateResult = CheckForUpdates(agentTarget);
-
-            if (updateResult.Updatable.Count == 0)
-            {
-                AnsiConsole.MarkupLine($"[green]✓[/] [bold]{agentTarget.Name}[/] — todos los archivos están actualizados.");
-                AnsiConsole.WriteLine();
-                continue;
-            }
-
-            PrintUpdatableFiles(updateResult);
-
-            if (settings.DryRun)
-            {
-                AnsiConsole.MarkupLine($"[yellow]{updateResult.Updatable.Count}[/] archivo(s) se actualizarían en [bold]{agentTarget.Name}[/].");
-                AnsiConsole.WriteLine();
-                continue;
-            }
-
-            bool shouldUpdate = settings.Force || ConfirmUpdate(updateResult.Updatable.Count, agentTarget.Name);
-
-            if (!shouldUpdate)
-            {
-                AnsiConsole.MarkupLine("[dim]Actualización cancelada.[/]");
-                AnsiConsole.WriteLine();
-                continue;
-            }
-
-            UpdateResult appliedResult = ApplyUpdates(agentTarget, updateResult.Updatable);
-            PrintUpdateResult(appliedResult);
-        }
-
-        AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
-        AnsiConsole.WriteLine();
-
-        return 0;
-    }
-
-    private static UpdateResult CheckForUpdates(AgentTarget target)
-    {
-        List<UpdateFileInfo> updatable = [];
-        List<string> errors = [];
-
-        CheckDirectoryForUpdates("skills", target.SkillsPath, updatable, errors);
-        CheckDirectoryForUpdates("agents", target.AgentsPath, updatable, errors);
-
-        return new UpdateResult
-        {
-            Target = target,
-            Updatable = updatable,
-            Errors = errors
-        };
-    }
-
-    private static void CheckDirectoryForUpdates(
-        string assetPrefix,
-        string destinationDirectory,
-        List<UpdateFileInfo> updatable,
-        List<string> errors)
-    {
-        IReadOnlyList<string> assetPaths = EmbeddedAssets.ListPaths(assetPrefix);
-
-        foreach (string assetPath in assetPaths)
-        {
-            string fileName = Path.GetFileName(assetPath);
-
-            if (_ignoredFiles.Contains(fileName))
-            {
-                continue;
-            }
-
-            string relativePath = assetPath[(assetPrefix.Length + 1)..];
-            string destinationPath = Path.Combine(destinationDirectory, relativePath);
-
-            if (!File.Exists(destinationPath))
-            {
-                continue;
-            }
-
             try
             {
-                var (found, embeddedContent) = EmbeddedAssets.TryReadText(assetPath);
-
-                if (!found)
-                {
-                    errors.Add($"Asset no encontrado: {assetPath}");
-                    continue;
-                }
-
-                string diskContent = File.ReadAllText(destinationPath);
-
-                if (embeddedContent != diskContent)
-                {
-                    updatable.Add(new UpdateFileInfo
-                    {
-                        AssetPath = assetPath,
-                        DestinationPath = destinationPath,
-                        RelativePath = relativePath
-                    });
-                }
+                ReleaseManifestService manifestService = new();
+                manifest = manifestService.DownloadStableManifest();
+                cliNeedsUpdate = IsRemoteVersionDifferent(localCliVersion, manifest.Cli.Version);
+                assetsNeedUpdate = assetsNeedUpdate || metadata?.InstalledAssetsVersion != manifest.Assets.Version;
             }
             catch (Exception exception)
             {
-                errors.Add($"{destinationPath}: {exception.Message}");
+                AnsiConsole.MarkupLine($"[red]No se pudo consultar el manifest remoto:[/] {exception.Message}");
+                return 1;
             }
         }
+        else
+        {
+            assetsNeedUpdate = true;
+        }
+
+        if (!cliNeedsUpdate && !assetsNeedUpdate)
+        {
+            AnsiConsole.MarkupLine("[green]Todo está actualizado.[/]");
+            return 0;
+        }
+
+        ShowPlan(sourceMode, cliNeedsUpdate, assetsNeedUpdate, manifest);
+
+        if (settings.DryRun)
+        {
+            AnsiConsole.MarkupLine("[yellow]Dry-run completado.[/]");
+            return 0;
+        }
+
+        if (!settings.Force && !AnsiConsole.Confirm("¿Querés aplicar esta actualización?"))
+        {
+            AnsiConsole.MarkupLine("[dim]Actualización cancelada.[/]");
+            return 0;
+        }
+
+        bool success = true;
+
+        if (assetsNeedUpdate)
+        {
+            InstallerService installerService = new();
+
+            foreach (AgentTarget target in selectedTargets)
+            {
+                InstallResult result = installerService.Install(target, sourceMode, overwriteExisting: true);
+                PrintInstallResult(result);
+                success &= result.IsSuccess;
+            }
+        }
+
+        if (success && cliNeedsUpdate && manifest is not null)
+        {
+            try
+            {
+                ReleaseManifestService manifestService = new();
+                CliPlatformManifest cliArtifact = manifestService.GetCurrentPlatformArtifact(manifest);
+                CliSelfUpdateService cliSelfUpdateService = new();
+                string downloadedExe = cliSelfUpdateService.DownloadAndStageCli(cliArtifact.Url);
+                string scriptPath = cliSelfUpdateService.StageReplacement(downloadedExe);
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c start \"\" \"{scriptPath}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+
+                AnsiConsole.MarkupLine("[green]✓[/] Se preparó la actualización del CLI.");
+                AnsiConsole.MarkupLine("[yellow]Reiniciá TemperAI o abrí una nueva terminal para usar la nueva versión.[/]");
+
+                metadataService.Save(new InstallMetadata
+                {
+                    Channel = manifest.Channel,
+                    SourceMode = sourceMode,
+                    InstalledCliVersion = manifest.Cli.Version,
+                    InstalledAssetsVersion = manifest.Assets.Version,
+                    InstalledAt = metadata?.InstalledAt ?? DateTimeOffset.UtcNow,
+                    LastUpdatedAt = DateTimeOffset.UtcNow
+                });
+            }
+            catch (Exception exception)
+            {
+                success = false;
+                AnsiConsole.MarkupLine($"[red]No se pudo actualizar el CLI:[/] {exception.Message}");
+            }
+        }
+        else if (success && manifest is not null && assetsNeedUpdate)
+        {
+            metadataService.Save(new InstallMetadata
+            {
+                Channel = manifest.Channel,
+                SourceMode = sourceMode,
+                InstalledCliVersion = localCliVersion,
+                InstalledAssetsVersion = manifest.Assets.Version,
+                InstalledAt = metadata?.InstalledAt ?? DateTimeOffset.UtcNow,
+                LastUpdatedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        return success ? 0 : 1;
     }
 
-    private static UpdateResult ApplyUpdates(
-        AgentTarget target,
-        List<UpdateFileInfo> updatable)
+    private static void ShowPlan(string sourceMode, bool cliNeedsUpdate, bool assetsNeedUpdate, ReleaseManifest? manifest)
     {
-        List<string> updated = [];
-        List<string> errors = [];
+        Table table = new();
+        table.AddColumn("[bold]Componente[/]");
+        table.AddColumn("[bold]Acción[/]");
 
-        foreach (UpdateFileInfo fileInfo in updatable)
+        table.AddRow("Source mode", sourceMode);
+
+        if (assetsNeedUpdate)
         {
-            var (success, error) = EmbeddedAssets.CopyToDisk(fileInfo.AssetPath, fileInfo.DestinationPath);
-
-            if (success)
-            {
-                updated.Add(fileInfo.RelativePath);
-            }
-            else
-            {
-                errors.Add($"{fileInfo.RelativePath}: {error}");
-            }
+            table.AddRow("Assets", sourceMode == InstallSourceMode.Remote
+                ? $"Actualizar a {manifest?.Assets.Version ?? "latest"}"
+                : "Sincronizar desde repo local");
         }
 
-        return new UpdateResult
+        if (cliNeedsUpdate)
         {
-            Target = target,
-            Updatable = [],
-            Updated = updated,
-            Errors = errors
-        };
+            table.AddRow("CLI", $"Actualizar a {manifest?.Cli.Version ?? "latest"}");
+        }
+
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine();
     }
 
-    private static List<AgentTarget> ResolveTargets(
-        UpdateSettings settings,
-        IReadOnlyList<AgentTarget> supportedTargets)
+    private static void PrintInstallResult(InstallResult installResult)
+    {
+        if (installResult.IsSuccess)
+        {
+            AnsiConsole.MarkupLine($"[green]✓[/] {installResult.Summary()}");
+            return;
+        }
+
+        AnsiConsole.MarkupLine($"[red]✗[/] {installResult.Summary()}");
+
+        foreach (string error in installResult.Errors)
+        {
+            AnsiConsole.MarkupLine($"  [red]•[/] {error}");
+        }
+    }
+
+    private static bool IsRemoteVersionDifferent(string localVersion, string remoteVersion)
+    {
+        return NormalizeVersion(localVersion) != NormalizeVersion(remoteVersion);
+    }
+
+    private static string NormalizeVersion(string version)
+    {
+        string normalized = version.Trim().TrimStart('v', 'V');
+
+        if (!Version.TryParse(normalized, out Version? parsedVersion))
+        {
+            return normalized;
+        }
+
+        return parsedVersion.Build >= 0
+            ? $"{parsedVersion.Major}.{parsedVersion.Minor}.{parsedVersion.Build}"
+            : $"{parsedVersion.Major}.{parsedVersion.Minor}";
+    }
+
+    private static string GetCliVersion()
+    {
+        Version? version = typeof(UpdateCommand).Assembly.GetName().Version;
+        return version?.ToString() ?? "0.0.0";
+    }
+
+    private static List<AgentTarget> ResolveTargets(UpdateSettings settings, IReadOnlyList<AgentTarget> supportedTargets)
     {
         if (!string.IsNullOrEmpty(settings.AgentId))
         {
-            if (settings.AgentId.Equals("all", StringComparison.OrdinalIgnoreCase))
-            {
-                return supportedTargets.ToList();
-            }
-
             AgentTarget? agentTarget = AgentTargets.FindById(settings.AgentId);
 
             if (agentTarget is null)
@@ -215,37 +243,7 @@ public sealed class UpdateCommand : Command<UpdateSettings>
             return [agentTarget];
         }
 
-        List<string> choices = supportedTargets
-            .Select(target => target.Name)
-            .ToList();
-
-        choices.Add("Todos");
-
-        string selection = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[bold]¿Para qué agente querés verificar actualizaciones?[/]")
-                .AddChoices(choices));
-
-        if (selection == "Todos")
-        {
-            return supportedTargets.ToList();
-        }
-
-        AgentTarget? selectedTarget = supportedTargets
-            .FirstOrDefault(target => target.Name == selection);
-
-        if (selectedTarget is null)
-        {
-            return [];
-        }
-
-        return [selectedTarget];
-    }
-
-    private static bool ConfirmUpdate(int count, string agentName)
-    {
-        return AnsiConsole.Confirm(
-            $"[bold]{count}[/] archivo(s) tienen versión nueva en [bold]{agentName}[/]. ¿Querés actualizar?");
+        return supportedTargets.ToList();
     }
 
     private static void PrintHeader()
@@ -255,62 +253,9 @@ public sealed class UpdateCommand : Command<UpdateSettings>
             new FigletText("TemperAI")
                 .Color(Color.Purple));
 
-        AnsiConsole.MarkupLine("[dim]Actualizador de skills y agentes AI[/]");
+        AnsiConsole.MarkupLine("[dim]Actualización unificada de CLI y assets[/]");
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
         AnsiConsole.WriteLine();
-    }
-
-    private static void PrintUpdatableFiles(UpdateResult result)
-    {
-        Table table = new Table();
-        table.AddColumn(new TableColumn("[bold]Archivo[/]"));
-        table.AddColumn(new TableColumn("[bold]Estado[/]"));
-
-        foreach (UpdateFileInfo fileInfo in result.Updatable)
-        {
-            table.AddRow(
-                fileInfo.RelativePath,
-                "[yellow]desactualizado[/]");
-        }
-
-        AnsiConsole.Write(table);
-        AnsiConsole.WriteLine();
-    }
-
-    private static void PrintUpdateResult(UpdateResult result)
-    {
-        if (result.Updated.Count > 0)
-        {
-            AnsiConsole.MarkupLine($"[green]✓[/] {result.Updated.Count} archivo(s) actualizado(s) para [bold]{result.Target.Name}[/]:");
-            AnsiConsole.WriteLine();
-
-            foreach (string updatedFile in result.Updated)
-            {
-                AnsiConsole.MarkupLine($"  [green]↑[/] {updatedFile}");
-            }
-
-            AnsiConsole.WriteLine();
-        }
-
-        foreach (string error in result.Errors)
-        {
-            AnsiConsole.MarkupLine($"  [red]✗[/] {error}");
-        }
-    }
-
-    private sealed class UpdateResult
-    {
-        public AgentTarget Target { get; init; } = null!;
-        public List<UpdateFileInfo> Updatable { get; init; } = [];
-        public List<string> Updated { get; init; } = [];
-        public List<string> Errors { get; init; } = [];
-    }
-
-    private sealed class UpdateFileInfo
-    {
-        public string AssetPath { get; init; } = string.Empty;
-        public string DestinationPath { get; init; } = string.Empty;
-        public string RelativePath { get; init; } = string.Empty;
     }
 }

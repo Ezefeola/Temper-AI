@@ -93,17 +93,19 @@ app.Configure(config =>
     config.PropagateExceptions();
 
     config.AddCommand<InstallCommand>("install")
-          .WithDescription("Instala skills y agentes en tu agente AI")
+          .WithDescription("Instala skills y agentes en OpenCode")
           .WithExample("install")
           .WithExample("install", "--dry-run")
-          .WithExample("install", "--agent", "copilot");
+          .WithExample("install", "--agent", "opencode")
+          .WithExample("install", "--source", "local");
 
     config.AddCommand<UpdateCommand>("update")
-          .WithDescription("Actualiza skills y agentes instalados")
+          .WithDescription("Actualiza CLI y assets instalados")
           .WithExample("update")
           .WithExample("update", "--force")
           .WithExample("update", "--dry-run")
-          .WithExample("update", "--agent", "copilot");
+          .WithExample("update", "--agent", "opencode")
+          .WithExample("update", "--source", "local");
 
     config.AddCommand<StatusCommand>("status")
           .WithDescription("Muestra el estado de la instalacion actual")

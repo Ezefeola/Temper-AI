@@ -1,31 +1,50 @@
 {
-  "last_updated": "2026-05-25T00:00:00Z",
-  "status": "complete",
-  "request_summary": "Analyst instruction files were hardened to forbid assumptions and require clarification until functional certainty is reached.",
+  "last_updated": "2026-06-06T00:00:00Z",
+  "status": "blocked",
+  "request_summary": "Final review is blocked because the repository build failed with a Microsoft Defender file lock in TemperAI.NeuralCore output.",
   "context": {
-    "project": "temper-ai Friday agent and workflow assets",
+    "project": "temper-ai CLI",
     "architecture": "unknown",
-    "stack": "agent and workflow markdown assets",
-    "notes": "Analyst workflow instructions now require explicit clarification of missing or ambiguous functional behavior and allow deferred unknowns only when the user explicitly chooses that path."
+    "stack": ".NET 10 CLI (Spectre.Console), self-contained binary",
+    "notes": "Review agent stopped at the build gate. Build failed with CS2012 because Microsoft Defender locked src/TemperAI.NeuralCore/obj/Debug/net10.0/win-x64/TemperAI.NeuralCore.dll. Additional warnings exist but are secondary until the build is clean."
   },
-  "session_metrics": {
-    "specialist_runs_total": 2,
-    "specialist_runs_current_thread": 1,
-    "distinct_specialists": [
-      "general"
-    ],
-    "distinct_specialist_count": 1,
-    "cycle_rounds_total": 0,
-    "recovery_attempts": 0,
-    "prompt_failure_retries": 0,
-    "long_outputs_count": 0,
-    "large_summaries_count": 0,
-    "last_output_class": "none",
-    "next_action_type": "none",
-    "scope_confusion_signals": 0,
-    "mixed_scope_signal": false,
-    "risk_score": 0
-  },
-  "block_reason": null,
-  "next_action": "Wait for the next user request; no further specialist step is active."
+  "approved_plan": [
+    {
+      "step": 1,
+      "agent": "general",
+      "phase": null,
+      "description": "Implement the approved remote distribution, manifest, local-source mode, and unified CLI+assets update model.",
+      "status": "complete",
+      "output": "CLI install/update/status and installer services updated"
+    },
+    {
+      "step": 2,
+      "agent": "temper-devops",
+      "phase": null,
+      "description": "Create GitHub release automation for the CLI bundle, assets bundle, manifest, and bootstrap installer.",
+      "status": "complete",
+      "output": ".github/workflows/community-release.yml and scripts/release/*"
+    },
+    {
+      "step": 3,
+      "agent": "general",
+      "phase": null,
+      "description": "Harden the stable release workflow so version tags only publish from commits already contained in main.",
+      "status": "complete",
+      "output": ".github/workflows/community-release.yml"
+    },
+    {
+      "step": 4,
+      "agent": "temper-review",
+      "phase": null,
+      "description": "Validate the approved distribution model implementation and release automation.",
+      "status": "pending",
+      "output": null
+    }
+  ],
+  "current_step": 4,
+  "total_steps": 4,
+  "current_agent": "temper-review",
+  "block_reason": "Review blocked at build gate: Microsoft Defender locked the NeuralCore build output, causing CS2012 during compile.",
+  "next_action": "Wait for the user to approve a recovery attempt to clear the build blockage and rerun the review."
 }

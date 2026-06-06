@@ -26,7 +26,7 @@ public sealed class UninstallSettings : CommandSettings
     public bool NoPath { get; init; }
 
     [CommandOption("-a|--agent")]
-    [Description("ID del agente a desinstalar (copilot, claude, opencode). Por defecto: todos")]
+    [Description("ID del agente a desinstalar (opencode). Por defecto: opencode")]
     public string? AgentId { get; init; }
 }
 

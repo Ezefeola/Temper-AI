@@ -14,8 +14,12 @@ public sealed class InstallSettings : CommandSettings
     public bool DryRun { get; init; }
 
     [CommandOption("-a|--agent")]
-    [Description("ID del agente a instalar (copilot, claude, opencode)")]
+    [Description("ID del agente a instalar (opencode)")]
     public string? AgentId { get; init; }
+
+    [CommandOption("--source")]
+    [Description("Origen de assets: remote (default) o local")]
+    public string? SourceMode { get; init; }
 
     [CommandOption("--neuralcore")]
     [Description("Instala NeuralCore MCP server")]
@@ -29,6 +33,12 @@ public sealed class InstallCommand : Command<InstallSettings>
         PrintHeader();
 
         IReadOnlyList<AgentTarget> supportedTargets = AgentTargets.Supported();
+
+        if (!string.IsNullOrWhiteSpace(settings.SourceMode) && !InstallSourceMode.IsValid(settings.SourceMode))
+        {
+            AnsiConsole.MarkupLine("[red]Source invalido. Usá 'remote' o 'local'.[/]");
+            return 1;
+        }
 
         if (supportedTargets.Count == 0)
         {
@@ -54,10 +64,11 @@ public sealed class InstallCommand : Command<InstallSettings>
         }
 
         InstallerService installerService = new(settings.DryRun);
+        string sourceMode = InstallSourceMode.Normalize(settings.SourceMode);
 
         foreach (AgentTarget agentTarget in selectedTargets)
         {
-            InstallResult installResult = installerService.Install(agentTarget);
+            InstallResult installResult = installerService.Install(agentTarget, sourceMode);
             PrintResult(installResult);
 
             if (installNeuralCore && !settings.DryRun)

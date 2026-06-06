@@ -14,8 +14,6 @@ public sealed class NeuralCoreStatus
     public TimeSpan? RunningDuration { get; init; }
 
     public bool IsConfiguredForOpenCode { get; init; }
-    public bool IsConfiguredForCopilot { get; init; }
-    public bool IsConfiguredForClaude { get; init; }
 
     public string? LastError { get; init; }
     public DateTime? LastErrorTime { get; init; }

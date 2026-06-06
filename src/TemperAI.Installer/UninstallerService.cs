@@ -83,12 +83,8 @@ public sealed class UninstallerService
         List<string> skipped = [];
         List<string> errors = [];
 
-        string installDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Programs",
-            "TemperAI");
-
-        string targetExe = Path.Combine(installDir, "temper-ai.exe");
+        string installDir = InstallationPaths.InstallRoot;
+        string targetExe = InstallationPaths.CliExePath;
 
         if (File.Exists(targetExe))
         {
@@ -118,6 +114,26 @@ public sealed class UninstallerService
         else
         {
             skipped.Add($"{targetExe} (not found)");
+        }
+
+        if (Directory.Exists(InstallationPaths.StateDirectory))
+        {
+            if (_dryRun)
+            {
+                removed.Add($"{InstallationPaths.StateDirectory} (dry run)");
+            }
+            else
+            {
+                try
+                {
+                    Directory.Delete(InstallationPaths.StateDirectory, recursive: true);
+                    removed.Add(InstallationPaths.StateDirectory);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Failed to delete state directory: {ex.Message}");
+                }
+            }
         }
 
         // Clean up empty TemperAI directory if nothing remains
@@ -154,10 +170,7 @@ public sealed class UninstallerService
         List<string> skipped = [];
         List<string> errors = [];
 
-        string installDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Programs",
-            "TemperAI");
+        string installDir = InstallationPaths.InstallRoot;
 
         string? currentPath = Environment.GetEnvironmentVariable(
             "PATH", EnvironmentVariableTarget.User);
@@ -259,12 +272,8 @@ public sealed class UninstallerService
         }
 
         // CLI
-        string installDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Programs",
-            "TemperAI");
-
-        string targetExe = Path.Combine(installDir, "temper-ai.exe");
+        string installDir = InstallationPaths.InstallRoot;
+        string targetExe = InstallationPaths.CliExePath;
         if (File.Exists(targetExe))
         {
             deletions.Add(targetExe);
@@ -442,47 +451,6 @@ public sealed class UninstallerService
 
                             // If mcp is now empty, remove it too
                             if (mcpDict.Count == 0)
-                            {
-                                root.Remove("mcp");
-                            }
-                        }
-                    }
-                    break;
-
-                case "claude":
-                    // { "mcpServers": { "neuralcore": {...} } }
-                    if (root.TryGetValue("mcpServers", out var claudeServers) &&
-                        claudeServers is Dictionary<string, object> claudeDict)
-                    {
-                        if (claudeDict.Remove("neuralcore"))
-                        {
-                            modified = true;
-
-                            if (claudeDict.Count == 0)
-                            {
-                                root.Remove("mcpServers");
-                            }
-                        }
-                    }
-                    break;
-
-                case "copilot":
-                    // { "mcp": { "servers": { "neuralcore": {...} } } }
-                    if (root.TryGetValue("mcp", out var copilotMcp) &&
-                        copilotMcp is Dictionary<string, object> copilotMcpDict &&
-                        copilotMcpDict.TryGetValue("servers", out var copilotServers) &&
-                        copilotServers is Dictionary<string, object> copilotServersDict)
-                    {
-                        if (copilotServersDict.Remove("neuralcore"))
-                        {
-                            modified = true;
-
-                            if (copilotServersDict.Count == 0)
-                            {
-                                copilotMcpDict.Remove("servers");
-                            }
-
-                            if (copilotMcpDict.Count == 0)
                             {
                                 root.Remove("mcp");
                             }

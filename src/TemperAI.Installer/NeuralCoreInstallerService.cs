@@ -255,39 +255,14 @@ public sealed class NeuralCoreInstallerService
             ["enabled"] = true
         };
 
-        switch (format)
-        {
-            case "opencode":
-                // OpenCode uses structure: { "mcp": { "neuralcore": {...} } }
-                // No "servers" level. type: "local", command as array.
-                var mcpObj = mcpConfig.ContainsKey("mcp")
-                    ? (Dictionary<string, object>)mcpConfig["mcp"]
-                    : new Dictionary<string, object>();
-                
-                mcpObj["neuralcore"] = neuralCoreServer;
-                mcpConfig["mcp"] = mcpObj;
-                break;
+        // OpenCode uses structure: { "mcp": { "neuralcore": {...} } }
+        // No "servers" level. type: "local", command as array.
+        var mcpObj = mcpConfig.ContainsKey("mcp")
+            ? (Dictionary<string, object>)mcpConfig["mcp"]
+            : new Dictionary<string, object>();
 
-            case "claude":
-                var claudeMcpServers = mcpConfig.ContainsKey("mcpServers")
-                    ? (Dictionary<string, object>)mcpConfig["mcpServers"]
-                    : new Dictionary<string, object>();
-                claudeMcpServers["neuralcore"] = neuralCoreServer;
-                mcpConfig["mcpServers"] = claudeMcpServers;
-                break;
-
-            case "copilot":
-                var copilotMcp = mcpConfig.ContainsKey("mcp")
-                    ? (Dictionary<string, object>)mcpConfig["mcp"]
-                    : new Dictionary<string, object>();
-                var copilotServers = copilotMcp.ContainsKey("servers")
-                    ? (Dictionary<string, object>)copilotMcp["servers"]
-                    : new Dictionary<string, object>();
-                copilotServers["neuralcore"] = neuralCoreServer;
-                copilotMcp["servers"] = copilotServers;
-                mcpConfig["mcp"] = copilotMcp;
-                break;
-        }
+        mcpObj["neuralcore"] = neuralCoreServer;
+        mcpConfig["mcp"] = mcpObj;
 
         string jsonOutput = JsonSerializer.Serialize(mcpConfig, _jsonOptions);
         File.WriteAllText(configPath, jsonOutput);

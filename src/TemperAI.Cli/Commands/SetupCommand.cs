@@ -148,7 +148,6 @@ public sealed class SetupCommand : Command<SetupSettings>
     private static void ConfigureMcpServers(string temperExe)
     {
         ConfigureOpenCode(temperExe);
-        ConfigureCopilot(temperExe);
     }
 
     private static void ConfigureOpenCode(string temperExe)
@@ -187,42 +186,6 @@ public sealed class SetupCommand : Command<SetupSettings>
         File.WriteAllText(configPath, JsonSerializer.Serialize(config, options));
 
         AnsiConsole.MarkupLine($"  [green]✓[/] OpenCode config updated: [dim]{configPath}[/]");
-    }
-
-    private static void ConfigureCopilot(string temperExe)
-    {
-        string configDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".copilot");
-
-        Directory.CreateDirectory(configDir);
-
-        string configPath = Path.Combine(configDir, "mcp.json");
-
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        var mcpConfig = new Dictionary<string, object>
-        {
-            ["type"] = "stdio",
-            ["command"] = temperExe,
-            ["args"] = new[] { "--mcp" }
-        };
-
-        var config = new Dictionary<string, object>
-        {
-            ["mcpServers"] = new Dictionary<string, object>
-            {
-                ["neuralcore"] = mcpConfig
-            }
-        };
-
-        File.WriteAllText(configPath, JsonSerializer.Serialize(config, options));
-
-        AnsiConsole.MarkupLine($"  [green]✓[/] Copilot CLI config updated: [dim]{configPath}[/]");
     }
 
     private static void PrintHeader()

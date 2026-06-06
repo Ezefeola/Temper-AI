@@ -25,8 +25,6 @@ public sealed class NeuralCoreService
         TimeSpan? runningDuration = GetProcessRunningDuration(runningPid);
 
         bool openCodeConfigured = IsMcpConfiguredForAgent("opencode");
-        bool copilotConfigured = IsMcpConfiguredForAgent("copilot");
-        bool claudeConfigured = IsMcpConfiguredForAgent("claude");
 
         string? suggestedAction = GetSuggestedAction(isPublished, runningPid, openCodeConfigured);
 
@@ -40,8 +38,6 @@ public sealed class NeuralCoreService
             ProcessId = runningPid,
             RunningDuration = runningDuration,
             IsConfiguredForOpenCode = openCodeConfigured,
-            IsConfiguredForCopilot = copilotConfigured,
-            IsConfiguredForClaude = claudeConfigured,
             SuggestedAction = suggestedAction
         };
     }
