@@ -36,6 +36,7 @@ description: >
   "current_step": 2,
   "total_steps": 4,
   "current_agent": "temper-backend",
+  "current_execution_mode": "task-driven | direct-action | direct-bugfix | recovery | null",
   "current_task": "T001",
   "current_work_item_type": "user-story | bug | refactor | setup | future-type | null",
   "current_work_item_id": "US-001 | BUG-001 | REF-001 | SETUP | null",
@@ -154,6 +155,7 @@ Before resuming, delegating, or writing state, validate these fields:
 - `approved_plan[].step` must be unique, sequential, and match its order.
 - `approved_plan[].status` must be `complete`, `pending`, or `in-cycle`.
 - `current_agent` is required when `status` is `in-progress` or a pending approval targets a specific next agent.
+- `current_execution_mode` is allowed for implementation routing and should be set when FRIDAY is delegating or awaiting approval for an implementation agent.
 - `session_metrics` is optional but allowed at the root and should be persisted once FRIDAY has enough checkpoint data to maintain session-mode recommendations safely.
 - When `session_metrics` exists, it must be an object with non-negative integer counters, a boolean `mixed_scope_signal`, and a non-negative integer `risk_score`.
 - `block_reason` is required and non-empty when `status` is `blocked`.
@@ -199,6 +201,8 @@ When `approved_plan` exists:
 - If expected output is missing, mark state as blocked or recovery-needed instead of advancing.
 - If the next step depends on a previous output, verify the previous step is `complete` and has the expected output reference before delegation.
 - `current_task`, `task_title`, `current_work_item_type`, `current_work_item_id`, `current_task_category`, `current_task_location`, `pending_tasks`, and task counters must agree before delegating task-driven implementation.
+- For `current_execution_mode: "direct-action"`, task metadata may be `null` and task counters may be absent if no task artifacts exist.
+- For `current_execution_mode: "direct-action"`, FRIDAY must still preserve an approved plan or explicit approval state before delegation.
 
 FRIDAY does not need to read full artifact contents for this check; it validates that required references and workflow statuses exist and are coherent.
 
@@ -210,7 +214,7 @@ Before routing between workflow phases, enforce these prerequisites:
 - Architect routing for normal project architecture may start only after Phase 2 specs are complete or the user explicitly changes direction with approval.
 - Task generation may start only after required requirements/spec and architecture outputs are complete and approved.
 - Plan generation may start only after task generation is complete and approved.
-- Implementation agents may start only from an approved plan/task or an explicitly approved direct bugfix/recovery path.
+- Implementation agents may start only from an approved plan/task, an explicitly approved direct-action path, or an explicitly approved direct bugfix/recovery path.
 
 If a prerequisite is missing, do not delegate. Report the missing prerequisite and propose the smallest valid next step.
 

@@ -3,7 +3,8 @@ name: friday-implementation-delegation
 description: >
   Implementation-agent delegation contract for FRIDAY. Load when FRIDAY
   delegates to temper-backend, temper-frontend, temper-tester, temper-devops, or
-  another task-driven execution agent, including bugfix and recovery turns.
+  another implementation agent, including task-driven, direct-action, bugfix,
+  and recovery turns.
 ---
 
 # FRIDAY Implementation Agent Delegation Contract
@@ -15,12 +16,13 @@ This skill defines the execution-agent delegation contract for FRIDAY.
 When loaded, it is authoritative for:
 
 - Task-file execution prompts.
+- Approved direct-action implementation prompts.
 - Bugfix prompts without a task file.
 - Implementation-agent recovery prompts.
 - Prompt-failure correction for implementation agents.
 - Implementation-agent pre-delegation checks.
 
-Use this skill when FRIDAY delegates to `temper-backend`, `temper-frontend`, `temper-tester`, `temper-devops`, or another task-driven execution agent.
+Use this skill when FRIDAY delegates to `temper-backend`, `temper-frontend`, `temper-tester`, `temper-devops`, or another implementation agent.
 
 `workflow/friday/state-schema` remains authoritative for universal delegation prohibitions.
 
@@ -63,6 +65,27 @@ Rules:
 - Keep the description behavioral, not technical.
 - Do not convert the bug into implementation instructions.
 
+## Approved Direct-Action Contract
+
+When backend implementation is approved without task artifacts, delegate in plain domain language and state the mode explicitly:
+
+```text
+Approved direct action: Implement backend change for order discount validation.
+Affected area: Discount validation during order updates.
+Expected behavior: Invalid discounts are rejected and valid discounts are preserved.
+Constraints: No task file or Plan artifacts exist for this request.
+```
+
+Rules:
+
+- Use this only when the user explicitly approved direct action.
+- Use this only when normal task/work-item artifacts are absent or intentionally bypassed.
+- Keep the request behavioral, not technical.
+- Do not include file paths, class names, method names, skill names, or implementation instructions.
+- Include `Affected area:` only when it helps disambiguate scope.
+- Include `Constraints:` only when FRIDAY must preserve the no-task direct-action boundary or another user-approved limit.
+- Do not pretend a task ID, work item ID, or artifact exists when it does not.
+
 ## Recovery Contract
 
 When an implementation agent failed after creating partial work, re-delegate with the minimum continuation context:
@@ -98,6 +121,7 @@ Do not resend large restated context if one missing clarification is enough.
 
 - The target agent is a task-driven implementation or execution step.
 - For task-file execution, the prompt is exactly `Implement task [T###]: [title] ([work item type] [work item id], [category])`.
+- For approved backend direct action without task artifacts, the prompt starts with `Approved direct action:` and stays in plain behavioral language.
 - For bugfixes, the prompt stays in behavioral domain language.
 - No file paths, skill names, or internal instructions are included.
 - No acceptance criteria, class names, DTO names, or layer guidance are included.

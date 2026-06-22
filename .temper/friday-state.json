@@ -1,50 +1,50 @@
 {
-  "last_updated": "2026-06-06T00:00:00Z",
-  "status": "blocked",
-  "request_summary": "Final review is blocked because the repository build failed with a Microsoft Defender file lock in TemperAI.NeuralCore output.",
+  "last_updated": "2026-06-22T00:30:00Z",
+  "status": "awaiting-task-approval",
+  "request_summary": "Make temper-backend task and user-story artifacts optional by adding an approved direct-action path when Plan/INDEX.md or task files are missing.",
   "context": {
     "project": "temper-ai CLI",
     "architecture": "unknown",
-    "stack": ".NET 10 CLI (Spectre.Console), self-contained binary",
-    "notes": "Review agent stopped at the build gate. Build failed with CS2012 because Microsoft Defender locked src/TemperAI.NeuralCore/obj/Debug/net10.0/win-x64/TemperAI.NeuralCore.dll. Additional warnings exist but are secondary until the build is clean."
+    "stack": "Prompt/skill-driven TemperAI agent workflow",
+    "notes": "Previous review-blocked workflow is superseded for now by this approved change-direction investigation. Explore completed and identified prompt/skill enforcement points for task-only backend execution."
   },
   "approved_plan": [
     {
       "step": 1,
-      "agent": "general",
+      "agent": "explore",
       "phase": null,
-      "description": "Implement the approved remote distribution, manifest, local-source mode, and unified CLI+assets update model.",
+      "description": "Locate where temper-backend and FRIDAY enforce Plan/INDEX.md, task files, and parent work items.",
       "status": "complete",
-      "output": "CLI install/update/status and installer services updated"
+      "output": "Exploration report identifying temper-backend.agent.md, friday implementation-delegation skill, friday state-schema skill, and temper-friday.agent.md as the minimal change surface."
     },
     {
       "step": 2,
-      "agent": "temper-devops",
-      "phase": null,
-      "description": "Create GitHub release automation for the CLI bundle, assets bundle, manifest, and bootstrap installer.",
-      "status": "complete",
-      "output": ".github/workflows/community-release.yml and scripts/release/*"
-    },
-    {
-      "step": 3,
       "agent": "general",
       "phase": null,
-      "description": "Harden the stable release workflow so version tags only publish from commits already contained in main.",
+      "description": "Implement optional direct-action routing and backend-agent support while preserving the formal task-driven path.",
       "status": "complete",
-      "output": ".github/workflows/community-release.yml"
-    },
-    {
-      "step": 4,
-      "agent": "temper-review",
-      "phase": null,
-      "description": "Validate the approved distribution model implementation and release automation.",
-      "status": "pending",
-      "output": null
+      "output": "Workflow assets updated: temper-backend now supports approved direct-action mode; FRIDAY delegation/state rules updated to ask formal-tasks vs direct-action and allow backend direct action without Plan artifacts."
     }
   ],
-  "current_step": 4,
-  "total_steps": 4,
-  "current_agent": "temper-review",
-  "block_reason": "Review blocked at build gate: Microsoft Defender locked the NeuralCore build output, causing CS2012 during compile.",
-  "next_action": "Wait for the user to approve a recovery attempt to clear the build blockage and rerun the review."
+  "current_step": 2,
+  "total_steps": 2,
+  "current_agent": "general",
+  "session_metrics": {
+    "specialist_runs_total": 2,
+    "specialist_runs_current_thread": 2,
+    "distinct_specialists": ["explore", "general"],
+    "distinct_specialist_count": 2,
+    "cycle_rounds_total": 0,
+    "recovery_attempts": 0,
+    "prompt_failure_retries": 0,
+    "long_outputs_count": 2,
+    "large_summaries_count": 0,
+    "last_output_class": "completion-report",
+    "next_action_type": "output-approval",
+    "scope_confusion_signals": 0,
+    "mixed_scope_signal": true,
+    "risk_score": 3
+  },
+  "block_reason": null,
+  "next_action": "Wait for the user to approve, reject, or request changes to the completed direct-action workflow update."
 }
