@@ -1,50 +1,42 @@
 {
-  "last_updated": "2026-06-22T00:30:00Z",
-  "status": "awaiting-task-approval",
-  "request_summary": "Make temper-backend task and user-story artifacts optional by adding an approved direct-action path when Plan/INDEX.md or task files are missing.",
+  "last_updated": "2026-06-24T00:00:00Z",
+  "status": "complete",
+  "request_summary": "Investigate the TemperAI release process and document it in Docs/Release.md.",
   "context": {
     "project": "temper-ai CLI",
     "architecture": "unknown",
-    "stack": "Prompt/skill-driven TemperAI agent workflow",
-    "notes": "Previous review-blocked workflow is superseded for now by this approved change-direction investigation. Explore completed and identified prompt/skill enforcement points for task-only backend execution."
+    "stack": "Prompt/skill-driven TemperAI agent workflow; .NET 10 CLI released via GitHub Actions on v* tags",
+    "notes": "Release = commit on main + git tag vX.Y.Z pushed to origin, triggers community-release.yml. Version driven solely by the tag. Docs/Release.md created and approved. NOTE: a prior change-direction workflow (temper-backend direct-action mode) is still pending output approval and was intentionally preserved, untouched."
   },
   "approved_plan": [
     {
       "step": 1,
-      "agent": "explore",
-      "phase": null,
-      "description": "Locate where temper-backend and FRIDAY enforce Plan/INDEX.md, task files, and parent work items.",
-      "status": "complete",
-      "output": "Exploration report identifying temper-backend.agent.md, friday implementation-delegation skill, friday state-schema skill, and temper-friday.agent.md as the minimal change surface."
-    },
-    {
-      "step": 2,
       "agent": "general",
       "phase": null,
-      "description": "Implement optional direct-action routing and backend-agent support while preserving the formal task-driven path.",
+      "description": "Investigate the release workflow/scripts and write Docs/Release.md documenting how to cut version 1.0.0.",
       "status": "complete",
-      "output": "Workflow assets updated: temper-backend now supports approved direct-action mode; FRIDAY delegation/state rules updated to ask formal-tasks vs direct-action and allow backend direct action without Plan artifacts."
+      "output": "Created Docs/Release.md (Spanish). Documents: release = commit on main + tag v1.0.0; build/test then publish job; version comes only from the git tag (csproj 0.1.0 is overridden); published assets and troubleshooting. Output approved by user."
     }
   ],
-  "current_step": 2,
-  "total_steps": 2,
+  "current_step": 1,
+  "total_steps": 1,
   "current_agent": "general",
   "session_metrics": {
-    "specialist_runs_total": 2,
-    "specialist_runs_current_thread": 2,
+    "specialist_runs_total": 3,
+    "specialist_runs_current_thread": 1,
     "distinct_specialists": ["explore", "general"],
     "distinct_specialist_count": 2,
     "cycle_rounds_total": 0,
     "recovery_attempts": 0,
     "prompt_failure_retries": 0,
-    "long_outputs_count": 2,
+    "long_outputs_count": 3,
     "large_summaries_count": 0,
     "last_output_class": "completion-report",
-    "next_action_type": "output-approval",
+    "next_action_type": "none",
     "scope_confusion_signals": 0,
-    "mixed_scope_signal": true,
-    "risk_score": 3
+    "mixed_scope_signal": false,
+    "risk_score": 1
   },
   "block_reason": null,
-  "next_action": "Wait for the user to approve, reject, or request changes to the completed direct-action workflow update."
+  "next_action": "Release documentation task complete and approved. No specialist queued. A prior temper-backend direct-action change can be resumed if the user requests it."
 }
