@@ -20,6 +20,19 @@ public static class AgentTargets
                 ConfigPath = Path.Combine(homeDirectory, ".config", "opencode"),
                 McpConfigFile = Path.Combine(homeDirectory, ".config", "opencode", "opencode.json"),
                 McpConfigFormat = "opencode",
+                Format = "opencode",
+                Supported = true
+            },
+            new()
+            {
+                Id = "claude",
+                Name = "Claude Code",
+                SkillsPath = Path.Combine(homeDirectory, ".claude", "skills"),
+                AgentsPath = Path.Combine(homeDirectory, ".claude", "agents"),
+                ConfigPath = Path.Combine(homeDirectory, ".claude"),
+                McpConfigFile = Path.Combine(homeDirectory, ".claude.json"),
+                McpConfigFormat = "claude",
+                Format = "claude",
                 Supported = true
             }
         }.AsReadOnly();

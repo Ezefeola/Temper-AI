@@ -113,4 +113,75 @@ public sealed class InstallerServiceTests
 
         Assert.DoesNotContain(result.Installed, f => f.Contains("existing.md"));
     }
+
+    [Fact]
+    public void Install_ClaudeTarget_ConvertsAgentsWithTransformedNamesAndTools()
+    {
+        string agentsPath = Path.Combine(_testDirectory, "agents");
+
+        AgentTarget target = new()
+        {
+            Id = "claude",
+            Name = "Claude Code",
+            SkillsPath = Path.Combine(_testDirectory, "skills"),
+            AgentsPath = agentsPath,
+            ConfigPath = _testDirectory,
+            Format = "claude",
+            Supported = true
+        };
+
+        InstallResult result = _service.Install(target, InstallSourceMode.Local);
+
+        Assert.True(result.IsSuccess);
+
+        // Specialists land in agents/ as <name>.md (no .agent suffix), with tools and no mode/permission.
+        string backendAgent = Path.Combine(agentsPath, "temper-backend.md");
+        Assert.True(File.Exists(backendAgent));
+        string backendFrontmatter = ExtractFrontmatter(File.ReadAllText(backendAgent));
+        Assert.Contains("tools:", backendFrontmatter);
+        Assert.DoesNotContain("mode:", backendFrontmatter);
+        Assert.DoesNotContain("permission:", backendFrontmatter);
+
+        // The orchestrator is also an agent (usable via `claude --agent`) with the Task tool.
+        string fridayAgent = Path.Combine(agentsPath, "temper-friday.md");
+        Assert.True(File.Exists(fridayAgent));
+        Assert.Contains("Task", ExtractFrontmatter(File.ReadAllText(fridayAgent)));
+
+        // No OpenCode-style .agent.md files were written.
+        Assert.False(File.Exists(Path.Combine(agentsPath, "temper-backend.agent.md")));
+    }
+
+    [Fact]
+    public void Install_ClaudeTarget_CopiesSkillsUnchanged()
+    {
+        AgentTarget target = new()
+        {
+            Id = "claude",
+            Name = "Claude Code",
+            SkillsPath = Path.Combine(_testDirectory, "skills"),
+            AgentsPath = Path.Combine(_testDirectory, "agents"),
+            ConfigPath = _testDirectory,
+            Format = "claude",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        Assert.True(Directory.Exists(Path.Combine(_testDirectory, "skills")));
+        Assert.NotEmpty(Directory.GetFiles(Path.Combine(_testDirectory, "skills"), "SKILL.md", SearchOption.AllDirectories));
+    }
+
+    private static string ExtractFrontmatter(string content)
+    {
+        string normalized = content.Replace("\r\n", "\n");
+
+        if (!normalized.StartsWith("---\n", StringComparison.Ordinal))
+        {
+            return string.Empty;
+        }
+
+        int closingIndex = normalized.IndexOf("\n---", 3, StringComparison.Ordinal);
+
+        return closingIndex < 0 ? string.Empty : normalized[4..closingIndex];
+    }
 }

@@ -2,7 +2,7 @@
 
 > AI-orchestrated software delivery for .NET teams, centered on FRIDAY.
 
-TemperAI installs a structured set of agents and skills into [OpenCode](https://opencode.ai) so work moves through a defined workflow instead of ad-hoc prompting. In the current supported model, **FRIDAY** is the orchestrator: it classifies requests, proposes the next specialist step, waits for explicit approval, delegates one specialist at a time, and tracks workflow state in `.temper/friday-state.json`.
+TemperAI installs a structured set of agents and skills into [OpenCode](https://opencode.ai) and [Claude Code](https://claude.com/claude-code) so work moves through a defined workflow instead of ad-hoc prompting. In the current supported model, **FRIDAY** is the orchestrator: it classifies requests, proposes the next specialist step, waits for explicit approval, delegates one specialist at a time, and tracks workflow state in `.temper/friday-state.json`.
 
 This repository contains more than just prompts. It defines:
 
@@ -123,23 +123,63 @@ Then verify:
 temper-ai --version
 ```
 
-Install TemperAI assets into OpenCode:
+Install TemperAI assets. The installer prompts for a target, or pass one explicitly:
 
 ```powershell
-temper-ai install
+temper-ai install            # choose OpenCode or Claude Code interactively
+temper-ai install -a opencode
+temper-ai install -a claude
+temper-ai install -a all      # install into every supported target
 ```
+
+### Targets
+
+| Target | Agents | Skills | Orchestrator | NeuralCore MCP |
+|---|---|---|---|---|
+| **OpenCode** | `~/.config/opencode/agents/` | `~/.config/opencode/skills/` | `temper-friday` primary agent | `opencode.json` |
+| **Claude Code** | `~/.claude/agents/` | `~/.claude/skills/` | `temper-friday` agent via `claude --agent` | `claude mcp add` (user scope) |
+
+For Claude Code, assets are converted on install: the OpenCode `mode`/`permission`
+frontmatter is rewritten to Claude's `tools` field and `*.agent.md` files are renamed to
+`*.md`. Every TemperAI agent — including the `mode: primary` orchestrators
+(`temper-friday`, `temper-jarvis`) — is installed as a Claude **agent**. Orchestrators
+carry the `Task` tool so they can delegate to specialists. Skills are portable and copied
+unchanged.
+
+#### Running FRIDAY as the orchestrator on Claude Code
+
+OpenCode runs FRIDAY as a *primary* agent. The Claude Code equivalent is to drive the
+session with the agent directly:
+
+```powershell
+claude --agent temper-friday
+```
+
+To get the OpenCode-like experience where every session in a project starts as FRIDAY,
+set the default agent in that project's `.claude/settings.json`:
+
+```json
+{ "agent": "temper-friday" }
+```
+
+> NeuralCore on Claude Code requires the `claude` CLI on your PATH; the installer runs
+> `claude mcp add neuralcore --scope user -- temper-ai --mcp` so Claude manages its own config.
 
 ---
 
 ## How to use TemperAI
 
-1. Install TemperAI into OpenCode.
-2. Open your project in OpenCode.
+1. Install TemperAI into OpenCode or Claude Code.
+2. Open your project in your AI client.
 3. Start with FRIDAY:
 
    ```text
    /temper-friday
    ```
+
+   On OpenCode, FRIDAY is a primary agent. On Claude Code, start the session with
+   `claude --agent temper-friday` (or set `"agent": "temper-friday"` in
+   `.claude/settings.json`). Specialists run as subagents in both clients.
 
 4. Describe the project, change, bug, or documentation request.
 5. Review FRIDAY's proposed plan.
@@ -156,7 +196,7 @@ Full workflow: [docs/friday-workflow.md](docs/friday-workflow.md)
 
 | Command | Description |
 |---|---|
-| `temper-ai install` | Install agents and skills into OpenCode |
+| `temper-ai install` | Install agents and skills into OpenCode and/or Claude Code |
 | `temper-ai update` | Update the installed CLI and assets |
 | `temper-ai status` | Show installed status |
 | `temper-ai neuralcore` | Manage NeuralCore |
@@ -204,6 +244,32 @@ To build from source you need the .NET 10 SDK:
 ```powershell
 dotnet run --project src/TemperAI.Cli
 ```
+
+### Local development install
+
+To test your local `assets/` (agents and skills) without cutting a release, build and
+install the CLI from source, then use local mode:
+
+```powershell
+# From the repo root — builds temper-ai.exe and adds it to your PATH
+./install-local.ps1
+
+# Optionally install the local assets right away into every provider
+./install-local.ps1 -Install
+```
+
+Once installed, the `--local` flag makes `install`/`update` read from the repo's
+`assets/` instead of the published release. **Run it from inside the repo** (local mode
+resolves `assets/` by walking up from the current directory):
+
+```powershell
+temper-ai --local                  # interactive menu in local mode
+temper-ai --local install -a all   # install local assets into OpenCode + Claude Code
+temper-ai --local update  -a all   # re-apply assets after editing them (overwrites)
+```
+
+> `install` skips files that already exist; use `update` to overwrite and pick up your
+> latest asset edits.
 
 ---
 

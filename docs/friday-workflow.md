@@ -20,7 +20,7 @@ It does not implement features, write architecture, or review code itself. Its j
 
 ## 2. What TemperAI is intended to do
 
-TemperAI is designed for structured software delivery in OpenCode.
+TemperAI is designed for structured software delivery in OpenCode and Claude Code.
 
 The intended usage model is:
 

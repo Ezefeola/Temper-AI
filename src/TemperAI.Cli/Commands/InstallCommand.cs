@@ -14,7 +14,7 @@ public sealed class InstallSettings : CommandSettings
     public bool DryRun { get; init; }
 
     [CommandOption("-a|--agent")]
-    [Description("ID del agente a instalar (opencode)")]
+    [Description("ID del agente a instalar (opencode, claude)")]
     public string? AgentId { get; init; }
 
     [CommandOption("--source")]
