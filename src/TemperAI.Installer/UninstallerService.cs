@@ -9,6 +9,7 @@ namespace TemperAI.Installer;
 public sealed class UninstallerService
 {
     private readonly bool _dryRun;
+    private readonly ClaudeAssetConverter _claudeAssetConverter = new();
 
     public UninstallerService(bool dryRun = false)
     {
@@ -22,7 +23,16 @@ public sealed class UninstallerService
         List<string> errors = [];
 
         UninstallDirectory("skills", target.SkillsPath, removed, skipped, errors);
-        UninstallDirectory("agents", target.AgentsPath, removed, skipped, errors);
+
+        if (target.Format.Equals("claude", StringComparison.OrdinalIgnoreCase))
+        {
+            UninstallClaudeAgents(target, removed, skipped, errors);
+        }
+        else
+        {
+            UninstallDirectory("agents", target.AgentsPath, removed, skipped, errors);
+        }
+
         RemoveNeuralCoreFromMcpConfig(target.McpConfigFile, target.McpConfigFormat, removed, skipped, errors);
 
         return new UninstallResult
@@ -256,11 +266,24 @@ public sealed class UninstallerService
         foreach (AgentTarget target in targets)
         {
             deletions.AddRange(GetPlannedDirectoryDeletions("skills", target.SkillsPath));
-            deletions.AddRange(GetPlannedDirectoryDeletions("agents", target.AgentsPath));
 
-            if (File.Exists(target.McpConfigFile))
+            if (target.Format.Equals("claude", StringComparison.OrdinalIgnoreCase))
             {
-                deletions.Add($"[MCP] Remove neuralcore from {target.McpConfigFile}");
+                deletions.AddRange(GetPlannedClaudeAgentDeletions(target));
+
+                if (NeuralCoreInstallerService.IsClaudeMcpConfigured())
+                {
+                    deletions.Add("[MCP] Remove neuralcore from Claude (claude mcp remove)");
+                }
+            }
+            else
+            {
+                deletions.AddRange(GetPlannedDirectoryDeletions("agents", target.AgentsPath));
+
+                if (File.Exists(target.McpConfigFile))
+                {
+                    deletions.Add($"[MCP] Remove neuralcore from {target.McpConfigFile}");
+                }
             }
         }
 
@@ -342,6 +365,59 @@ public sealed class UninstallerService
         }
     }
 
+    private void UninstallClaudeAgents(
+        AgentTarget target,
+        List<string> removed,
+        List<string> skipped,
+        List<string> errors)
+    {
+        IReadOnlyList<string> assetPaths = EmbeddedAssets.ListPaths("agents");
+
+        foreach (string assetPath in assetPaths)
+        {
+            string fileName = Path.GetFileName(assetPath);
+
+            if (fileName.Equals("README.md", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            (bool found, string content) = EmbeddedAssets.TryReadText(assetPath);
+
+            if (!found)
+            {
+                continue;
+            }
+
+            ConvertedAgent converted = _claudeAssetConverter.Convert(content);
+
+            string destinationPath = Path.Combine(target.AgentsPath, converted.FileName);
+
+            if (!File.Exists(destinationPath))
+            {
+                skipped.Add($"{destinationPath} (not found)");
+                continue;
+            }
+
+            if (_dryRun)
+            {
+                removed.Add($"{destinationPath} (dry run)");
+                continue;
+            }
+
+            try
+            {
+                File.Delete(destinationPath);
+                removed.Add(destinationPath);
+                CleanupEmptyDirectories(Path.GetDirectoryName(destinationPath), target.AgentsPath);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{destinationPath}: {ex.Message}");
+            }
+        }
+    }
+
     private List<string> GetPlannedDirectoryDeletions(string assetPrefix, string destinationDirectory)
     {
         var paths = new List<string>();
@@ -358,6 +434,40 @@ public sealed class UninstallerService
 
             string relativePath = assetPath[(assetPrefix.Length + 1)..];
             string destinationPath = Path.Combine(destinationDirectory, relativePath);
+
+            if (File.Exists(destinationPath))
+            {
+                paths.Add(destinationPath);
+            }
+        }
+
+        return paths;
+    }
+
+    private List<string> GetPlannedClaudeAgentDeletions(AgentTarget target)
+    {
+        var paths = new List<string>();
+        IReadOnlyList<string> assetPaths = EmbeddedAssets.ListPaths("agents");
+
+        foreach (string assetPath in assetPaths)
+        {
+            string fileName = Path.GetFileName(assetPath);
+
+            if (fileName.Equals("README.md", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            (bool found, string content) = EmbeddedAssets.TryReadText(assetPath);
+
+            if (!found)
+            {
+                continue;
+            }
+
+            ConvertedAgent converted = _claudeAssetConverter.Convert(content);
+
+            string destinationPath = Path.Combine(target.AgentsPath, converted.FileName);
 
             if (File.Exists(destinationPath))
             {
@@ -397,13 +507,19 @@ public sealed class UninstallerService
         }
     }
 
-    private static void RemoveNeuralCoreFromMcpConfig(
+    private void RemoveNeuralCoreFromMcpConfig(
         string configPath,
         string format,
         List<string> removed,
         List<string> skipped,
         List<string> errors)
     {
+        if (format.Equals("claude", StringComparison.OrdinalIgnoreCase))
+        {
+            RemoveClaudeMcp(removed, skipped, errors);
+            return;
+        }
+
         if (!File.Exists(configPath))
         {
             skipped.Add($"{configPath} (not found)");
@@ -473,6 +589,41 @@ public sealed class UninstallerService
         catch (Exception ex)
         {
             errors.Add($"Failed to update {configPath}: {ex.Message}");
+        }
+    }
+
+    private void RemoveClaudeMcp(
+        List<string> removed,
+        List<string> skipped,
+        List<string> errors)
+    {
+        if (!NeuralCoreInstallerService.IsClaudeCliAvailable())
+        {
+            skipped.Add("Claude MCP (Claude CLI no encontrado)");
+            return;
+        }
+
+        if (!NeuralCoreInstallerService.IsClaudeMcpConfigured())
+        {
+            skipped.Add("Claude MCP (neuralcore no configurado)");
+            return;
+        }
+
+        if (_dryRun)
+        {
+            removed.Add("Claude MCP (neuralcore) (dry run)");
+            return;
+        }
+
+        ClaudeCliResult result = NeuralCoreInstallerService.RunClaudeCli("mcp remove neuralcore --scope user");
+
+        if (result.Success)
+        {
+            removed.Add("Claude MCP (neuralcore removido)");
+        }
+        else
+        {
+            errors.Add($"No se pudo remover NeuralCore de Claude: {result.Error}");
         }
     }
 

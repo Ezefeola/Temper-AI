@@ -8,6 +8,7 @@ public sealed class InstallerService
     private readonly RemoteAssetPackageService _remoteAssetPackageService = new();
     private readonly ReleaseManifestService _releaseManifestService = new();
     private readonly InstallMetadataService _installMetadataService = new();
+    private readonly ClaudeAssetConverter _claudeAssetConverter = new();
 
     private static readonly HashSet<string> _ignoredFiles = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -46,13 +47,26 @@ public sealed class InstallerService
                 errors,
                 overwriteExisting);
 
-            InstallDirectory(
-                Path.Combine(assetsRoot, "agents"),
-                target.AgentsPath,
-                installed,
-                skipped,
-                errors,
-                overwriteExisting);
+            if (target.Format.Equals("claude", StringComparison.OrdinalIgnoreCase))
+            {
+                InstallClaudeAgents(
+                    Path.Combine(assetsRoot, "agents"),
+                    target,
+                    installed,
+                    skipped,
+                    errors,
+                    overwriteExisting);
+            }
+            else
+            {
+                InstallDirectory(
+                    Path.Combine(assetsRoot, "agents"),
+                    target.AgentsPath,
+                    installed,
+                    skipped,
+                    errors,
+                    overwriteExisting);
+            }
 
             if (!_dryRun && errors.Count == 0)
             {
@@ -143,6 +157,59 @@ public sealed class InstallerService
             catch (Exception exception)
             {
                 errors.Add($"{destinationPath}: {exception.Message}");
+            }
+        }
+    }
+
+    private void InstallClaudeAgents(
+        string sourceDirectory,
+        AgentTarget target,
+        List<string> installed,
+        List<string> skipped,
+        List<string> errors,
+        bool overwriteExisting)
+    {
+        if (!Directory.Exists(sourceDirectory))
+        {
+            errors.Add($"Directorio de origen no encontrado: {sourceDirectory}");
+            return;
+        }
+
+        foreach (string sourcePath in Directory.GetFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            string fileName = Path.GetFileName(sourcePath);
+
+            if (_ignoredFiles.Contains(fileName))
+            {
+                continue;
+            }
+
+            try
+            {
+                string sourceContent = File.ReadAllText(sourcePath);
+                ConvertedAgent converted = _claudeAssetConverter.Convert(sourceContent);
+
+                string destinationPath = Path.Combine(target.AgentsPath, converted.FileName);
+
+                if (_dryRun)
+                {
+                    installed.Add($"{destinationPath} (dry run)");
+                    continue;
+                }
+
+                if (File.Exists(destinationPath) && !overwriteExisting)
+                {
+                    skipped.Add(destinationPath);
+                    continue;
+                }
+
+                Directory.CreateDirectory(target.AgentsPath);
+                File.WriteAllText(destinationPath, converted.Content);
+                installed.Add(destinationPath);
+            }
+            catch (Exception exception)
+            {
+                errors.Add($"{sourcePath}: {exception.Message}");
             }
         }
     }

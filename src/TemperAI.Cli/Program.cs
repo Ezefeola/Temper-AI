@@ -80,9 +80,11 @@ if (args.Contains("--mcp"))
     return process.ExitCode;
 }
 
-if (args.Length == 0)
+(bool localMode, string[] cliArgs) = LocalModeArguments.Process(args);
+
+if (cliArgs.Length == 0)
 {
-    return RunMenu();
+    return RunMenu(localMode);
 }
 
 CommandApp app = new();
@@ -165,9 +167,9 @@ app.Configure(config =>
           .WithExample("doctor");
 });
 
-return app.Run(args);
+return app.Run(cliArgs);
 
-static int RunMenu()
+static int RunMenu(bool localMode = false)
 {
     AnsiConsole.WriteLine();
     AnsiConsole.Write(
@@ -175,6 +177,12 @@ static int RunMenu()
             .Color(Color.Purple));
 
     AnsiConsole.MarkupLine("[dim]Ecosistema AI para desarrolladores .NET[/]");
+
+    if (localMode)
+    {
+        AnsiConsole.MarkupLine("[yellow]modo local[/] [dim]— install/update usan los assets del repo[/]");
+    }
+
     AnsiConsole.WriteLine();
     AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
     AnsiConsole.WriteLine();
@@ -225,26 +233,26 @@ static int RunMenu()
     {
         AnsiConsole.MarkupLine("[dim]Cancelado. Volviendo al menu...[/]");
         AnsiConsole.WriteLine();
-        return RunMenu();
+        return RunMenu(localMode);
     }
 
     AnsiConsole.WriteLine();
-    AnsiConsole.MarkupLine($"[dim]Ejecutando: temper-ai {selected.CommandName}[/]");
+    AnsiConsole.MarkupLine($"[dim]Ejecutando: temper-ai {LocalModeArguments.SubcommandArgs(selected.CommandName, localMode)}[/]");
     AnsiConsole.WriteLine();
     AnsiConsole.MarkupLine("[dim]─────────────────────────────────────[/]");
     AnsiConsole.WriteLine();
 
-    return RunSubCommand(selected.CommandName);
+    return RunSubCommand(selected.CommandName, localMode);
 }
 
-static int RunSubCommand(string commandName)
+static int RunSubCommand(string commandName, bool localMode = false)
 {
     string exePath = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
 
     var startInfo = new ProcessStartInfo
     {
         FileName = exePath,
-        Arguments = commandName,
+        Arguments = LocalModeArguments.SubcommandArgs(commandName, localMode),
         UseShellExecute = false
     };
 

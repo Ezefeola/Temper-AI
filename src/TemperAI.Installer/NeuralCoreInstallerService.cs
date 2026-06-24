@@ -20,6 +20,11 @@ public sealed class NeuralCoreInstallerService
 
         try
         {
+            if (target.McpConfigFormat.Equals("claude", StringComparison.OrdinalIgnoreCase))
+            {
+                return ConfigureClaudeMcp(target, installed, skipped, errors);
+            }
+
             string mcpConfigFile = target.McpConfigFile;
 
             if (string.IsNullOrEmpty(mcpConfigFile))
@@ -78,6 +83,134 @@ public sealed class NeuralCoreInstallerService
             Errors = errors,
             IsSuccess = errors.Count == 0
         };
+    }
+
+    private InstallResult ConfigureClaudeMcp(
+        AgentTarget target,
+        List<string> installed,
+        List<string> skipped,
+        List<string> errors)
+    {
+        if (!IsClaudeCliAvailable())
+        {
+            errors.Add(
+                "Claude CLI no encontrado en el PATH. Configurá NeuralCore manualmente: " +
+                "claude mcp add neuralcore --scope user -- temper-ai --mcp");
+
+            return BuildResult(target, installed, skipped, errors);
+        }
+
+        if (IsClaudeMcpConfigured())
+        {
+            skipped.Add("Claude MCP (neuralcore ya configurado)");
+            return BuildResult(target, installed, skipped, errors);
+        }
+
+        ClaudeCliResult result = RunClaudeCli("mcp add neuralcore --scope user -- temper-ai --mcp");
+
+        if (result.Success)
+        {
+            installed.Add("Claude MCP (neuralcore --scope user)");
+        }
+        else
+        {
+            errors.Add($"No se pudo configurar NeuralCore en Claude: {result.Error}");
+        }
+
+        return BuildResult(target, installed, skipped, errors);
+    }
+
+    private static InstallResult BuildResult(
+        AgentTarget target,
+        List<string> installed,
+        List<string> skipped,
+        List<string> errors)
+    {
+        return new InstallResult
+        {
+            Target = target,
+            Installed = installed,
+            Skipped = skipped,
+            Errors = errors,
+            IsSuccess = errors.Count == 0
+        };
+    }
+
+    public static bool IsClaudeCliAvailable()
+    {
+        try
+        {
+            ClaudeCliResult result = RunClaudeCli("--version");
+            return result.Started;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool IsClaudeMcpConfigured()
+    {
+        try
+        {
+            ClaudeCliResult result = RunClaudeCli("mcp get neuralcore");
+            return result.Success;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static ClaudeCliResult RunClaudeCli(string arguments)
+    {
+        // The Claude CLI is typically a .cmd shim on Windows, so it must be launched
+        // through cmd.exe for PATH resolution; elsewhere it can be invoked directly.
+        ProcessStartInfo startInfo = OperatingSystem.IsWindows()
+            ? new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c claude {arguments}",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+            : new ProcessStartInfo
+            {
+                FileName = "claude",
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+        try
+        {
+            using Process? process = Process.Start(startInfo);
+
+            if (process is null)
+            {
+                return new ClaudeCliResult { Started = false };
+            }
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            return new ClaudeCliResult
+            {
+                Started = true,
+                ExitCode = process.ExitCode,
+                Output = output,
+                Error = string.IsNullOrWhiteSpace(error) ? output : error
+            };
+        }
+        catch
+        {
+            return new ClaudeCliResult { Started = false };
+        }
     }
 
     public static PublishResult PublishNeuralCore(Action<string>? onProgress = null)
@@ -294,4 +427,13 @@ public sealed class PublishResult
     public string? Size { get; init; }
     public string? Output { get; init; }
     public string? Error { get; init; }
+}
+
+public sealed class ClaudeCliResult
+{
+    public bool Started { get; init; }
+    public int ExitCode { get; init; }
+    public string Output { get; init; } = string.Empty;
+    public string Error { get; init; } = string.Empty;
+    public bool Success => Started && ExitCode == 0;
 }

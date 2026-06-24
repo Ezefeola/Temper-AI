@@ -1,365 +1,278 @@
 # TemperAI
 
-> The AI-powered Software Development workflow for .NET developers.
+> AI-orchestrated software delivery for .NET teams, centered on FRIDAY.
 
-TemperAI is an open-source toolkit that installs a complete ecosystem of **agents** and **skills** directly into [OpenCode](https://opencode.ai), turning your AI coding assistant into a structured, opinionated software delivery engine — from requirements all the way to production-ready code.
+TemperAI installs a structured set of agents and skills into [OpenCode](https://opencode.ai) and [Claude Code](https://claude.com/claude-code) so work moves through a defined workflow instead of ad-hoc prompting. In the current supported model, **FRIDAY** is the orchestrator: it classifies requests, proposes the next specialist step, waits for explicit approval, delegates one specialist at a time, and tracks workflow state in `.temper/friday-state.json`.
 
----
+This repository contains more than just prompts. It defines:
 
-## What is TemperAI?
+- **FRIDAY** as the supported orchestrator
+- **Specialist agents** for analysis, architecture, planning, implementation, testing, review, DevOps, and documentation
+- **Skills** that encode the standards each agent must follow
+- **CLI tooling** for installation, updates, diagnostics, and optional NeuralCore memory
 
-When you work with an AI coding assistant, you're usually writing prompts from scratch every time. TemperAI changes that. It provides:
-
-- **Agents** — specialized AI personas (analyst, architect, backend developer, tester, DevOps engineer, and more) that are automatically available in OpenCode as sub-agents.
-- **Skills** — reusable instruction libraries covering .NET architecture patterns, DDD, EF Core, Blazor, testing, CI/CD, and more. Agents load the right skill at the right moment without you having to explain it.
-- **An orchestrator (FRIDAY)** — an intelligent workflow coordinator that routes your requests to the right specialist, tracks state across sessions, and enforces approval gates before any code is written.
-- **NeuralCore** — an optional local MCP server that gives your agents persistent memory across sessions using a local SQLite database.
-
-The result is a **structured SDD (Software-Driven Development) workflow** where each piece of work — requirements, architecture, tasks, implementation, tests, review — is handled by the right specialist, with the right context, in the right order.
+> Supported documentation scope: **FRIDAY-centered workflow only**. Legacy JARVIS assets are not part of the supported documentation model.
 
 ---
 
-## The SDD Workflow
+## Start here
 
+- [FRIDAY workflow overview](docs/friday-workflow.md)
+- [Active agents](docs/agents.md)
+- [Active skills and agent-to-skill mapping](docs/skills.md)
+- [Human-readable skill catalog](assets/docs/skills-catalog.md)
+
+---
+
+## What TemperAI is
+
+TemperAI is an opinionated Software-Driven Development workflow for .NET projects.
+
+Instead of asking one general AI assistant to do everything, TemperAI splits the work across specialists:
+
+- `temper-analyst` defines requirements
+- `temper-architect` designs the solution
+- `temper-tasks` and `temper-plan` prepare execution
+- implementation agents build the system
+- `temper-review` checks quality
+- `temper-docs` produces final documentation
+
+FRIDAY coordinates that flow and enforces approval gates between steps.
+
+---
+
+## End-to-end model
+
+```text
+Idea / request
+    ↓
+FRIDAY
+    ↓
+Analyst
+    ↓
+Architect
+    ↓
+Tasks
+    ↓
+Plan
+    ↓
+Backend / Frontend / Tester / DevOps
+    ↓
+Review
+    ↓
+Docs
 ```
-Your idea
-    │
-    ▼
-┌─────────────────────────────────────────────────────────┐
-│                     FRIDAY (Orchestrator)                │
-│  Classifies requests · Routes to specialists            │
-│  Enforces approvals · Preserves workflow state          │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-    ┌──────────────────────┼───────────────────────────┐
-    ▼                      ▼                           ▼
-temper-analyst      temper-architect            temper-tasks
-Phase 1: PRD        Architecture design         Break work into
-Phase 2: Specs      Tech stack · Patterns       atomic tasks
-                    DDD docs · Config files
-                           │
-    ┌──────────────────────┼───────────────────────────┐
-    ▼                      ▼                           ▼
-temper-backend      temper-frontend           temper-tester
-.NET domain         Blazor components         xUnit · Moq
-Application layer   State management          bUnit · Integration
-EF Core · APIs      UI behavior               tests
-                           │
-    ┌──────────────────────┼───────────────────────────┐
-    ▼                      ▼                           ▼
-temper-devops       temper-review             temper-docs
-Docker              Quality gate              README
-GitHub Actions      Convention audit          ARCHITECTURE.md
-CI/CD pipelines     Risk analysis             API.md · CHANGELOG
-```
+
+Key rules in the supported model:
+
+- FRIDAY never implements work directly.
+- FRIDAY delegates **one specialist per session**.
+- Medium and complex work requires **explicit approval** before delegation.
+- Requirements and architecture happen before normal implementation.
+- Skills, not ad-hoc prompt style, define execution standards.
 
 ---
 
-## Agents
+## Active agents
 
 | Agent | Role |
 |---|---|
-| `temper-friday` | Intelligent orchestrator. Routes requests, proposes plans, tracks workflow state, enforces approval gates. Never implements work directly. |
-| `temper-analyst` | Senior functional analyst. Phase 1: elicits requirements and produces a PRD. Phase 2: generates user stories and acceptance criteria from the approved PRD. |
-| `temper-architect` | Senior software architect. Designs the system architecture, chooses the stack and patterns, produces backend/frontend config and DDD documentation. |
-| `temper-tasks` | Build planner. Converts approved specs and architecture into atomic, trackable implementation tasks organized by user story. |
-| `temper-plan` | Execution planner. Analyzes task dependencies and produces an optimized build plan with parallel execution groups. |
-| `temper-backend` | .NET backend implementer. Writes production-quality C# following the architecture pattern decided by the architect. |
-| `temper-frontend` | Blazor frontend implementer. Implements components, pages, state, forms, and API consumption. |
-| `temper-tester` | Test implementer. Writes xUnit unit tests, integration tests, and bUnit component tests. |
-| `temper-devops` | DevOps implementer. Generates Dockerfiles, docker-compose, and GitHub Actions CI/CD pipelines. |
-| `temper-review` | Quality reviewer. Audits generated code against TemperAI conventions and the approved specifications. |
-| `temper-docs` | Documentation generator. Produces README, ARCHITECTURE.md, API.md, and CHANGELOG after the build is complete. |
-| `temper-jarvis` | Alternative orchestrator (legacy). |
+| `temper-friday` | Supported orchestrator. Routes work, manages approvals, persists workflow state, and delegates specialists. |
+| `temper-analyst` | Produces the PRD and the user-story/spec set. |
+| `temper-architect` | Produces architecture proposals and project design documents. |
+| `temper-tasks` | Breaks approved work into atomic implementation tasks. |
+| `temper-plan` | Turns tasks into an execution plan with dependency groups. |
+| `temper-backend` | Implements .NET backend work. |
+| `temper-frontend` | Implements Blazor or Angular frontend work. |
+| `temper-tester` | Implements tests. |
+| `temper-devops` | Implements Docker and CI/CD work. |
+| `temper-review` | Reviews generated output against TemperAI conventions. |
+| `temper-docs` | Produces final project documentation. |
+
+Full details: [docs/agents.md](docs/agents.md)
 
 ---
 
-## Skills
+## Active skill families
 
-Skills are instruction libraries that agents load on demand. They encode conventions, patterns, and rules so every agent follows the same standards without you needing to repeat yourself.
+TemperAI skills are reusable instruction contracts. Agents load them only when needed.
 
-### Backend
+Active skill families in the FRIDAY model:
 
-| Category | Skills |
-|---|---|
-| Architecture patterns | Clean Architecture, Hexagonal Architecture, Vertical Slice Architecture, Onion Architecture, Shared architecture rules |
-| .NET / C# | C# conventions, ASP.NET Core API, DDD patterns, EF Core (setup, queries, entity config, repository, bulk ops), LINQ, Testing |
-| Shared patterns | Result pattern, SOLID & Clean Code, DTO conventions, Use case patterns |
-| API documentation | Scalar, Swagger |
+- **FRIDAY workflow skills** — state, delegation, communication loops, session-mode guidance
+- **Analyst skills** — functional analysis, report formats, PRD generation, spec generation
+- **Architect skills** — proposal/report formats and document templates
+- **Backend skills** — architecture patterns, .NET API, DDD, EF Core, DTOs, Result pattern, clean code
+- **Frontend skills** — Blazor, Blazor Server, Angular, Angular Material, SCSS, Tailwind, MudBlazor, bUnit
+- **Testing skills** — .NET testing conventions
+- **DevOps skills** — Docker and GitHub Actions
 
-### Frontend
-
-| Category | Skills |
-|---|---|
-| Blazor | Blazor WebAssembly, Blazor Server, bUnit component testing |
-| UI libraries | MudBlazor, Tailwind CSS |
-
-### DDD
-
-| Category | Skills |
-|---|---|
-| Domain modeling | DDD document generation, Ubiquitous language |
-
-### DevOps
-
-| Category | Skills |
-|---|---|
-| Infrastructure | Docker, GitHub Actions, CI/CD strategy |
-
-### Workflow
-
-| Category | Skills |
-|---|---|
-| FRIDAY | State schema, Analyst communication, Architect communication, Implementation delegation, Prompt excellence |
-| Analyst | Functional analysis, PRD template, Report formats, Analyst reasoning, Spec generator |
-| Architect | Proposal formats, Document templates |
-| Project management | Token budget, Setup tasks, PRD analyzer |
-
----
-
-## Requirements
-
-- **Windows** (macOS/Linux support coming soon)
-- **OpenCode** installed and configured
-- No .NET SDK required — the CLI is self-contained
-
-## Community release model
-
-TemperAI community releases follow a remote-first distribution model:
-
-- The public install is a **global self-contained `temper-ai` CLI**.
-- Community installations use **remote assets by default**.
-- **Local source mode** is for contributors and development against a checked-out repository.
-- `temper-ai update` is the **single user-facing update action** for both the CLI and assets.
-- Every public release ships with a **mandatory manifest** that defines the matching CLI and assets pair.
-- **`stable`** is the initial public release channel.
-- Running `temper-ai` **without arguments** opens the interactive menu as the primary user experience.
-
-See [docs/community-release-model.md](docs/community-release-model.md) for the public release and update model.
+Full details: [docs/skills.md](docs/skills.md)
 
 ---
 
 ## Installation
 
-### Quick install (recommended)
+### Quick install
 
-Use the published **one-line PowerShell bootstrap command** from the latest [Releases](https://github.com/Ezefeola/temper-ai/releases) page.
+Use the published PowerShell bootstrap command from the latest [Releases](https://github.com/Ezefeola/temper-ai/releases) page.
 
-That bootstrap flow is the supported public install path. It resolves the current **stable** release manifest, installs the self-contained CLI globally for the current user, and configures TemperAI to use **remote assets by default**.
-
-No repository clone or .NET SDK is required for community installation.
-
-Restart your terminal and verify:
+Then verify:
 
 ```powershell
 temper-ai --version
 ```
 
-Then start TemperAI with:
+Install TemperAI assets. The installer prompts for a target, or pass one explicitly:
 
 ```powershell
-temper-ai
+temper-ai install            # choose OpenCode or Claude Code interactively
+temper-ai install -a opencode
+temper-ai install -a claude
+temper-ai install -a all      # install into every supported target
 ```
 
-Running `temper-ai` with no arguments opens the interactive menu, which is the primary community user experience.
+### Targets
+
+| Target | Agents | Skills | Orchestrator | NeuralCore MCP |
+|---|---|---|---|---|
+| **OpenCode** | `~/.config/opencode/agents/` | `~/.config/opencode/skills/` | `temper-friday` primary agent | `opencode.json` |
+| **Claude Code** | `~/.claude/agents/` | `~/.claude/skills/` | `temper-friday` agent via `claude --agent` | `claude mcp add` (user scope) |
+
+For Claude Code, assets are converted on install: the OpenCode `mode`/`permission`
+frontmatter is rewritten to Claude's `tools` field and `*.agent.md` files are renamed to
+`*.md`. Every TemperAI agent — including the `mode: primary` orchestrators
+(`temper-friday`, `temper-jarvis`) — is installed as a Claude **agent**. Orchestrators
+carry the `Task` tool so they can delegate to specialists. Skills are portable and copied
+unchanged.
+
+#### Running FRIDAY as the orchestrator on Claude Code
+
+OpenCode runs FRIDAY as a *primary* agent. The Claude Code equivalent is to drive the
+session with the agent directly:
+
+```powershell
+claude --agent temper-friday
+```
+
+To get the OpenCode-like experience where every session in a project starts as FRIDAY,
+set the default agent in that project's `.claude/settings.json`:
+
+```json
+{ "agent": "temper-friday" }
+```
+
+> NeuralCore on Claude Code requires the `claude` CLI on your PATH; the installer runs
+> `claude mcp add neuralcore --scope user -- temper-ai --mcp` so Claude manages its own config.
 
 ---
 
-## First Steps
+## How to use TemperAI
 
-### Install agents and skills into OpenCode
+1. Install TemperAI into OpenCode or Claude Code.
+2. Open your project in your AI client.
+3. Start with FRIDAY:
 
-```powershell
-temper-ai install
-```
+   ```text
+   /temper-friday
+   ```
 
-This installs TemperAI into OpenCode using the configured release assets. For community installs, the default source is the published **remote assets** for the selected stable release.
+   On OpenCode, FRIDAY is a primary agent. On Claude Code, start the session with
+   `claude --agent temper-friday` (or set `"agent": "temper-friday"` in
+   `.claude/settings.json`). Specialists run as subagents in both clients.
 
-### Local source mode for contributors
+4. Describe the project, change, bug, or documentation request.
+5. Review FRIDAY's proposed plan.
+6. Approve the next step explicitly when required.
+7. Review each specialist's output before moving to the next specialist.
 
-If you are developing TemperAI itself, you can work against a local repository checkout instead of published remote assets. This **local source mode** is intended for maintainers and contributors only; it is not the default community installation model.
+The primary supported usage model is **through FRIDAY orchestration**, not by manually bypassing it.
 
-### Optional: Install NeuralCore (persistent memory)
+Full workflow: [docs/friday-workflow.md](docs/friday-workflow.md)
 
-NeuralCore is a local MCP server that gives your agents memory across sessions. It stores observations, decisions, and project context in a local SQLite database.
+---
+
+## CLI commands
+
+| Command | Description |
+|---|---|
+| `temper-ai install` | Install agents and skills into OpenCode and/or Claude Code |
+| `temper-ai update` | Update the installed CLI and assets |
+| `temper-ai status` | Show installed status |
+| `temper-ai neuralcore` | Manage NeuralCore |
+| `temper-ai neural` | Save or recall NeuralCore observations |
+| `temper-ai doctor` | Diagnose installation issues |
+| `temper-ai skill` | Create, install, and discover skills |
+| `temper-ai snapshot` | Manage workflow snapshots |
+| `temper-ai incremental` | Detect phases that need re-execution |
+| `temper-ai budget` | Show token usage |
+| `temper-ai uninstall` | Remove TemperAI |
+
+---
+
+## NeuralCore
+
+NeuralCore is an optional local MCP server that gives agents persistent memory across sessions.
+
+Install it with:
 
 ```powershell
 temper-ai neuralcore --install
 ```
 
-Once installed, NeuralCore is automatically started whenever OpenCode invokes TemperAI agents.
-
 ---
 
-## CLI Commands
+## Project structure
 
-| Command | Description |
-|---|---|
-| `temper-ai install` | Install all agents and skills into OpenCode |
-| `temper-ai update` | Update the installed CLI and assets to the latest stable release |
-| `temper-ai status` | Show what is installed and what needs updating |
-| `temper-ai neuralcore` | Manage NeuralCore MCP server (install, status, test) |
-| `temper-ai neural` | Save and recall project observations (requires NeuralCore) |
-| `temper-ai doctor` | Diagnose and auto-repair installation issues |
-| `temper-ai skill` | Create, install, and discover custom skills |
-| `temper-ai snapshot` | Manage workflow snapshots for rollback |
-| `temper-ai incremental` | Detect which workflow phases need re-execution after changes |
-| `temper-ai budget` | Show token usage for the current project |
-| `temper-ai uninstall` | Remove TemperAI completely |
-
-Run any command with `--help` for full options:
-
-```powershell
-temper-ai install --help
-temper-ai update --help
-```
-
----
-
-## Using TemperAI in OpenCode
-
-Once installed, open OpenCode in any project and start a conversation with FRIDAY:
-
-```
-/temper-friday
-```
-
-FRIDAY will guide you through the full SDD workflow:
-
-1. Describe your project idea — FRIDAY delegates to the analyst.
-2. The analyst elicits requirements and produces a PRD (Product Requirements Document).
-3. Once you approve the PRD, the analyst generates user stories with acceptance criteria.
-4. FRIDAY delegates to the architect, who designs the system architecture.
-5. Tasks are generated and organized into a build plan.
-6. Backend, frontend, tester, and DevOps agents implement the work task by task.
-7. The reviewer audits the output.
-8. The docs agent generates project documentation.
-
-Each step requires explicit approval before proceeding. FRIDAY never generates code without an approved plan.
-
----
-
-## NeuralCore — Persistent Agent Memory
-
-NeuralCore is an optional local MCP server that enables your agents to remember things across sessions.
-
-**What it stores:**
-- Architecture decisions
-- Bug fixes and root causes
-- Technical observations
-- Session context and project notes
-
-**How it works:**
-
-NeuralCore runs as a local process and communicates with OpenCode via the MCP protocol. It uses a local SQLite database stored at:
-
-```
-%LOCALAPPDATA%\Programs\TemperAI\NeuralCore\neural.db
-```
-
-**CLI commands:**
-
-```powershell
-# Save an observation
-temper-ai neural --save --title "Fixed null ref in UserService" --content "..." --type Bugfix
-
-# Recall recent observations
-temper-ai neural --recall --limit 20
-
-# Recall by topic
-temper-ai neural --recall --topic-filter "authentication"
-
-# View session context
-temper-ai neural --session --project MyProject
-```
-
----
-
-## Custom Skills
-
-You can create and install your own skills:
-
-```powershell
-# Create a new skill scaffold
-temper-ai skill --create --name my-skill --category backend
-
-# Install a skill from a local path
-temper-ai skill --install /path/to/my-skill
-
-# List installed skills
-temper-ai skill --list
-```
-
-Skills are Markdown files that follow the TemperAI skill format. Once installed, they are available to any agent that loads them.
-
----
-
-## Project Structure
-
-```
+```text
 temper-ai/
 ├── assets/
-│   ├── agents/          # Source agent definition files used for development and packaging
-│   └── skills/          # Source skill files used for development and packaging
-│       ├── backend/     # .NET, EF Core, architecture patterns
-│       ├── frontend/    # Blazor, MudBlazor, Tailwind
-│       ├── ddd/         # Domain modeling, ubiquitous language
-│       ├── devops/      # Docker, GitHub Actions, CI/CD
-│       └── workflow/    # FRIDAY, analyst, architect workflow skills
-├── src/
-│   ├── TemperAI.Cli/        # CLI entry point (Spectre.Console)
-│   ├── TemperAI.Core/       # Shared models, configuration, asset loading
-│   ├── TemperAI.Installer/  # Install/update/uninstall logic
-│   └── TemperAI.NeuralCore/ # MCP server for persistent memory
-├── install.ps1              # Local installer/bootstrap helper for repository workflows
-└── temper-ai.exe            # Pre-built self-contained binary
+│   ├── agents/          # Agent definitions
+│   ├── skills/          # Skill definitions
+│   └── docs/            # Human-readable internal reference docs
+├── docs/                # Public workflow documentation
+├── src/                 # CLI, core libraries, installer, NeuralCore
+└── README.md
 ```
-
----
-
-## Updating
-
-To update your TemperAI installation to the latest public stable release:
-
-```powershell
-temper-ai update
-```
-
-This is the single user-facing update action. It updates both:
-
-- the installed CLI
-- the configured release assets
-
-Release resolution is manifest-driven, so public updates move to the matching CLI/assets pair published for that release.
-
----
-
-## Uninstalling
-
-```powershell
-temper-ai uninstall
-```
-
-This removes all installed agents, skills, NeuralCore, the CLI binary, and the PATH entry.
 
 ---
 
 ## Contributing
 
-Contributions are welcome. To build from source you need the .NET 10 SDK:
+To build from source you need the .NET 10 SDK:
 
 ```powershell
-# Build and run locally
 dotnet run --project src/TemperAI.Cli
-
-# Publish a self-contained binary
-dotnet publish src/TemperAI.Cli/TemperAI.Cli.csproj -c Release -o ./publish --self-contained true -p:PublishSingleFile=true
 ```
 
-Contributor workflows may use local source mode to validate unreleased asset changes from the checked-out repository. Public/community releases, however, are documented and supported through manifest-backed stable releases with remote assets by default.
+### Local development install
+
+To test your local `assets/` (agents and skills) without cutting a release, build and
+install the CLI from source, then use local mode:
+
+```powershell
+# From the repo root — builds temper-ai.exe and adds it to your PATH
+./install-local.ps1
+
+# Optionally install the local assets right away into every provider
+./install-local.ps1 -Install
+```
+
+Once installed, the `--local` flag makes `install`/`update` read from the repo's
+`assets/` instead of the published release. **Run it from inside the repo** (local mode
+resolves `assets/` by walking up from the current directory):
+
+```powershell
+temper-ai --local                  # interactive menu in local mode
+temper-ai --local install -a all   # install local assets into OpenCode + Claude Code
+temper-ai --local update  -a all   # re-apply assets after editing them (overwrites)
+```
+
+> `install` skips files that already exist; use `update` to overwrite and pick up your
+> latest asset edits.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
