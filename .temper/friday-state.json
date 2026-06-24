@@ -1,50 +1,50 @@
 {
-  "last_updated": "2026-06-06T00:00:00Z",
-  "status": "blocked",
-  "request_summary": "Final review is blocked because the repository build failed with a Microsoft Defender file lock in TemperAI.NeuralCore output.",
+  "last_updated": "2026-06-07T00:00:00Z",
+  "status": "awaiting-task-approval",
+  "request_summary": "Document TemperAI agents, skills, FRIDAY orchestration, and intended usage, explicitly excluding JARVIS from the documentation scope.",
   "context": {
     "project": "temper-ai CLI",
     "architecture": "unknown",
     "stack": ".NET 10 CLI (Spectre.Console), self-contained binary",
-    "notes": "Review agent stopped at the build gate. Build failed with CS2012 because Microsoft Defender locked src/TemperAI.NeuralCore/obj/Debug/net10.0/win-x64/TemperAI.NeuralCore.dll. Additional warnings exist but are secondary until the build is clean."
+    "notes": "User wants complete documentation of FRIDAY, all active agents, all active skills, the relationships between agents and skills, and the intended TemperAI usage model. JARVIS must be excluded from documentation scope. Step 1 exploration completed and Step 2 documentation drafting is pending approval. Exploration found current-vs-legacy documentation mismatches, but final docs should focus on FRIDAY as the central orchestrator and avoid documenting JARVIS as part of the supported model."
   },
   "approved_plan": [
     {
       "step": 1,
-      "agent": "general",
+      "agent": "explore",
       "phase": null,
-      "description": "Implement the approved remote distribution, manifest, local-source mode, and unified CLI+assets update model.",
+      "description": "Inventory agents, skills, canonical sources, and documentation gaps relevant to TemperAI workflow documentation.",
       "status": "complete",
-      "output": "CLI install/update/status and installer services updated"
+      "output": "Exploration report covering existing docs, agents, skills by category, agent-to-skill relationships, canonical sources, recommended documentation outline, and risks/ambiguities."
     },
     {
       "step": 2,
-      "agent": "temper-devops",
+      "agent": "temper-docs",
       "phase": null,
-      "description": "Create GitHub release automation for the CLI bundle, assets bundle, manifest, and bootstrap installer.",
+      "description": "Draft the documentation set for FRIDAY, active agents, active skills, workflow usage, and relationship mapping, excluding JARVIS from the supported documentation scope.",
       "status": "complete",
-      "output": ".github/workflows/community-release.yml and scripts/release/*"
-    },
-    {
-      "step": 3,
-      "agent": "general",
-      "phase": null,
-      "description": "Harden the stable release workflow so version tags only publish from commits already contained in main.",
-      "status": "complete",
-      "output": ".github/workflows/community-release.yml"
-    },
-    {
-      "step": 4,
-      "agent": "temper-review",
-      "phase": null,
-      "description": "Validate the approved distribution model implementation and release automation.",
-      "status": "pending",
-      "output": null
+      "output": "Documentation updated to cover FRIDAY-centered workflow, active agents, active skills, agent-to-skill relationships, and intended usage model, with JARVIS excluded from supported scope."
     }
   ],
-  "current_step": 4,
-  "total_steps": 4,
-  "current_agent": "temper-review",
-  "block_reason": "Review blocked at build gate: Microsoft Defender locked the NeuralCore build output, causing CS2012 during compile.",
-  "next_action": "Wait for the user to approve a recovery attempt to clear the build blockage and rerun the review."
+  "current_step": 2,
+  "total_steps": 2,
+  "current_agent": "temper-docs",
+  "session_metrics": {
+    "specialist_runs_total": 2,
+    "specialist_runs_current_thread": 2,
+    "distinct_specialists": ["explore", "temper-docs"],
+    "distinct_specialist_count": 2,
+    "cycle_rounds_total": 0,
+    "recovery_attempts": 0,
+    "prompt_failure_retries": 0,
+    "long_outputs_count": 2,
+    "large_summaries_count": 0,
+    "last_output_class": "task-result",
+    "next_action_type": "output-approval",
+    "scope_confusion_signals": 1,
+    "mixed_scope_signal": false,
+    "risk_score": 3
+  },
+  "block_reason": null,
+  "next_action": "Wait for the user to approve, reject, or request changes to the documentation updates produced by temper-docs."
 }

@@ -1,7 +1,7 @@
 # NeuralCore — Project Memory Export
 
-> Generated: 2026-04-14 14:28 UTC
-> Project: Temper-AI
+> Generated: 2026-06-07 23:26 UTC
+> Project: temper-ai
 
 ## Sessions
 
@@ -11,8 +11,31 @@
 - **Temper-AI** — Active (2026-04-13)
 - **Temper-AI** — Active (2026-04-13)
 - **Temper-AI** — Active (2026-04-14)
+- **temper-ai** — Active (2026-06-07)
+- **temper-ai** — Active (2026-06-07)
 
 ## Observations
+
+### [Discovery] Session summary: Update documentation to explain the current FRIDAY-centered TemperAI model and exclude JARVIS from supported documentation scope
+
+- **Date:** 2026-06-07 23:26
+- **Topic:** session-summary
+
+Goal: Update documentation to explain the current FRIDAY-centered TemperAI model and exclude JARVIS from supported documentation scope
+Discoveries: The repository already had a broad README and an outdated human skill catalog that still referenced JARVIS; active FRIDAY workflow and agent-skill relationships are defined across temper-friday.agent.md and specialist agent contracts.
+Accomplished: Rewrote README around the supported FRIDAY model, added dedicated docs for workflow, agents, and skills, and replaced the human-readable skills catalog with a FRIDAY-centered version.
+Files changed: README.md, docs/friday-workflow.md, docs/agents.md, docs/skills.md, assets/docs/skills-catalog.md
+
+---
+
+### [Decision] Document FRIDAY-centered supported model
+
+- **Date:** 2026-06-07 23:26
+- **Topic:** friday-docs
+
+What: Rewrote human-facing documentation to center the supported TemperAI model on FRIDAY and exclude JARVIS from documented scope. Why: The current supported workflow is FRIDAY-based, and older JARVIS references in public docs created confusion about the intended model. Where: README.md, docs/friday-workflow.md, docs/agents.md, docs/skills.md, assets/docs/skills-catalog.md. Learned: Public docs should describe only active agent contracts and skill relationships that are wired into the supported orchestration flow.
+
+---
 
 ### [Discovery] Session summary: Actualizar skills DDD para enfoque pragmático sin ValueObjects
 
