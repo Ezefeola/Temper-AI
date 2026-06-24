@@ -1,50 +1,50 @@
 {
-  "last_updated": "2026-06-07T00:00:00Z",
+  "last_updated": "2026-06-22T00:30:00Z",
   "status": "awaiting-task-approval",
-  "request_summary": "Document TemperAI agents, skills, FRIDAY orchestration, and intended usage, explicitly excluding JARVIS from the documentation scope.",
+  "request_summary": "Make temper-backend task and user-story artifacts optional by adding an approved direct-action path when Plan/INDEX.md or task files are missing.",
   "context": {
     "project": "temper-ai CLI",
     "architecture": "unknown",
-    "stack": ".NET 10 CLI (Spectre.Console), self-contained binary",
-    "notes": "User wants complete documentation of FRIDAY, all active agents, all active skills, the relationships between agents and skills, and the intended TemperAI usage model. JARVIS must be excluded from documentation scope. Step 1 exploration completed and Step 2 documentation drafting is pending approval. Exploration found current-vs-legacy documentation mismatches, but final docs should focus on FRIDAY as the central orchestrator and avoid documenting JARVIS as part of the supported model."
+    "stack": "Prompt/skill-driven TemperAI agent workflow",
+    "notes": "Previous review-blocked workflow is superseded for now by this approved change-direction investigation. Explore completed and identified prompt/skill enforcement points for task-only backend execution."
   },
   "approved_plan": [
     {
       "step": 1,
       "agent": "explore",
       "phase": null,
-      "description": "Inventory agents, skills, canonical sources, and documentation gaps relevant to TemperAI workflow documentation.",
+      "description": "Locate where temper-backend and FRIDAY enforce Plan/INDEX.md, task files, and parent work items.",
       "status": "complete",
-      "output": "Exploration report covering existing docs, agents, skills by category, agent-to-skill relationships, canonical sources, recommended documentation outline, and risks/ambiguities."
+      "output": "Exploration report identifying temper-backend.agent.md, friday implementation-delegation skill, friday state-schema skill, and temper-friday.agent.md as the minimal change surface."
     },
     {
       "step": 2,
-      "agent": "temper-docs",
+      "agent": "general",
       "phase": null,
-      "description": "Draft the documentation set for FRIDAY, active agents, active skills, workflow usage, and relationship mapping, excluding JARVIS from the supported documentation scope.",
+      "description": "Implement optional direct-action routing and backend-agent support while preserving the formal task-driven path.",
       "status": "complete",
-      "output": "Documentation updated to cover FRIDAY-centered workflow, active agents, active skills, agent-to-skill relationships, and intended usage model, with JARVIS excluded from supported scope."
+      "output": "Workflow assets updated: temper-backend now supports approved direct-action mode; FRIDAY delegation/state rules updated to ask formal-tasks vs direct-action and allow backend direct action without Plan artifacts."
     }
   ],
   "current_step": 2,
   "total_steps": 2,
-  "current_agent": "temper-docs",
+  "current_agent": "general",
   "session_metrics": {
     "specialist_runs_total": 2,
     "specialist_runs_current_thread": 2,
-    "distinct_specialists": ["explore", "temper-docs"],
+    "distinct_specialists": ["explore", "general"],
     "distinct_specialist_count": 2,
     "cycle_rounds_total": 0,
     "recovery_attempts": 0,
     "prompt_failure_retries": 0,
     "long_outputs_count": 2,
     "large_summaries_count": 0,
-    "last_output_class": "task-result",
+    "last_output_class": "completion-report",
     "next_action_type": "output-approval",
-    "scope_confusion_signals": 1,
-    "mixed_scope_signal": false,
+    "scope_confusion_signals": 0,
+    "mixed_scope_signal": true,
     "risk_score": 3
   },
   "block_reason": null,
-  "next_action": "Wait for the user to approve, reject, or request changes to the documentation updates produced by temper-docs."
+  "next_action": "Wait for the user to approve, reject, or request changes to the completed direct-action workflow update."
 }

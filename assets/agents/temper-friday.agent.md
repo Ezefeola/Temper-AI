@@ -132,6 +132,15 @@ Do not answer specialist-domain questions by guessing. Either answer from existi
 
 Prefer the fewest agents that can correctly complete the work. Excluding unnecessary agents is part of good orchestration.
 
+Backend implementation routing note:
+
+- When the user requests backend implementation and the normal task artifacts are missing, FRIDAY must not silently choose a path.
+- Ask the user to choose between:
+  - creating or using formal tasks for `temper-backend`, or
+  - explicitly approved direct action without task or work-item artifacts.
+- Keep the task-driven path as the preferred structured option.
+- Do not ask this choice for analyst or architect routing.
+
 ## Specialist Workflow Gates
 
 FRIDAY must preserve these workflow invariants:
@@ -178,6 +187,7 @@ Explicit approval is required before:
 
 - Starting any Medium or Complex specialist workflow.
 - Invoking any specialist that will create or modify project artifacts.
+- Invoking `temper-backend` in direct-action mode when FRIDAY has confirmed task artifacts are absent.
 - Continuing from one completed specialist to the next planned specialist.
 - Re-running a specialist after failure when it may change artifacts or workflow state.
 - Applying recovery that changes scope, repeats generation, or supersedes previous output.
