@@ -9,6 +9,9 @@ public sealed class InstallerService
     private readonly ReleaseManifestService _releaseManifestService = new();
     private readonly InstallMetadataService _installMetadataService = new();
     private readonly ClaudeAssetConverter _claudeAssetConverter = new();
+    private readonly ClaudeSkillConverter _claudeSkillConverter = new();
+
+    private const string SkillFileName = "SKILL.md";
 
     private static readonly HashSet<string> _ignoredFiles = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -39,26 +42,45 @@ public sealed class InstallerService
 
             assetsRoot = NormalizeAssetsRoot(assetsRoot);
 
-            InstallDirectory(
-                Path.Combine(assetsRoot, "skills"),
-                target.SkillsPath,
-                installed,
-                skipped,
-                errors,
-                overwriteExisting);
-
             if (target.Format.Equals("claude", StringComparison.OrdinalIgnoreCase))
             {
-                InstallClaudeAgents(
-                    Path.Combine(assetsRoot, "agents"),
-                    target,
+                string skillsSourceDirectory = Path.Combine(assetsRoot, "skills");
+
+                // Build the flat-name map once from the skills source so that skills and
+                // agents are rewritten with identical flat names.
+                SkillFlatNameMap? skillFlatNameMap = TryBuildSkillFlatNameMap(skillsSourceDirectory, errors);
+
+                if (skillFlatNameMap is not null)
+                {
+                    InstallClaudeSkills(
+                        skillsSourceDirectory,
+                        skillFlatNameMap,
+                        target,
+                        installed,
+                        skipped,
+                        errors,
+                        overwriteExisting);
+
+                    InstallClaudeAgents(
+                        Path.Combine(assetsRoot, "agents"),
+                        skillFlatNameMap,
+                        target,
+                        installed,
+                        skipped,
+                        errors,
+                        overwriteExisting);
+                }
+            }
+            else
+            {
+                InstallDirectory(
+                    Path.Combine(assetsRoot, "skills"),
+                    target.SkillsPath,
                     installed,
                     skipped,
                     errors,
                     overwriteExisting);
-            }
-            else
-            {
+
                 InstallDirectory(
                     Path.Combine(assetsRoot, "agents"),
                     target.AgentsPath,
@@ -163,6 +185,7 @@ public sealed class InstallerService
 
     private void InstallClaudeAgents(
         string sourceDirectory,
+        SkillFlatNameMap skillFlatNameMap,
         AgentTarget target,
         List<string> installed,
         List<string> skipped,
@@ -187,7 +210,7 @@ public sealed class InstallerService
             try
             {
                 string sourceContent = File.ReadAllText(sourcePath);
-                ConvertedAgent converted = _claudeAssetConverter.Convert(sourceContent);
+                ConvertedAgent converted = _claudeAssetConverter.Convert(sourceContent, skillFlatNameMap);
 
                 string destinationPath = Path.Combine(target.AgentsPath, converted.FileName);
 
@@ -211,6 +234,122 @@ public sealed class InstallerService
             {
                 errors.Add($"{sourcePath}: {exception.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Installs skills for the Claude target, flattening the deep nested asset layout into the
+    /// one-level <c>&lt;SkillsPath&gt;/&lt;flat-name&gt;/SKILL.md</c> layout Claude Code requires for
+    /// discovery. Non-SKILL.md companion files (if any) are flattened into the same skill folder.
+    /// Mirrors <see cref="InstallClaudeAgents"/> for dry-run, overwrite, ignored-file, and
+    /// installed/skipped/errors accounting.
+    /// </summary>
+    private void InstallClaudeSkills(
+        string sourceDirectory,
+        SkillFlatNameMap flatNameMap,
+        AgentTarget target,
+        List<string> installed,
+        List<string> skipped,
+        List<string> errors,
+        bool overwriteExisting)
+    {
+        if (!Directory.Exists(sourceDirectory))
+        {
+            errors.Add($"Directorio de origen no encontrado: {sourceDirectory}");
+            return;
+        }
+
+        string[] sourcePaths = Directory.GetFiles(sourceDirectory, "*", SearchOption.AllDirectories);
+
+        foreach (string sourcePath in sourcePaths)
+        {
+            string fileName = Path.GetFileName(sourcePath);
+
+            if (_ignoredFiles.Contains(fileName))
+            {
+                continue;
+            }
+
+            try
+            {
+                string relativeDirectory = Path.GetDirectoryName(
+                    Path.GetRelativePath(sourceDirectory, sourcePath)) ?? string.Empty;
+                string flatName = flatNameMap.ResolveFlatName(relativeDirectory);
+                string destinationPath = Path.Combine(target.SkillsPath, flatName, fileName);
+
+                if (_dryRun)
+                {
+                    installed.Add($"{destinationPath} (dry run)");
+                    continue;
+                }
+
+                if (File.Exists(destinationPath) && !overwriteExisting)
+                {
+                    skipped.Add(destinationPath);
+                    continue;
+                }
+
+                Directory.CreateDirectory(Path.Combine(target.SkillsPath, flatName));
+
+                if (fileName.Equals(SkillFileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    string sourceContent = File.ReadAllText(sourcePath);
+                    ConvertedSkill converted = _claudeSkillConverter.Convert(sourceContent, relativeDirectory, flatNameMap);
+                    File.WriteAllText(destinationPath, converted.Content);
+                }
+                else
+                {
+                    File.Copy(sourcePath, destinationPath, overwrite: overwriteExisting);
+                }
+
+                installed.Add(destinationPath);
+            }
+            catch (Exception exception)
+            {
+                errors.Add($"{sourcePath}: {exception.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Builds the shared <see cref="SkillFlatNameMap"/> from the skills source directory so the
+    /// same flat names drive both skill installation and agent reference rewriting. Returns
+    /// <see langword="null"/> (recording an error) when the source is missing or the map cannot
+    /// be built, so the Claude install reports the failure instead of proceeding inconsistently.
+    /// </summary>
+    private static SkillFlatNameMap? TryBuildSkillFlatNameMap(string skillsSourceDirectory, List<string> errors)
+    {
+        if (!Directory.Exists(skillsSourceDirectory))
+        {
+            errors.Add($"Directorio de origen no encontrado: {skillsSourceDirectory}");
+            return null;
+        }
+
+        string[] sourcePaths = Directory.GetFiles(skillsSourceDirectory, "*", SearchOption.AllDirectories);
+
+        try
+        {
+            return SkillFlatNameMap.Build(
+                EnumerateSkillRelativeDirectories(skillsSourceDirectory, sourcePaths));
+        }
+        catch (Exception exception)
+        {
+            errors.Add(exception.Message);
+            return null;
+        }
+    }
+
+    private static IEnumerable<string> EnumerateSkillRelativeDirectories(string sourceDirectory, IEnumerable<string> sourcePaths)
+    {
+        foreach (string sourcePath in sourcePaths)
+        {
+            if (!Path.GetFileName(sourcePath).Equals(SkillFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            yield return Path.GetDirectoryName(
+                Path.GetRelativePath(sourceDirectory, sourcePath)) ?? string.Empty;
         }
     }
 
