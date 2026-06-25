@@ -4,7 +4,7 @@ description: >
   Canonical use case structure, naming, and DI conventions for backend tasks.
   Load when creating or modifying use cases or controllers that invoke them.
   Do not load for Vertical Slice handlers.
-requires: [dotnet-csharp, result-pattern]
+requires: [backend-dotnet-csharp, backend-dotnet-shared-result-pattern]
 produces: [use-case-classes, use-case-interfaces]
 ---
 

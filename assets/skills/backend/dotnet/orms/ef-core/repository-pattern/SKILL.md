@@ -3,7 +3,7 @@ name: repository-pattern
 description: >
   Canonical repository and UnitOfWork creation rules for EF Core.
   Load when creating repositories or UnitOfWork from scratch.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [repositories, unit-of-work, repository-interfaces]
 ---
 

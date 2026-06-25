@@ -230,7 +230,7 @@ public sealed class ProductsApiTests : IClassFixture<WebApplicationFactory<Progr
 
 ## Rules
 
-For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+For general C# conventions (syntax, usings, naming, async, DTOs), see `backend/dotnet/csharp/SKILL.md`.
 
 - Never skip testing error paths — every validation must have a test.
 - Never write tests that depend on non-deterministic behavior.

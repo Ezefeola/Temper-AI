@@ -5,12 +5,12 @@ description: >
   Use when the project has multiple input channels (API, CLI, message queue),
   need to test the domain in isolation, or when adapters change frequently.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  For implementation details, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+  For implementation details, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Hexagonal Architecture — TemperAI Standards
 
-> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
@@ -740,5 +740,5 @@ When generating actual code, the namespace MUST match the folder structure exact
 - `UnitOfWork` is the single entry point to all repositories within a persistence adapter
 - **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
 - **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
-- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core/bulk-operations/SKILL.md`
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/orms/ef-core/bulk-operations/SKILL.md`
 - For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

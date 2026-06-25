@@ -33,29 +33,55 @@
 
 ## Backend
 
-| Skill | Description |
+All .NET backend skills live under the `backend/dotnet/` technology root.
+Architecture and shared skills are grouped under `backend/dotnet/`; the EF Core
+data-access leaves are grouped under `backend/dotnet/orms/ef-core/`.
+
+### `backend/dotnet/` — language, API, domain
+
+| Skill (source path) | Description |
 |---|---|
-| `dotnet-csharp` | Universal C# / .NET 10 conventions |
-| `clean-architecture` | Clean Architecture rules |
-| `hexagonal-architecture` | Hexagonal Architecture rules |
-| `vertical-slice-architecture` | Vertical Slice Architecture rules |
-| `onion-architecture` | Onion Architecture rules |
-| `dotnet-api` | ASP.NET Core API conventions |
-| `api-docs-scalar` | Scalar API documentation provider rules |
-| `api-docs-swagger` | Swagger API documentation provider rules |
-| `dotnet-ddd` | DDD rules for domain entities and aggregates |
-| `dto-conventions` | DTO conventions |
-| `result-pattern` | `Result<T>` pattern |
-| `use-case-patterns` | Use-case conventions |
-| `solid-clean-code` | SOLID and clean code rules |
-| `entity-configuration` | EF Core entity configuration rules |
-| `repository-pattern` | Repository and UnitOfWork rules |
-| `repository-usage` | Correct use of existing repositories |
-| `dbcontext-setup` | DbContext setup rules |
-| `dotnet-ef-core-queries` | EF Core query rules |
-| `dotnet-linq` | LINQ rules |
-| `bulk-operations` | Bulk insert and batch operation guidance |
-| `ddd-ubiquitous-language` | Ubiquitous language understanding |
+| `backend/dotnet/csharp` | Universal C# / .NET 10 conventions |
+| `backend/dotnet/api` | ASP.NET Core API conventions |
+| `backend/dotnet/api-docs/scalar` | Scalar API documentation provider rules |
+| `backend/dotnet/api-docs/swagger` | Swagger API documentation provider rules |
+| `backend/dotnet/ddd` | DDD rules for domain entities and aggregates |
+| `backend/dotnet/linq` | LINQ rules |
+
+### `backend/dotnet/architecture/` — architecture patterns
+
+| Skill (source path) | Description |
+|---|---|
+| `backend/dotnet/architecture/clean` | Clean Architecture rules |
+| `backend/dotnet/architecture/hexagonal` | Hexagonal Architecture rules |
+| `backend/dotnet/architecture/vertical-slice` | Vertical Slice Architecture rules |
+| `backend/dotnet/architecture/onion` | Onion Architecture rules |
+
+### `backend/dotnet/shared/` — cross-cutting backend rules
+
+| Skill (source path) | Description |
+|---|---|
+| `backend/dotnet/shared/dto-conventions` | DTO conventions |
+| `backend/dotnet/shared/result-pattern` | `Result<T>` pattern |
+| `backend/dotnet/shared/use-case-patterns` | Use-case conventions |
+| `backend/dotnet/shared/solid-clean-code` | SOLID and clean code rules |
+
+### `backend/dotnet/orms/ef-core/` — EF Core data access
+
+| Skill (source path) | Description |
+|---|---|
+| `backend/dotnet/orms/ef-core/entity-configuration` | EF Core entity configuration rules |
+| `backend/dotnet/orms/ef-core/repository-pattern` | Repository and UnitOfWork rules |
+| `backend/dotnet/orms/ef-core/repository-usage` | Correct use of existing repositories |
+| `backend/dotnet/orms/ef-core/dbcontext-setup` | DbContext setup rules |
+| `backend/dotnet/orms/ef-core/queries` | EF Core query rules |
+| `backend/dotnet/orms/ef-core/bulk-operations` | Bulk insert and batch operation guidance |
+
+### Domain language
+
+| Skill (source path) | Description |
+|---|---|
+| `ddd/ubiquitous-language` | Ubiquitous language understanding |
 
 ## Frontend
 

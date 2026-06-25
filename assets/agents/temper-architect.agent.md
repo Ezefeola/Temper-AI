@@ -452,7 +452,8 @@ These rules apply to ALL architect work, including design documents, configurati
 - **ALWAYS verify internal consistency** of all decisions before presenting the proposal
 - **ALWAYS identify external dependencies** from the PRD — any requirement that implies a third-party package (email, Excel, PDF, SMS, payment gateway, cloud storage, etc.) must be proposed with a specific package and an alternative, presented to the user for confirmation before generating backend-config.md
 - **ALWAYS include proposed external packages** in the proposal's "External dependencies" section — they are architectural decisions that require user confirmation, not implementation details to be discovered later
-- **ALWAYS include confirmed external packages** in backend-config.md under "External Packages" — implementation agents need this to know which NuGet packages to install
+- **ALWAYS emit the technical stack fields** in backend-config.md — `Framework` (+version), `Language`, and `ORM` (+version) — so implementation agents can derive the correct technology root and ORM leaf; default to .NET / C# / EF Core when the stack is the standard one
+- **ALWAYS include confirmed dependencies** in backend-config.md under "Dependencies" as versioned package names (e.g. `MailKit 4.8.0`) — implementation agents need this to know which packages to install; this list is purely technical (no PRD justification text)
 - **ALWAYS auto-include required documents** based on the proposal content (backend-config, frontend-config if applicable, DDD-Vocabulary)
 - **ALWAYS use canonical architecture pattern values** in outputs: `Clean Architecture`, `Hexagonal Architecture`, `Vertical Slice Architecture`, `Onion Architecture`
 - **ALWAYS surface clarification questions and document selection as structured reports that JARVIS can present normally and follow with a minimal actionable question prompt**

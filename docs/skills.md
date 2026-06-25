@@ -58,7 +58,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 
 | Skill | Purpose |
 |---|---|
-| `dotnet-csharp` | Universal .NET and C# conventions |
+| `backend-dotnet-csharp` | Universal .NET and C# conventions |
 | `clean-architecture` / `hexagonal-architecture` / `vertical-slice-architecture` / `onion-architecture` | Structural rules based on chosen architecture |
 | `result-pattern` | Standard result handling |
 | `ddd-ubiquitous-language` | Consistent domain language understanding |
@@ -77,7 +77,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 | `entity-configuration` | EF Core Fluent API entity configuration |
 | `repository-pattern` | Repository and UnitOfWork creation |
 | `dbcontext-setup` | DbContext creation and registration |
-| `dotnet-ef-core-queries` | EF Core query composition |
+| `backend-dotnet-orms-ef-core-queries` | EF Core query composition |
 | `repository-usage` | Correct use of existing repositories |
 | `dotnet-linq` | LINQ rules |
 | `bulk-operations` | High-volume insert and batch guidance |
@@ -88,7 +88,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 
 | Skill | Purpose |
 |---|---|
-| `dotnet-csharp` | C# rules for Blazor work |
+| `backend-dotnet-csharp` | C# rules for Blazor work |
 | `blazor` | Blazor WebAssembly standards |
 | `blazor-server` | Blazor Server / interactive server rendering standards |
 | `mudblazor` | MudBlazor component standards |
@@ -107,7 +107,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 
 | Skill | Purpose | Used by |
 |---|---|---|
-| `dotnet-csharp` | C# conventions for test code | `temper-tester` |
+| `backend-dotnet-csharp` | C# conventions for test code | `temper-tester` |
 | `dotnet-testing` | xUnit, Moq, integration, and component test guidance | `temper-tester` |
 
 ## 9. DevOps skills
@@ -123,7 +123,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 
 | Skill | Purpose |
 |---|---|
-| `dotnet-csharp` | Core coding rules |
+| `backend-dotnet-csharp` | Core coding rules |
 | `dotnet-api` | API review rules |
 | `result-pattern` | Result contract review |
 | `dto-conventions` | DTO review rules |
@@ -151,7 +151,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 | `temper-plan` | none | none |
 | `temper-backend` | backend core skills | API, DDD, EF Core, DTO, query, docs-provider, and batch skills as required |
 | `temper-frontend` | stack-detection-driven | Blazor or Angular skill set only |
-| `temper-tester` | `dotnet-csharp`, `dotnet-testing` | none in current contract |
+| `temper-tester` | `backend-dotnet-csharp`, `dotnet-testing` | none in current contract |
 | `temper-devops` | `docker`, `github-actions` | none in current contract |
 | `temper-review` | review baseline skills | chosen architecture skill |
 | `temper-docs` | none | none |

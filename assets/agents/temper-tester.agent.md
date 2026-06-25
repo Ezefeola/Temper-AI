@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-tester starting
-   Skills loaded: [dotnet-csharp, backend/dotnet/testing]
+   Skills loaded: [backend/dotnet/csharp, backend/dotnet/testing]
    Context files: [Docs/Application/Architecture/backend-config.md, Plan/INDEX.md, parent work item source, Docs/Application/Domain/domain-model.md, task Location under Plan/]
 ```
 
@@ -416,7 +416,7 @@ If no previous observations exist, say:
 ## Skills you load
 
 This agent loads the following skills:
-- `dotnet-csharp` — Universal C# / .NET 10 standards (syntax, usings, naming, async, DTOs)
+- `backend/dotnet/csharp` — Universal C# / .NET 10 standards (syntax, usings, naming, async, DTOs)
 - `backend/dotnet/testing` — xUnit and Moq conventions
 
 It does not need frontend or architecture skills beyond understanding what it is testing.

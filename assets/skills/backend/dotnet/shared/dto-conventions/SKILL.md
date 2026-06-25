@@ -3,7 +3,7 @@ name: dto-conventions
 description: >
   Canonical DTO naming, structure, and mapping conventions for backend tasks.
   Load when creating or modifying DTOs.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [request-dtos, response-dtos, mapping-conventions]
 ---
 

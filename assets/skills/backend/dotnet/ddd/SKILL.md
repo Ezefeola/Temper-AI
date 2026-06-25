@@ -6,7 +6,7 @@ description: >
   Load when creating or modifying any Domain layer component — entities, enums, events, aggregates.
   DO NOT load for infrastructure, repository, or controller tasks.
   Value Objects are intentionally NOT used — primitives are used directly in entities.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [entities, aggregates, domain-events, enums, domain-rules]
 ---
 
@@ -26,7 +26,7 @@ produces: [entities, aggregates, domain-events, enums, domain-rules]
 
 ## When NOT to apply this skill
 
-- You are configuring EF Core mappings — load `backend/dotnet/ef-core/entity-configuration/SKILL.md` instead
+- You are configuring EF Core mappings — load `backend/dotnet/orms/ef-core/entity-configuration/SKILL.md` instead
 - You are writing repositories or use cases without modifying domain entities
 - You are working on the API or infrastructure layer
 
@@ -494,7 +494,7 @@ public sealed record Money { ... }  // DO NOT CREATE
 
 > ⚠️ NOTE FOR EF CORE: Since Value Objects are not used, `OwnsOne` configuration is also never used.
 > The `OwnsOne` API exists in EF Core but does not apply to this project.
-> See `backend/dotnet/ef-core/entity-configuration/SKILL.md` for correct entity configuration.
+> See `backend/dotnet/orms/ef-core/entity-configuration/SKILL.md` for correct entity configuration.
 
 ---
 

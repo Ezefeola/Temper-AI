@@ -3,7 +3,7 @@ name: result-pattern
 description: >
   Canonical Result<T> pattern for backend tasks.
   Load on every backend task.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [result-pattern, action-result-mapping]
 ---
 

@@ -3,7 +3,7 @@ name: dbcontext-setup
 description: >
   Canonical DbContext setup and registration rules for EF Core.
   Load when creating or modifying DbContext classes or their DI wiring.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [dbcontext, dbsets, configuration-registration]
 ---
 

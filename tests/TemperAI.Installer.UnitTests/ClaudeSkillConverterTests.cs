@@ -10,9 +10,10 @@ public sealed class ClaudeSkillConverterTests
     {
         return SkillFlatNameMap.Build(
         [
-            "dotnet-csharp",
+            "backend/dotnet/csharp",
             "backend/dotnet/api",
-            "backend/dotnet/ef-core/queries",
+            "backend/dotnet/orms/ef-core/queries",
+            "setup-tasks",
             "frontend/blazor"
         ]);
     }
@@ -28,7 +29,7 @@ public sealed class ClaudeSkillConverterTests
             description: >
               ASP.NET Core API standards.
               Multiple folded lines preserved.
-            requires: [dotnet-csharp]
+            requires: [backend-dotnet-csharp]
             ---
 
             # Body
@@ -41,7 +42,7 @@ public sealed class ClaudeSkillConverterTests
         Assert.DoesNotContain("name: dotnet-api", result.Content);
         // Folded description and other keys preserved verbatim.
         Assert.Contains("Multiple folded lines preserved.", result.Content);
-        Assert.Contains("requires: [dotnet-csharp]", result.Content);
+        Assert.Contains("requires: [backend-dotnet-csharp]", result.Content);
         Assert.Contains("# Body", result.Content);
     }
 
@@ -52,16 +53,16 @@ public sealed class ClaudeSkillConverterTests
 
         string source = """
             ---
-            name: dotnet-csharp
+            name: setup-tasks
             ---
 
             # Universal
             """;
 
-        ConvertedSkill result = _converter.Convert(source, "dotnet-csharp", map);
+        ConvertedSkill result = _converter.Convert(source, "setup-tasks", map);
 
-        Assert.Equal("dotnet-csharp", result.FlatName);
-        Assert.Contains("name: dotnet-csharp", result.Content);
+        Assert.Equal("setup-tasks", result.FlatName);
+        Assert.Contains("name: setup-tasks", result.Content);
     }
 
     [Fact]
@@ -74,13 +75,13 @@ public sealed class ClaudeSkillConverterTests
             name: dotnet-linq
             ---
 
-            For EF Core, load `backend/dotnet/ef-core/queries/SKILL.md`.
+            For EF Core, load `backend/dotnet/orms/ef-core/queries/SKILL.md`.
             """;
 
         ConvertedSkill result = _converter.Convert(source, "backend/dotnet/linq", map);
 
-        Assert.Contains("backend-dotnet-ef-core-queries/SKILL.md", result.Content);
-        Assert.DoesNotContain("backend/dotnet/ef-core/queries/SKILL.md", result.Content);
+        Assert.Contains("backend-dotnet-orms-ef-core-queries/SKILL.md", result.Content);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/queries/SKILL.md", result.Content);
     }
 
     [Fact]
@@ -96,7 +97,7 @@ public sealed class ClaudeSkillConverterTests
             See `some/unknown/path/SKILL.md` for details.
             """;
 
-        ConvertedSkill result = _converter.Convert(source, "dotnet-csharp", map);
+        ConvertedSkill result = _converter.Convert(source, "backend/dotnet/csharp", map);
 
         // Not a known skill directory — left as-is rather than blindly rewritten.
         Assert.Contains("some/unknown/path/SKILL.md", result.Content);
@@ -115,12 +116,12 @@ public sealed class ClaudeSkillConverterTests
         SkillFlatNameMap map = SkillFlatNameMap.Build(
         [
             "backend/dotnet",
-            "backend/dotnet/ef-core/queries"
+            "backend/dotnet/orms/ef-core/queries"
         ]);
 
-        string rewritten = map.RewriteReferences("ref: backend/dotnet/ef-core/queries/SKILL.md");
+        string rewritten = map.RewriteReferences("ref: backend/dotnet/orms/ef-core/queries/SKILL.md");
 
-        Assert.Equal("ref: backend-dotnet-ef-core-queries/SKILL.md", rewritten);
+        Assert.Equal("ref: backend-dotnet-orms-ef-core-queries/SKILL.md", rewritten);
     }
 
     [Fact]
@@ -166,10 +167,10 @@ public sealed class ClaudeSkillConverterTests
         // so the flat name resolved for a skill must equal the flat name written into agents.
         SkillFlatNameMap map = BuildMap();
 
-        string skillFlatName = map.ResolveFlatName("backend/dotnet/ef-core/queries");
-        string agentRewritten = map.RewriteReferences("`backend/dotnet/ef-core/queries`");
+        string skillFlatName = map.ResolveFlatName("backend/dotnet/orms/ef-core/queries");
+        string agentRewritten = map.RewriteReferences("`backend/dotnet/orms/ef-core/queries`");
 
-        Assert.Equal("backend-dotnet-ef-core-queries", skillFlatName);
+        Assert.Equal("backend-dotnet-orms-ef-core-queries", skillFlatName);
         Assert.Equal($"`{skillFlatName}`", agentRewritten);
     }
 }

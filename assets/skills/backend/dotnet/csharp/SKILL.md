@@ -327,4 +327,4 @@ public sealed record CreateProductRequestDto
 - File name must match DTO name exactly
 
 For complete DTO rules, naming, mapping patterns, and anti-patterns:
-→ load `backend/shared/dto-conventions/SKILL.md`
+→ load `backend/dotnet/shared/dto-conventions/SKILL.md`

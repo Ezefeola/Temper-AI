@@ -136,9 +136,9 @@ public sealed class ClaudeAssetConverterTests
     {
         return SkillFlatNameMap.Build(
         [
-            "dotnet-csharp",
+            "backend/dotnet/csharp",
             "backend/dotnet/api",
-            "backend/dotnet/ef-core/queries",
+            "backend/dotnet/orms/ef-core/queries",
             "workflow/friday/state-schema"
         ]);
     }
@@ -157,13 +157,13 @@ public sealed class ClaudeAssetConverterTests
             ---
 
             # Body
-            Load `backend/dotnet/ef-core/queries/SKILL.md` for queries.
+            Load `backend/dotnet/orms/ef-core/queries/SKILL.md` for queries.
             """;
 
         ConvertedAgent result = _converter.Convert(source, BuildSkillMap());
 
-        Assert.Contains("backend-dotnet-ef-core-queries/SKILL.md", result.Content);
-        Assert.DoesNotContain("backend/dotnet/ef-core/queries/SKILL.md", result.Content);
+        Assert.Contains("backend-dotnet-orms-ef-core-queries/SKILL.md", result.Content);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/queries/SKILL.md", result.Content);
     }
 
     [Fact]
@@ -248,14 +248,14 @@ public sealed class ClaudeAssetConverterTests
             ---
 
             # Body
-            Load `backend/dotnet/api` and `backend/dotnet/ef-core/queries/SKILL.md`.
+            Load `backend/dotnet/api` and `backend/dotnet/orms/ef-core/queries/SKILL.md`.
             """;
 
         // No map passed — mirrors the OpenCode path, which never rewrites references.
         ConvertedAgent result = _converter.Convert(source);
 
         Assert.Contains("backend/dotnet/api", result.Content);
-        Assert.Contains("backend/dotnet/ef-core/queries/SKILL.md", result.Content);
+        Assert.Contains("backend/dotnet/orms/ef-core/queries/SKILL.md", result.Content);
         Assert.DoesNotContain("backend-dotnet-api", result.Content);
     }
 }

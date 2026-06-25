@@ -3,7 +3,7 @@ name: repository-usage
 description: >
   Canonical rules for using existing repositories and UnitOfWork from application code.
   Load when calling repositories or CompleteAsync from use cases.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [repository-usage, unit-of-work-calls]
 ---
 

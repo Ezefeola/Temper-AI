@@ -5,12 +5,12 @@ description: >
   Use for CRUDs, MVPs, rapid prototypes, or simple systems where
   Clean Architecture would be overkill. Do not use for complex business
   domains — prefer Clean Architecture in that case.
-  For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+  For data access implementation, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Vertical Slice Architecture — TemperAI Standards
 
-> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
@@ -720,7 +720,7 @@ When generating actual code, the namespace MUST match the folder structure exact
 
 ## Rules specific to Vertical Slice Architecture
 
-For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+For general C# conventions (syntax, usings, naming, async, DTOs), see `backend/dotnet/csharp/SKILL.md`.
 
 - **Single project** — no layer separation into Api/Application/Domain/Infrastructure
 - **No Repository pattern** — `DbContext` is used directly in handlers

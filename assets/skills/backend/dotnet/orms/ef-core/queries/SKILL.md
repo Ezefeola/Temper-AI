@@ -3,7 +3,7 @@ name: dotnet-ef-core-queries
 description: >
   Canonical EF Core query rules for tracking, includes, async materialization,
   projections, and performance-sensitive query composition.
-requires: [dotnet-csharp, dotnet-linq]
+requires: [backend-dotnet-csharp, dotnet-linq]
 produces: [ef-core-queries, async-materialization, tracking-queries]
 ---
 

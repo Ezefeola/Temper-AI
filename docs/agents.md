@@ -168,7 +168,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 
 ### Always-on skill core
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - chosen architecture skill: `clean-architecture` / `hexagonal-architecture` / `vertical-slice-architecture` / `onion-architecture`
 - `result-pattern`
 - `ddd-ubiquitous-language`
@@ -184,7 +184,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 - `entity-configuration`
 - `repository-pattern`
 - `dbcontext-setup`
-- `dotnet-ef-core-queries`
+- `backend-dotnet-orms-ef-core-queries`
 - `repository-usage`
 - `dotnet-linq`
 - `bulk-operations`
@@ -208,7 +208,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 
 Blazor path:
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `blazor`
 - `blazor-server`
 - `mudblazor`
@@ -233,7 +233,7 @@ Angular path:
 
 ### Main skills
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `dotnet-testing`
 
 ## 9. `temper-devops`
@@ -265,7 +265,7 @@ Angular path:
 
 ### Main skills
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `dotnet-api`
 - `result-pattern`
 - `dto-conventions`

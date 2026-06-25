@@ -7,7 +7,7 @@ description: >
   Docs/Application/Domain/domain-model.md, scans all generated code for convention violations,
   and produces a review report with pass/fail items and exact file
   references. Loads backend/dotnet/api, the required backend/shared leaf
-  skills, and backend/architecture/clean.
+  skills, and backend/dotnet/architecture/clean.
 mode: subagent
 permission:
   read: allow
@@ -38,7 +38,7 @@ At the very start of your execution, you MUST announce:
 
 ```
 🔧 temper-review starting
-   Skills loaded: [dotnet-csharp, backend/dotnet/api, backend/shared/result-pattern, backend/shared/dto-conventions, backend/shared/use-case-patterns, backend/shared/solid-clean-code, backend/architecture/[chosen]]
+   Skills loaded: [backend/dotnet/csharp, backend/dotnet/api, backend/dotnet/shared/result-pattern, backend/dotnet/shared/dto-conventions, backend/dotnet/shared/use-case-patterns, backend/dotnet/shared/solid-clean-code, backend/dotnet/architecture/[chosen]]
      Context files: [Docs/Functional-Analysis/PRD.md, Docs/Application/Architecture/backend-config.md, Plan/INDEX.md, Plan/User-Stories/, Plan/BUILD.md, Docs/Application/Domain/domain-model.md]
 ```
 
@@ -79,19 +79,19 @@ This gives the user full visibility into what you know and what conventions you 
 
 Based on the constitution's chosen architecture:
 
-- **Clean Architecture** → load `backend/architecture/clean` skill
-- **Hexagonal Architecture** → load `backend/architecture/hexagonal` skill
-- **Vertical Slice Architecture** → load `backend/architecture/vertical-slice` skill
-- **Onion Architecture** → load `backend/architecture/onion` skill
+- **Clean Architecture** → load `backend/dotnet/architecture/clean` skill
+- **Hexagonal Architecture** → load `backend/dotnet/architecture/hexagonal` skill
+- **Vertical Slice Architecture** → load `backend/dotnet/architecture/vertical-slice` skill
+- **Onion Architecture** → load `backend/dotnet/architecture/onion` skill
 
 Always load the `backend/dotnet/api` skill.
 
 Always load these shared leaf skills directly:
 
-- `backend/shared/result-pattern`
-- `backend/shared/dto-conventions`
-- `backend/shared/use-case-patterns`
-- `backend/shared/solid-clean-code`
+- `backend/dotnet/shared/result-pattern`
+- `backend/dotnet/shared/dto-conventions`
+- `backend/dotnet/shared/use-case-patterns`
+- `backend/dotnet/shared/solid-clean-code`
 
 ### Phase 5 — Scan code for convention violations
 
@@ -243,10 +243,10 @@ After generating the review report:
 ## Skills you load
 
 This agent loads:
-- `dotnet-csharp` — Universal C# / .NET 10 standards
+- `backend/dotnet/csharp` — Universal C# / .NET 10 standards
 - `backend/dotnet/api` — ASP.NET Core API standards
-- `backend/shared/result-pattern` — Result pattern checks
-- `backend/shared/dto-conventions` — DTO shape checks
-- `backend/shared/use-case-patterns` — use case structure checks where applicable
-- `backend/shared/solid-clean-code` — naming and code quality checks
-- The architecture skill matching the constitution's chosen pattern (`backend/architecture/clean`, `backend/architecture/hexagonal`, `backend/architecture/vertical-slice`, or `backend/architecture/onion`)
+- `backend/dotnet/shared/result-pattern` — Result pattern checks
+- `backend/dotnet/shared/dto-conventions` — DTO shape checks
+- `backend/dotnet/shared/use-case-patterns` — use case structure checks where applicable
+- `backend/dotnet/shared/solid-clean-code` — naming and code quality checks
+- The architecture skill matching the constitution's chosen pattern (`backend/dotnet/architecture/clean`, `backend/dotnet/architecture/hexagonal`, `backend/dotnet/architecture/vertical-slice`, or `backend/dotnet/architecture/onion`)

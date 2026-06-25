@@ -3,7 +3,7 @@ name: bulk-operations
 description: >
   Canonical EF Core bulk and batch operation guidance.
   Load only for explicit high-volume insert or batch tasks.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [bulk-insert, batch-update]
 ---
 

@@ -3,7 +3,7 @@ name: solid-clean-code
 description: >
   Canonical SOLID and Clean Code rules for backend tasks.
   Load on every backend task.
-requires: [dotnet-csharp]
+requires: [backend-dotnet-csharp]
 produces: [method-design, class-boundaries, complexity-control]
 ---
 

@@ -6,12 +6,12 @@ description: >
   aggregate roots, and the Specification pattern. All dependencies
   point inward toward the domain core.
   Do not use for simple CRUDs without logic — prefer Vertical Slice in that case.
-  For implementation details, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+  For implementation details, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 ---
 
 # Onion Architecture — TemperAI Standards
 
-> For data access implementation, load the required `backend/dotnet/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
+> For data access implementation, load the required `backend/dotnet/orms/ef-core/*/SKILL.md` leaf skill(s) or your chosen data access skill.
 
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
@@ -683,7 +683,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Configure database — see the matching backend/dotnet/ef-core/* leaf skill for EF Core implementation
+        // Configure database — see the matching backend/dotnet/orms/ef-core/* leaf skill for EF Core implementation
         return services;
     }
 
@@ -731,5 +731,5 @@ When generating actual code, the namespace MUST match the folder structure exact
 - **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
 - **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - Domain folder names must be **plural** and different from the class name — `Domain/Entities/Products/Product.cs`, never `Domain/Entities/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
-- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/ef-core/bulk-operations/SKILL.md`
+- For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/orms/ef-core/bulk-operations/SKILL.md`
 - For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

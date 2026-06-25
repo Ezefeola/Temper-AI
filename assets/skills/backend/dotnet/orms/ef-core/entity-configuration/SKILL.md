@@ -3,7 +3,7 @@ name: entity-configuration
 description: >
   Canonical EF Core Fluent API entity configuration rules.
   Load when creating or modifying IEntityTypeConfiguration classes.
-requires: [dotnet-csharp, dotnet-ddd]
+requires: [backend-dotnet-csharp, dotnet-ddd]
 produces: [entity-configurations, relationship-mappings]
 ---
 

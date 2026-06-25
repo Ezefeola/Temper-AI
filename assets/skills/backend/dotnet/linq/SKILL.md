@@ -6,8 +6,8 @@ description: >
   performance best practices over IEnumerable<T> and IQueryable<T>.
   Load when writing or reviewing LINQ expressions in any layer.
   DO NOT load expecting EF Core-specific methods (ToListAsync, AsNoTracking,
-  Include, ExecuteUpdateAsync) — those belong to `backend/dotnet/ef-core/queries/SKILL.md`.
-requires: [dotnet-csharp]
+  Include, ExecuteUpdateAsync) — those belong to `backend/dotnet/orms/ef-core/queries/SKILL.md`.
+requires: [backend-dotnet-csharp]
 produces: [linq-expressions, query-compositions, in-memory-projections]
 ---
 
@@ -24,7 +24,7 @@ regardless of whether the source is a database, a list, an array, or any other c
 - `ExecuteUpdateAsync`, `ExecuteDeleteAsync` — EF Core bulk operations
 - Tracking vs no-tracking strategy — EF Core concern
 
-For all of the above, load `backend/dotnet/ef-core/queries/SKILL.md`.
+For all of the above, load `backend/dotnet/orms/ef-core/queries/SKILL.md`.
 
 ---
 
@@ -39,7 +39,7 @@ For all of the above, load `backend/dotnet/ef-core/queries/SKILL.md`.
 
 ## When NOT to load this skill
 
-- Task is purely about EF Core query behavior (tracking, includes, async materialization) → load `backend/dotnet/ef-core/queries/SKILL.md`
+- Task is purely about EF Core query behavior (tracking, includes, async materialization) → load `backend/dotnet/orms/ef-core/queries/SKILL.md`
 - Task has no collection or query logic at all
 
 ---
