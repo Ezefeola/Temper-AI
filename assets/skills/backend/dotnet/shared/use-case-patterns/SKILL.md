@@ -67,97 +67,28 @@ public sealed class CreateProduct : ICreateProduct
 - Controllers call `result.ToActionResult()` and nothing else
 - Do not create custom status code branching in use cases or controllers
 
-## Null safety with domain factories
+## Consuming domain entities
 
-When a factory returns `(List<string> errors, Entity? entity)`, validate the entity reference, not the error count.
+A use case orchestrates entities through the contract their factory and update methods expose —
+it does NOT author entities. The authoring rules (sealed class, private constructor, nested
+`Rules`, update methods, aggregates) live in `backend/dotnet/ddd/SKILL.md`; load it only when
+creating or modifying a domain entity.
+
+The contract a use case relies on:
+
+- Factory methods return `(List<string> Errors, Entity? Entity)`
+- Update methods return `(List<string> Errors, bool Updated)`
+
+When a factory returns a nullable entity, validate the entity reference, not the error count
+(full rationale and example in `backend/dotnet/csharp/SKILL.md` §14 Null Safety):
 
 ```csharp
-// ❌ WRONG — validates error count instead of the nullable entity reference
-(List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
-if (errors.Count > 0)
-    return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
-
-// item may still be null here even though the error count check passed
-
-// ✅ CORRECT — validate nullability directly
+// ✅ CORRECT — validate nullability directly; never check errors.Count, never use `!`
 (List<string> errors, TodoItem? item) = TodoItem.Create(request.Title);
 if (item is null)
     return Result<TodoItemDto>.Failure(HttpStatusCode.BadRequest).WithErrors(errors);
 
 await _repo.AddAsync(item, cancellationToken);
-```
-
-Rules:
-
-- Never use the null-forgiving operator (`!`) in use case flows
-- Always prefer `if (entity is null)` over `if (errors.Count > 0)` when the factory returns a nullable entity
-
-## Domain entity interaction patterns
-
-When a use case collaborates with domain entities, keep these legacy rules intact:
-
-- Entities are `sealed class` with `private` constructors
-- Factory methods return `(List<string> Errors, Entity? Entity)`
-- Update methods return `(List<string> Errors, bool Updated)`
-- Constraint constants live in a nested `Rules` class
-- `UpdatedAt` is set explicitly in every successful update method
-
-```csharp
-public sealed class Product
-{
-    public Guid Id { get; private set; }
-    public string Name { get; private set; } = string.Empty;
-    public DateTime UpdatedAt { get; private set; }
-
-    private Product() { }
-
-    public static (List<string> Errors, Product? Entity) Create(string name)
-    {
-        List<string> errors = [];
-
-        if (string.IsNullOrWhiteSpace(name))
-            errors.Add("Name is required.");
-
-        if (name.Length > Rules.NAME_MAX_LENGTH)
-            errors.Add($"Name must not exceed {Rules.NAME_MAX_LENGTH} characters.");
-
-        if (errors.Count > 0)
-            return (errors, null);
-
-        return (errors, new Product
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            UpdatedAt = DateTime.UtcNow
-        });
-    }
-
-    public (List<string> Errors, bool Updated) UpdateName(string newName)
-    {
-        List<string> errors = [];
-
-        if (string.IsNullOrWhiteSpace(newName))
-            errors.Add("Name is required.");
-
-        if (newName.Length > Rules.NAME_MAX_LENGTH)
-            errors.Add($"Name must not exceed {Rules.NAME_MAX_LENGTH} characters.");
-
-        if (Name == newName)
-            return (errors, false);
-
-        if (errors.Count > 0)
-            return (errors, false);
-
-        Name = newName;
-        UpdatedAt = DateTime.UtcNow;
-        return (errors, true);
-    }
-
-    public static class Rules
-    {
-        public const int NAME_MAX_LENGTH = 100;
-    }
-}
 ```
 
 ## DI conventions

@@ -67,6 +67,7 @@ data-access leaves are grouped under `backend/dotnet/orms/ef-core/`.
 | `backend/dotnet/shared/result-pattern` | `Result<T>` pattern |
 | `backend/dotnet/shared/use-case-patterns` | Use-case conventions |
 | `backend/dotnet/shared/solid-clean-code` | SOLID and clean code rules |
+| `backend/dotnet/shared/backend-config-maintenance` | Keeps backend-config.md Dependencies in sync from the real .csproj |
 
 ### `backend/dotnet/orms/ef-core/` — EF Core data access
 

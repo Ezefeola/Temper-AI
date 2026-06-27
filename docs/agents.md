@@ -189,6 +189,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 - `repository-usage`
 - `dotnet-linq`
 - `bulk-operations`
+- `backend-config-maintenance` (when a task changes packages — syncs `backend-config.md` Dependencies from the real `.csproj`)
 
 ## 7. `temper-frontend`
 

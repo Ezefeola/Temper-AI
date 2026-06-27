@@ -43,10 +43,21 @@ Once context is available, extract:
 - External integrations
 - Implied scale (internal tool | startup MVP | mid-size system | enterprise)
 - Existing constraints
-- External dependency signals (PRD requirements implying third-party packages — email,
-  Excel, PDF, SMS, payment gateway, cloud storage, etc.)
+- External dependency signals — read each PRD requirement and interpret what capability it
+  implies beyond the base stack. Any requirement to send email, build an Excel/PDF/CSV, send
+  SMS, take payments, store files, run full-text search, generate reports, etc. implies a
+  third-party package. Map each one as `need → capability` (e.g. "email daily suggestions in
+  Excel" → a mail sender AND a spreadsheet builder — that is two packages, not one).
 
-Emit the domain analysis using the format from `workflow/architect/proposal-formats`.
+For each detected need, before proposing anything, check whether it is **already covered**:
+- an existing codebase already pulls in a package for that capability,
+- a stated constraint already mandates a specific vendor/package, or
+- a prior `Docs/Application/Architecture/backend-config.md` already lists one.
+If a need is already covered, mark it as such and plan to **reuse** it — do NOT propose a new
+package for it. Only genuinely uncovered needs become package proposals.
+
+Emit the domain analysis using the format from `workflow/architect/proposal-formats`,
+separating needs that require a new package from needs already covered.
 
 ---
 
@@ -85,10 +96,13 @@ Your proposal must show where each major decision came from:
 - user-required preference or constraint
 - architect recommendation because no preference was given
 
-Identify every external dependency from the PRD: any requirement that implies a third-party
-package must be proposed with a specific package and an alternative, in the proposal's
-"External dependencies" section, for user confirmation — these are architectural decisions,
-not implementation details to discover later.
+Present external dependencies in the proposal's "External dependencies" section as one bullet
+per package. For each uncovered need, give a specific package, **an explicit reason tied to
+that need** (why this package, not just that it exists), and one alternative — these are
+architectural decisions requiring user confirmation, not implementation details to discover
+later. List needs that are already covered separately and reuse the existing package instead
+of proposing a new one. The user owns the final decision: they may confirm, swap any package,
+or reject it, and you readapt the list without resistance.
 
 Load `workflow/architect/proposal-formats` and present the architectural proposal using its
 exact format. The proposal presents DECISIONS only — the content constraints (no folder

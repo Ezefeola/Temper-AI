@@ -172,6 +172,17 @@ Dependencies:
   (e.g. `MailKit 4.8.0`) — implementation agents need this to know what to install.
   This list is purely technical: no PRD justification text.
 
+**Ownership & maintenance:**
+
+- The architect owns the **decision fields** (`Framework`, `Language`, `ORM`, `Architecture`,
+  `Database`, `Auth`, `API Docs`, `Health Checks`, `Messaging`, `Caching`, `Logging`) and
+  seeds the initial `Dependencies` list at design time. The architect only revisits these
+  fields through a new design or problem-solving cycle.
+- The **`Dependencies` block is kept live by the backend agent**: after any task that adds,
+  removes, or upgrades a package, it reconciles the block from the real `.csproj` so the file
+  never drifts from the actual project. It must not change any decision field. This keeps the
+  file a trustworthy contract for every downstream agent that reads it.
+
 ---
 
 ## Template: `frontend-config.md`

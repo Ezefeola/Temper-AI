@@ -83,6 +83,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 | `repository-usage` | Correct use of existing repositories |
 | `dotnet-linq` | LINQ rules |
 | `bulk-operations` | High-volume insert and batch guidance |
+| `backend-config-maintenance` | Syncs backend-config.md Dependencies from the real .csproj after a package change |
 
 ## 7. Frontend skills
 

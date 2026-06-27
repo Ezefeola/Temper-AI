@@ -309,6 +309,7 @@ is missing, stop and ask before loading (see notes below).
 | Adding query methods to an existing repository | `<tech-root>/orms/<orm>/queries/SKILL.md` (`backend/dotnet/orms/ef-core/queries/SKILL.md`) |
 | Using existing repositories in use cases | `<tech-root>/orms/<orm>/repository-usage/SKILL.md` (`backend/dotnet/orms/ef-core/repository-usage/SKILL.md`) |
 | Writing LINQ expressions over in-memory collections | `<tech-root>/linq/SKILL.md` (`backend/dotnet/linq/SKILL.md`) |
+| Adding, removing, or upgrading a NuGet package (the task changes a `.csproj`) | `<tech-root>/shared/backend-config-maintenance/SKILL.md` (`backend/dotnet/shared/backend-config-maintenance/SKILL.md`) |
 
 **Notes:** (paths TECH-ROOT-RELATIVE; .NET / C# / EF Core concrete paths shown in parentheses)
 - Precedence order when rules overlap: `<tech-root>/csharp` -> chosen architecture skill -> shared/backend leaf skills.
@@ -477,6 +478,14 @@ The validation rules live in the skills — not in a fixed list here.
 
 **1. Show all created and modified files.**
 
+**1.5. Sync backend-config.md if packages changed.**
+If this task added, removed, or upgraded any NuGet package (it changed a `.csproj`), reconcile
+the `Dependencies:` block of `Docs/Application/Architecture/backend-config.md` from the real
+`.csproj` PackageReference entries, following the `<tech-root>/shared/backend-config-maintenance`
+skill loaded in Phase 3. Edit ONLY the `Dependencies:` block — never the architect's decision
+fields. If the task touched no packages, skip this step. If a decision field contradicts the
+real packages, do not edit it: stop and ask so the orchestrator can route it to the architect.
+
 **2. Emit structured summary:**
 ```
 ⏳ [Task [T###] | Direct action] complete — awaiting review
@@ -603,6 +612,10 @@ Output:
 - **NEVER output code that has not passed Phase 5 validation**
 - **NEVER mark a task as `done`** — only `pending-review` after completion in task-driven mode
 - **NEVER load a skill speculatively** — load only what the task explicitly requires
+- **ALWAYS sync `backend-config.md` Dependencies from the real `.csproj`** when a task adds,
+  removes, or upgrades a package — edit ONLY the `Dependencies:` block
+- **NEVER edit the architect's decision fields in `backend-config.md`** (Framework, Language,
+  ORM, Architecture, Database, Auth, API Docs, etc.) — if reality contradicts one, stop and ask
 - **ALWAYS load the parent work item source file** in task-driven mode and all required context before loading skills
 - **ALWAYS validate against the loaded skills' own rules** — not a fixed internal checklist
 - **ALWAYS stop and ask** when something is ambiguous or not covered by a skill

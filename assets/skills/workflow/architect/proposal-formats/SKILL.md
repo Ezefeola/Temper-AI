@@ -117,10 +117,14 @@ Technical preference capture:
   External dependency constraints: [explicit requirement/constraint | explicit no preference | not stated]
   Notes: [approved/banned vendors, license limits, managed vs self-hosted, security/compliance, or "none"]
 
-External dependency signals (from PRD):
-  [PRD requirement that implies a third-party package — e.g. "send email" → MailKit]
-  [PRD requirement that implies a third-party package — e.g. "generate Excel" → ClosedXML]
-  [If none found: "No external dependencies identified beyond base stack"]
+External dependency signals (from context):
+  Needs a new package:
+    [requirement that implies a third-party package — e.g. "email daily report" → needs a mail sender]
+    [requirement that implies a third-party package — e.g. "report in Excel" → needs a spreadsheet builder]
+  Already covered (reuse, do NOT re-propose):
+    [need → existing package from existing codebase / stated constraint / prior backend-config.md]
+    [If none pre-covered: omit this sub-block]
+  [If no external dependencies at all: "No external dependencies identified beyond base stack"]
 
 Architectural implications:
   [Signal] → [what it suggests]
@@ -211,21 +215,32 @@ Type: [value | None | API Only]
 
 ── External dependencies ────────────────────────────────────────
 
-  Responsibility / Need        Proposed Choice        Constraint Handling
-  ───────────────────────────  ─────────────────────  ─────────────────────────────────────────
-  [e.g. Send email reports]    [e.g. MailKit]         [approved OSS only | no vendor lock-in]
-  [e.g. Generate Excel]        [e.g. ClosedXML]       [commercial license avoided]
-  [e.g. Auth provider]         [e.g. self-hosted JWT] [managed not allowed | compliance]
-  [e.g. Storage / search]      [e.g. Azure Blob]      [vendor preference | data residency]
+  These are packages the architect proposes to satisfy specific needs detected in the
+  context. One bullet per package. The decision is the user's — they may confirm, swap any
+  package, or reject it, and the architect readapts the list without resistance.
 
-  For each row, state whether the choice is:
-  - required by user constraint
-  - selected from an approved/preferred set
-  - recommended by the architect because no preference was given
+  • [Need — e.g. Send the daily purchase-suggestion email]
+      Proposed package: [e.g. MailKit]
+      Why this package: [why it fits THIS need — maturity, license, fit with the chosen stack,
+        active maintenance — one or two concrete reasons, never just "it's popular"]
+      Alternative: [e.g. SendGrid SDK] — [one line on the trade-off vs. the proposed one]
+      Decision source: [required by user constraint | selected from an approved/preferred set |
+        architect recommendation because no preference was given]
 
-  If no external dependencies: "No external packages required beyond base stack."
+  • [Need — e.g. Build the Excel attachment with the purchase suggestions]
+      Proposed package: [e.g. ClosedXML]
+      Why this package: [reason tied to the need]
+      Alternative: [e.g. EPPlus] — [trade-off, e.g. commercial license avoided]
+      Decision source: [...]
 
-  Explicit constraint categories to account for when relevant:
+  Already covered (do NOT propose a new package for these):
+  - [Need] → already satisfied by [existing package, from existing codebase / stated
+    constraint / prior backend-config.md] — reusing it, no new package proposed
+  - [If nothing is pre-covered, omit this block]
+
+  If no external dependencies at all: "No external packages required beyond base stack."
+
+  Constraint categories to respect when relevant:
   - licensing / commercial-use restrictions
   - approved or banned libraries/vendors
   - managed service vs self-hosted requirements
