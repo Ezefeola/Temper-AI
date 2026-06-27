@@ -20,6 +20,19 @@ Canonical architecture pattern values for all architect outputs:
 - `Vertical Slice Architecture`
 - `Onion Architecture`
 
+## Content rule — applies to every proposal and plan (CRITICAL)
+
+Proposals and plans present DECISIONS only. They must NEVER contain:
+- Folder structures or directory trees
+- File names or file path enumerations
+- Class names, method names, or namespace suggestions
+- Code snippets in any language
+- "Structure is X" or "Files go in Y" descriptions
+
+The project structure is defined by the architecture skill (loaded by the implementation
+agent at build time), not by the architect. The architect decides WHICH architecture pattern
+and stack, not HOW to organize files.
+
 ---
 
 ## 1. Startup Report
@@ -146,14 +159,7 @@ If critical information is missing, use the clarification request format above.
 
 Emitted during Architectural Design mode. Do NOT generate any files yet.
 Do NOT proceed until the proposal is explicitly confirmed.
-
-**Proposal content rule — CRITICAL:**
-The proposal presents DECISIONS only. It must NEVER contain:
-- Folder structures or directory trees
-- File names or file path enumerations
-- Class names, method names, or namespace suggestions
-- Code snippets in any language
-- "Structure is X" or "Files go in Y" descriptions
+The global content rule above applies — decisions only, never structure or code.
 
 ```
 📐 Architectural proposal

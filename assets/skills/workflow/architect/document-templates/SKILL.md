@@ -163,6 +163,15 @@ Dependencies:
   [If none: "None beyond base stack"]
 ```
 
+**Rules for `backend-config.md`:**
+
+- ALWAYS emit `Framework` (+version), `Language`, and `ORM` (+version) so implementation
+  agents can derive the correct technology root and ORM leaf. Default to .NET / C# / EF Core
+  when the stack is the standard one.
+- ALWAYS list confirmed dependencies under `Dependencies` as versioned package names
+  (e.g. `MailKit 4.8.0`) — implementation agents need this to know what to install.
+  This list is purely technical: no PRD justification text.
+
 ---
 
 ## Template: `frontend-config.md`

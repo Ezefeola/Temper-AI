@@ -109,6 +109,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 ### Main skills
 
 - `architect-proposal-formats`
+- `architect-design-workflow` (Mode A) / `architect-problem-solving-workflow` (Mode B)
 - `architect-document-templates`
 
 ## 4. `temper-tasks`

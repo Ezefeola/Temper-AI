@@ -41,6 +41,8 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 
 | Skill | Purpose | Used by |
 |---|---|---|
+| `architect-design-workflow` | Mode A workflow — context analysis, proposal, document offer, and generation | `temper-architect` |
+| `architect-problem-solving-workflow` | Mode B workflow — problem analysis, plan, and optional plan document | `temper-architect` |
 | `architect-proposal-formats` | Structured mode, proposal, clarification, and completion reports | `temper-architect` |
 | `architect-document-templates` | Templates for generated architecture/configuration documents | `temper-architect` |
 
@@ -146,7 +148,7 @@ In the supported TemperAI model, skills are part of the runtime contract. They a
 |---|---|---|
 | `temper-friday` | all `friday-*` skills | based on routing, resume, recovery, and session state |
 | `temper-analyst` | `analyst-report-formats` | `functional-analysis`, `analyst-reasoning`, `analyst-prd-template`, `spec-generator` by phase |
-| `temper-architect` | `architect-proposal-formats` | `architect-document-templates` when generating documents |
+| `temper-architect` | `architect-proposal-formats` | `architect-design-workflow` or `architect-problem-solving-workflow` by mode; `architect-document-templates` when generating documents |
 | `temper-tasks` | none | `setup-tasks` for new projects |
 | `temper-plan` | none | none |
 | `temper-backend` | backend core skills | API, DDD, EF Core, DTO, query, docs-provider, and batch skills as required |

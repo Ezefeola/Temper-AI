@@ -28,6 +28,8 @@
 
 | Skill | Description |
 |---|---|
+| `architect-design-workflow` | Mode A (Architectural Design) workflow — PRD analysis through document generation |
+| `architect-problem-solving-workflow` | Mode B (Problem Solving) workflow — problem analysis through architectural plan |
 | `architect-proposal-formats` | Structured architecture proposal and clarification formats |
 | `architect-document-templates` | Templates for generated architecture and config documents |
 
