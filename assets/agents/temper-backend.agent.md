@@ -102,6 +102,9 @@ Extract:
 - ORM (and version) → determines the data-access leaf folder (required only for ORM-based data-access tasks)
 - Architecture pattern → determines which architecture skill to load
 - Database engine → determines whether ORM/data-access skills are needed
+- Data Access pattern → `Repository + UnitOfWork` or `Direct DbContext` — determines whether the
+  repository/UnitOfWork skills or the direct-DbContext skill are loaded (required only for
+  ORM-based data-access tasks)
 - API documentation provider → determines which API docs skill to load when the task touches API docs or `Program.cs`
 
 **Verify the backend technology is explicitly specified.**
@@ -131,7 +134,7 @@ clearly specify the technology, emit and stop:
 Throughout this agent, every skill path written as `<tech-root>/...` or
 `<tech-root>/orms/<orm>/...` resolves, for a config of Framework: .NET / Language: C# /
 ORM: Entity Framework Core, to the concrete paths shown alongside it
-(e.g. `backend/dotnet/csharp/SKILL.md`, `backend/dotnet/orms/ef-core/queries/SKILL.md`).
+(e.g. `backend/dotnet/csharp/SKILL.md`, `backend/dotnet/orms/ef-core/query-best-practices/SKILL.md`).
 
 If architecture pattern is missing or ambiguous, emit and stop:
 ```
@@ -140,7 +143,17 @@ If architecture pattern is missing or ambiguous, emit and stop:
    I will not improvise the architecture skill. Please clarify `Docs/Application/Architecture/backend-config.md`.
 ```
 
-Output: `📄 Config loaded — Tech root: [<tech-root>] | ORM: [<orm> or required-only-for-data-access] | Architecture: [pattern] | Database: [engine] | API Docs: [provider or not-defined]`
+**Derive the DATA ACCESS pattern — only when a data-access task needs it, never inferred:**
+- The `Data Access` field is one of `Repository + UnitOfWork` or `Direct DbContext`. It selects
+  which data-access skills apply (see the conditional-load table in Phase 3):
+  - `Repository + UnitOfWork` → repository/UnitOfWork skills (`repository-pattern` / `repository-usage`)
+  - `Direct DbContext` → the direct-DbContext skill (`dbcontext-usage`)
+- The two are mutually exclusive — never load both families for the same task.
+- The `Data Access` field is consulted ONLY when the task actually requires ORM/data-access skills.
+  Do NOT default it. If a task requires data-access skills and the field is missing or unspecified,
+  stop at that point and ask (see the conditional-load notes in Phase 3).
+
+Output: `📄 Config loaded — Tech root: [<tech-root>] | ORM: [<orm> or required-only-for-data-access] | Data Access: [pattern or required-only-for-data-access] | Architecture: [pattern] | Database: [engine] | API Docs: [provider or not-defined]`
 
 **2. Determine execution mode and load implementation context**
 
@@ -304,10 +317,11 @@ is missing, stop and ask before loading (see notes below).
 | Creating or modifying `Program.cs` API documentation setup | `<tech-root>/api/SKILL.md` + exactly one provider skill: `<tech-root>/api-docs/scalar/SKILL.md` or `<tech-root>/api-docs/swagger/SKILL.md` (`backend/dotnet/api-docs/scalar/SKILL.md` or `backend/dotnet/api-docs/swagger/SKILL.md`) |
 | Creating entities, domain events, aggregates from scratch | `<tech-root>/ddd/SKILL.md` (`backend/dotnet/ddd/SKILL.md`) |
 | Creating entity configurations | `<tech-root>/orms/<orm>/entity-configuration/SKILL.md` (`backend/dotnet/orms/ef-core/entity-configuration/SKILL.md`) |
-| Creating repositories or UnitOfWork from scratch | `<tech-root>/orms/<orm>/repository-pattern/SKILL.md` (`backend/dotnet/orms/ef-core/repository-pattern/SKILL.md`) |
+| Writing ANY EF Core query — in a repository OR directly in a use case | `<tech-root>/orms/<orm>/query-best-practices/SKILL.md` (`backend/dotnet/orms/ef-core/query-best-practices/SKILL.md`) — always load whenever the task writes EF Core queries, regardless of the `Data Access` pattern |
 | Creating or modifying DbContext | `<tech-root>/orms/<orm>/dbcontext-setup/SKILL.md` (`backend/dotnet/orms/ef-core/dbcontext-setup/SKILL.md`) |
-| Adding query methods to an existing repository | `<tech-root>/orms/<orm>/queries/SKILL.md` (`backend/dotnet/orms/ef-core/queries/SKILL.md`) |
-| Using existing repositories in use cases | `<tech-root>/orms/<orm>/repository-usage/SKILL.md` (`backend/dotnet/orms/ef-core/repository-usage/SKILL.md`) |
+| **[`Data Access = Repository + UnitOfWork` only]** Creating repositories or UnitOfWork from scratch | `<tech-root>/orms/<orm>/repository-pattern/SKILL.md` (`backend/dotnet/orms/ef-core/repository-pattern/SKILL.md`) |
+| **[`Data Access = Repository + UnitOfWork` only]** Using existing repositories / UnitOfWork in use cases | `<tech-root>/orms/<orm>/repository-usage/SKILL.md` (`backend/dotnet/orms/ef-core/repository-usage/SKILL.md`) |
+| **[`Data Access = Direct DbContext` only]** Using `AppDbContext` directly in use cases (read or write) | `<tech-root>/orms/<orm>/dbcontext-usage/SKILL.md` (`backend/dotnet/orms/ef-core/dbcontext-usage/SKILL.md`) |
 | Writing LINQ expressions over in-memory collections | `<tech-root>/linq/SKILL.md` (`backend/dotnet/linq/SKILL.md`) |
 | Adding, removing, or upgrading a NuGet package (the task changes a `.csproj`) | `<tech-root>/shared/backend-config-maintenance/SKILL.md` (`backend/dotnet/shared/backend-config-maintenance/SKILL.md`) |
 
@@ -316,11 +330,19 @@ is missing, stop and ask before loading (see notes below).
 - `<tech-root>/csharp` defines universal language syntax and null-safety rules. No backend skill overrides it.
 - The chosen architecture skill defines structure, dependency direction, and allowed endpoint/data-access style.
 - Shared and leaf skills apply only when they do not conflict with the chosen architecture skill.
+- **Data Access pattern gates the repository vs direct-DbContext skills, and the two families are mutually exclusive:**
+  - `Data Access = Repository + UnitOfWork` → load `repository-pattern` (creating from scratch) and/or `repository-usage` (using existing). Repository and UnitOfWork are always used together — never one without the other. NEVER load `dbcontext-usage`.
+  - `Data Access = Direct DbContext` → load `dbcontext-usage` when a use case reads or writes data. NEVER load `repository-pattern` or `repository-usage`.
+- `<tech-root>/orms/<orm>/query-best-practices/SKILL.md` is loaded whenever the task writes EF Core queries at all — it is pattern-agnostic and applies to both repository methods and direct-DbContext use cases (`backend/dotnet/orms/ef-core/query-best-practices/SKILL.md`).
 - Creating from scratch → load the specific ORM leaf skills the task actually touches under `<tech-root>/orms/<orm>/`.
-- Using what already exists → `<tech-root>/orms/<orm>/repository-usage/SKILL.md` only (`backend/dotnet/orms/ef-core/repository-usage/SKILL.md`).
-- A task that touches both (e.g., adds a new method to an existing repo AND uses it in a use case)
-  loads `<tech-root>/orms/<orm>/queries/SKILL.md` + `<tech-root>/orms/<orm>/repository-usage/SKILL.md` — not the full creation files
-  (`backend/dotnet/orms/ef-core/queries/SKILL.md` + `backend/dotnet/orms/ef-core/repository-usage/SKILL.md`).
+- A task that writes a query AND uses it: under `Repository + UnitOfWork`, load `query-best-practices` + `repository-usage`; under `Direct DbContext`, load `query-best-practices` + `dbcontext-usage` — not the full creation files.
+- If the task requires ORM/data-access skills and `Docs/Application/Architecture/backend-config.md` does not clearly specify the `Data Access` pattern (`Repository + UnitOfWork` or `Direct DbContext`), stop and ask. Never choose a data-access pattern yourself:
+```
+⚠️ This task needs data access, but backend config does not specify the Data Access pattern.
+   Supported: Repository + UnitOfWork | Direct DbContext
+   I will NOT infer or choose a pattern. Please clarify `Docs/Application/Architecture/backend-config.md`
+   (add the Data Access field), or have the config file created by the architect, before this task can proceed.
+```
 - If the task needs API documentation wiring and `Docs/Application/Architecture/backend-config.md` does not clearly specify `Scalar` or `Swagger`, stop and ask. Never choose a provider yourself.
 - If the task requires ORM/data-access skills (any conditional row whose path contains `<orm>`) and `Docs/Application/Architecture/backend-config.md` does not clearly specify the `ORM`, stop and ask. Never choose an ORM yourself:
 ```
@@ -331,6 +353,7 @@ is missing, stop and ask before loading (see notes below).
 - If the chosen architecture is `Vertical Slice Architecture`:
   - Do NOT load `<tech-root>/shared/use-case-patterns/SKILL.md` for handlers.
   - Do NOT load `<tech-root>/orms/<orm>/repository-pattern/SKILL.md` or `<tech-root>/orms/<orm>/repository-usage/SKILL.md` for normal feature handlers.
+  - Data access inside a handler still follows the `Data Access` pattern: under `Direct DbContext`, a handler that touches data loads `<tech-root>/orms/<orm>/dbcontext-usage/SKILL.md`; still load `<tech-root>/orms/<orm>/query-best-practices/SKILL.md` whenever the handler writes an EF Core query.
   - Load `<tech-root>/api/SKILL.md` only for host-level concerns (`Program.cs`, middleware, FluentValidation registration, or an existing grouped controller). The `vertical-slice` skill decides endpoint style.
 
 #### Load optionally — only if task explicitly mentions it

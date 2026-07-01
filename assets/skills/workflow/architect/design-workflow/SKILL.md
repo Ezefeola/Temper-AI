@@ -71,7 +71,19 @@ Before proposing anything, classify each decision bucket as exactly one of:
 Buckets to classify:
 - stack / platform
 - architecture pattern
+- data access pattern (only when the stack uses a relational ORM such as EF Core)
 - external dependencies (per detected responsibility)
+
+**Data access pattern (ORM-based stacks only).** When the proposal includes an ORM like EF Core,
+the project must commit to exactly one data-access pattern, because it changes how every use case
+is written and which conventions the implementation agent follows:
+- `Repository + UnitOfWork` — repositories abstract data access and a UnitOfWork owns persistence.
+  Repository and UnitOfWork are always adopted together, never one alone.
+- `Direct DbContext` — use cases depend on the `DbContext` directly; no repository/UnitOfWork layer.
+Recommend based on domain complexity (rich aggregates, multi-repository transactions, and
+swappable persistence favor `Repository + UnitOfWork`; straightforward CRUD/read-heavy APIs favor
+`Direct DbContext`). This is a real decision the user owns — treat "no preference" as a valid answer
+and recommend, but surface it so it is confirmed, not assumed.
 
 For external dependencies, account for: approved or banned packages/libraries/vendors;
 license or commercial-use restrictions; managed service vs self-hosted requirements;

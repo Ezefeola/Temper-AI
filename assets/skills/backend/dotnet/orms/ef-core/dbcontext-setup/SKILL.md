@@ -14,7 +14,8 @@ produces: [dbcontext, dbsets, configuration-registration]
 1. **ALWAYS keep `DbSet<T>` names aligned with EF conventions and the chosen architecture**
 2. **ALWAYS register entity configurations explicitly or via assembly scanning consistently**
 3. **NEVER embed business logic in `DbContext`**
-4. **NEVER let application code depend directly on concrete `DbContext` when repository abstractions are required by the architecture**
+4. **ALWAYS register `AppDbContext` as `Scoped`** (the default of `AddDbContext`) — one instance per request
+5. **NEVER inject `AppDbContext` directly into application code when the data-access pattern is `Repository + UnitOfWork`** — go through the repository abstraction. Direct injection into use cases is allowed ONLY when the pattern is `Direct DbContext`.
 
 ## Load when
 
@@ -54,6 +55,32 @@ public sealed class AppDbContext : DbContext
 | Never `OnConfiguring` | Provider and connection string belong in DI |
 
 ## DI registration
+
+Registering `AppDbContext` is identical for both data-access patterns. What differs is whether you
+**also** register repositories + UnitOfWork on top of it.
+
+### Direct DbContext pattern — register only the context
+
+Use cases inject `AppDbContext` directly (see `dbcontext-usage`). Nothing else to register.
+
+```csharp
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        string connectionString)
+    {
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        return services;
+    }
+}
+```
+
+### Repository + UnitOfWork pattern — register the context plus the abstractions
+
+Use cases inject repositories / `IUnitOfWork`, never the context (see `repository-usage`).
 
 ```csharp
 public static class DependencyInjection

@@ -9,6 +9,11 @@ produces: [repositories, unit-of-work, repository-interfaces]
 
 # Repository Pattern — TemperAI
 
+Load this skill only when the project's `Data Access` pattern is **`Repository + UnitOfWork`**.
+Repository and UnitOfWork are created together as one unit — never a repository without a UnitOfWork
+to persist through it. If the pattern is `Direct DbContext`, there is no repository layer; use cases
+talk to `AppDbContext` directly (see `dbcontext-usage`).
+
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **NEVER call `.Update()`** on tracked entities

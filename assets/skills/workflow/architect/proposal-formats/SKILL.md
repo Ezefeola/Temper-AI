@@ -89,7 +89,9 @@ Rules:
 - Ask only for information that is actually blocking the next step
 - If only one answer is needed, include only one numbered item
 - For technical preference checkpoints, ask only about the blocking decision buckets:
-  architecture pattern, stack, external dependencies
+  architecture pattern, stack, data access pattern (ORM-based stacks only), external dependencies
+- When asking about the data access pattern, present the two mutually exclusive options
+  (`Repository + UnitOfWork` or `Direct DbContext`) and make it easy to answer `no preference`
 - Make it easy for the user to answer `no preference` for any bucket
 
 ---
@@ -114,6 +116,7 @@ Existing constraints: [list or "none"]
 Technical preference capture:
   Stack / platform: [explicit requirement/constraint | explicit no preference | not stated]
   Architecture pattern: [explicit requirement/constraint | explicit no preference | not stated]
+  Data access pattern: [Repository + UnitOfWork | Direct DbContext | explicit no preference | not stated | N/A — no ORM]
   External dependency constraints: [explicit requirement/constraint | explicit no preference | not stated]
   Notes: [approved/banned vendors, license limits, managed vs self-hosted, security/compliance, or "none"]
 
@@ -189,6 +192,9 @@ Database: [value]
 ORM / data access: [value]
   Decision source: [user-required | architect recommendation]
   Reason: [why]
+Data access pattern: [Repository + UnitOfWork | Direct DbContext | N/A — no ORM]
+  Decision source: [user-required | architect recommendation after explicit no preference | architect recommendation after targeted checkpoint]
+  Reason: [tied to domain complexity — rich aggregates / multi-repo transactions favor Repository + UnitOfWork; straightforward CRUD favors Direct DbContext]
 Auth strategy: [value]
   Decision source: [user-required | architect recommendation]
   Reason: [tied to frontend type and stateless/stateful decision]
@@ -260,7 +266,7 @@ Type: [value | None | API Only]
 ────────────────────────────────────────────────────────────────
 
 Please confirm this proposal or tell me what you want to change.
-If needed, respond by bucket: architecture pattern, stack, external dependencies.
+If needed, respond by bucket: architecture pattern, stack, data access pattern, external dependencies.
 I will update any decision without resistance.
 If a change introduces a risk, I will note it once — the decision is yours.
 ```

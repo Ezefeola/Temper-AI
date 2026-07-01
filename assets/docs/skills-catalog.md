@@ -74,10 +74,11 @@ data-access leaves are grouped under `backend/dotnet/orms/ef-core/`.
 | Skill (source path) | Description |
 |---|---|
 | `backend/dotnet/orms/ef-core/entity-configuration` | EF Core entity configuration rules |
-| `backend/dotnet/orms/ef-core/repository-pattern` | Repository and UnitOfWork rules |
-| `backend/dotnet/orms/ef-core/repository-usage` | Correct use of existing repositories |
-| `backend/dotnet/orms/ef-core/dbcontext-setup` | DbContext setup rules |
-| `backend/dotnet/orms/ef-core/queries` | EF Core query rules |
+| `backend/dotnet/orms/ef-core/dbcontext-setup` | DbContext setup and registration rules |
+| `backend/dotnet/orms/ef-core/query-best-practices` | EF Core query best practices, performance, and tricks — load whenever writing EF Core queries |
+| `backend/dotnet/orms/ef-core/dbcontext-usage` | Using AppDbContext directly in use cases (Direct DbContext pattern) |
+| `backend/dotnet/orms/ef-core/repository-pattern` | Repository + UnitOfWork rules (optional pattern) |
+| `backend/dotnet/orms/ef-core/repository-usage` | Using existing repositories + UnitOfWork (optional pattern) |
 | `backend/dotnet/orms/ef-core/bulk-operations` | Bulk insert and batch operation guidance |
 
 ### Domain language

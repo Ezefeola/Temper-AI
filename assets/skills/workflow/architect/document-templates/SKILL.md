@@ -23,7 +23,7 @@ Canonical architecture pattern values for machine-readable architect outputs:
 
 | Document | What it MUST contain | What it must NEVER contain |
 |----------|---------------------|---------------------------|
-| `backend-config.md` | Framework (+version), language, ORM (+version), architecture pattern, database engine, API docs provider, auth type, health checks, messaging, caching, logging, versioned dependencies (package names + versions) | Skills lists, code patterns, "key conventions", implementation details |
+| `backend-config.md` | Framework (+version), language, ORM (+version), data access pattern (Repository + UnitOfWork \| Direct DbContext, ORM stacks only), architecture pattern, database engine, API docs provider, auth type, health checks, messaging, caching, logging, versioned dependencies (package names + versions) | Skills lists, code patterns, "key conventions", implementation details |
 | `frontend-config.md` | Framework type, backend URL, backend communication, auth handling, state management | Skills lists, code patterns |
 | `DDD-Vocabulary.md` | Domain terms with definitions — per `ddd/documents` skill template | Technical jargon, implementation details |
 | `architecture-decision.md` | Full reasoning, justification, trade-offs, alternatives, risks | Code snippets, skill names |
@@ -94,6 +94,7 @@ Written to `Docs/Application/Architecture/architecture-decision.md`.
 **Runtime:** [value] — [rationale]
 **Database:** [value] — [rationale]
 **ORM / data access:** [value] — [rationale]
+**Data access pattern:** [Repository + UnitOfWork | Direct DbContext | N/A — no ORM] — [rationale]
 **Auth strategy:** [value] — [rationale]
 **API documentation:** [value] — [rationale]
 
@@ -148,6 +149,7 @@ Written to `Docs/Application/Architecture/backend-config.md`.
 Framework: [exact value with version — e.g. .NET 10]
 Language: [exact value — e.g. C# 14]
 ORM: [exact value with version — e.g. Entity Framework Core 10.0]
+Data Access: [Repository + UnitOfWork | Direct DbContext]
 Architecture: [Clean Architecture | Hexagonal Architecture | Vertical Slice Architecture | Onion Architecture]
 Database: [exact value]
 Auth: [exact value]
@@ -168,16 +170,21 @@ Dependencies:
 - ALWAYS emit `Framework` (+version), `Language`, and `ORM` (+version) so implementation
   agents can derive the correct technology root and ORM leaf. Default to .NET / C# / EF Core
   when the stack is the standard one.
+- ALWAYS emit `Data Access` for ORM-based stacks (e.g. EF Core) as exactly one of
+  `Repository + UnitOfWork` or `Direct DbContext` — the backend agent uses it to decide whether to
+  load the repository/UnitOfWork skills or the direct-DbContext skill. The two are mutually
+  exclusive; Repository and UnitOfWork are always adopted together. Omit this field only when the
+  stack has no relational ORM.
 - ALWAYS list confirmed dependencies under `Dependencies` as versioned package names
   (e.g. `MailKit 4.8.0`) — implementation agents need this to know what to install.
   This list is purely technical: no PRD justification text.
 
 **Ownership & maintenance:**
 
-- The architect owns the **decision fields** (`Framework`, `Language`, `ORM`, `Architecture`,
-  `Database`, `Auth`, `API Docs`, `Health Checks`, `Messaging`, `Caching`, `Logging`) and
-  seeds the initial `Dependencies` list at design time. The architect only revisits these
-  fields through a new design or problem-solving cycle.
+- The architect owns the **decision fields** (`Framework`, `Language`, `ORM`, `Data Access`,
+  `Architecture`, `Database`, `Auth`, `API Docs`, `Health Checks`, `Messaging`, `Caching`,
+  `Logging`) and seeds the initial `Dependencies` list at design time. The architect only revisits
+  these fields through a new design or problem-solving cycle.
 - The **`Dependencies` block is kept live by the backend agent**: after any task that adds,
   removes, or upgrades a package, it reconciles the block from the real `.csproj` so the file
   never drifts from the actual project. It must not change any decision field. This keeps the

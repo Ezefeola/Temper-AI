@@ -210,11 +210,11 @@ public sealed class InstallerServiceTests
 
         _service.Install(target, InstallSourceMode.Local);
 
-        // dotnet-linq references backend/dotnet/orms/ef-core/queries/SKILL.md in its body — it must
-        // be rewritten to the flat name so the guidance stays valid under Claude discovery.
+        // dotnet-linq references backend/dotnet/orms/ef-core/query-best-practices/SKILL.md in its
+        // body — it must be rewritten to the flat name so the guidance stays valid under Claude discovery.
         string linq = File.ReadAllText(Path.Combine(skillsPath, "backend-dotnet-linq", "SKILL.md"));
-        Assert.Contains("backend-dotnet-orms-ef-core-queries/SKILL.md", linq);
-        Assert.DoesNotContain("backend/dotnet/orms/ef-core/queries/SKILL.md", linq);
+        Assert.Contains("backend-dotnet-orms-ef-core-query-best-practices/SKILL.md", linq);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/query-best-practices/SKILL.md", linq);
     }
 
     [Fact]
@@ -235,14 +235,14 @@ public sealed class InstallerServiceTests
 
         _service.Install(target, InstallSourceMode.Local);
 
-        // dotnet-linq references backend/dotnet/orms/ef-core/queries/SKILL.md inside its folded
-        // `description:` frontmatter block. That reference must be flattened just like the body
+        // dotnet-linq references backend/dotnet/orms/ef-core/query-best-practices/SKILL.md inside its
+        // folded `description:` frontmatter block. That reference must be flattened just like the body
         // ones, otherwise the guidance under Claude points at a non-existent nested path.
         string linq = File.ReadAllText(Path.Combine(skillsPath, "backend-dotnet-linq", "SKILL.md"));
         string frontmatter = ExtractFrontmatter(linq);
 
-        Assert.Contains("backend-dotnet-orms-ef-core-queries/SKILL.md", frontmatter);
-        Assert.DoesNotContain("backend/dotnet/orms/ef-core/queries/SKILL.md", frontmatter);
+        Assert.Contains("backend-dotnet-orms-ef-core-query-best-practices/SKILL.md", frontmatter);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/query-best-practices/SKILL.md", frontmatter);
 
         // The name: must stay synced to the flat folder name (not corrupted by the rewrite),
         // and the folded `description: >` block must remain intact.

@@ -9,6 +9,11 @@ produces: [repository-usage, unit-of-work-calls]
 
 # Repository Usage — TemperAI
 
+Load this skill only when the project's `Data Access` pattern is **`Repository + UnitOfWork`**.
+Repository and UnitOfWork are always used together. If the pattern is `Direct DbContext`, use
+`dbcontext-usage` instead — never combine the two for the same task. Query internals (tracking,
+includes, projection) come from `query-best-practices`.
+
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **Tracking is determined by intent** — tracked for modify/delete, no-tracking for read-only

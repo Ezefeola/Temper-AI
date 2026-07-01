@@ -41,15 +41,12 @@ public interface ICreateProduct
 
 public sealed class CreateProduct : ICreateProduct
 {
+    // Data-access dependency depends on the project's chosen pattern (see below)
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IProductRepository _productRepository;
 
-    public CreateProduct(
-        IUnitOfWork unitOfWork,
-        IProductRepository productRepository)
+    public CreateProduct(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _productRepository = productRepository;
     }
 
     public async Task<Result<CreateProductResponseDto>> ExecuteAsync(
@@ -60,6 +57,20 @@ public sealed class CreateProduct : ICreateProduct
     }
 }
 ```
+
+## Data access inside a use case — depends on the chosen pattern
+
+This skill defines the use-case *shell* (naming, `Result<T>` flow, DI). HOW the use case reads and
+writes data is decided by the project's `Data Access` pattern in `backend-config.md`. The two
+patterns are mutually exclusive — a use case uses one, never both:
+
+| `Data Access` pattern | Use case injects | Load for the data-access details |
+|---|---|---|
+| `Repository + UnitOfWork` | repositories + `IUnitOfWork` | `repository-usage` |
+| `Direct DbContext` | `AppDbContext` | `dbcontext-usage` |
+
+Do not mix them: a Direct DbContext project has no repositories or `IUnitOfWork`, and a
+Repository + UnitOfWork project never injects `AppDbContext` into a use case.
 
 ## Result flow
 

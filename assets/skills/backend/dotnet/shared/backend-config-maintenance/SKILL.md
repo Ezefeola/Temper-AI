@@ -19,7 +19,7 @@ to the real project, using the `.csproj` files as the single source of truth.
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **ONLY edit the `Dependencies:` block** of `backend-config.md`. Every other field
-   (`Framework`, `Language`, `ORM`, `Architecture`, `Database`, `Auth`, `API Docs`,
+   (`Framework`, `Language`, `ORM`, `Data Access`, `Architecture`, `Database`, `Auth`, `API Docs`,
    `Health Checks`, `Messaging`, `Caching`, `Logging`) is owned by the architect and is
    **read-only** for you.
 2. **RECONCILE from the real `.csproj`, never from memory.** Derive the list from the actual
