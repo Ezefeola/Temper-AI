@@ -152,13 +152,15 @@ public sealed class InstallerServiceTests
     }
 
     [Fact]
-    public void Install_ClaudeTarget_CopiesSkillsUnchanged()
+    public void Install_ClaudeTarget_FlattensSkillsToOneLevel()
     {
+        string skillsPath = Path.Combine(_testDirectory, "skills");
+
         AgentTarget target = new()
         {
             Id = "claude",
             Name = "Claude Code",
-            SkillsPath = Path.Combine(_testDirectory, "skills"),
+            SkillsPath = skillsPath,
             AgentsPath = Path.Combine(_testDirectory, "agents"),
             ConfigPath = _testDirectory,
             Format = "claude",
@@ -167,8 +169,166 @@ public sealed class InstallerServiceTests
 
         _service.Install(target, InstallSourceMode.Local);
 
-        Assert.True(Directory.Exists(Path.Combine(_testDirectory, "skills")));
-        Assert.NotEmpty(Directory.GetFiles(Path.Combine(_testDirectory, "skills"), "SKILL.md", SearchOption.AllDirectories));
+        Assert.True(Directory.Exists(skillsPath));
+
+        // Every SKILL.md must land exactly one level deep: <skills>/<flat-name>/SKILL.md.
+        string[] skillFiles = Directory.GetFiles(skillsPath, "SKILL.md", SearchOption.AllDirectories);
+        Assert.NotEmpty(skillFiles);
+
+        foreach (string skillFile in skillFiles)
+        {
+            string flatFolder = Path.GetDirectoryName(skillFile)!;
+            Assert.Equal(skillsPath, Path.GetDirectoryName(flatFolder));
+        }
+
+        // A previously nested skill is reachable under its flattened folder name.
+        string flattenedApi = Path.Combine(skillsPath, "backend-dotnet-api", "SKILL.md");
+        Assert.True(File.Exists(flattenedApi));
+
+        // Frontmatter name is synced to the flat folder name.
+        Assert.Contains("name: backend-dotnet-api", File.ReadAllText(flattenedApi));
+
+        // A nested skill is reachable under its flattened folder name.
+        Assert.True(File.Exists(Path.Combine(skillsPath, "backend-dotnet-csharp", "SKILL.md")));
+    }
+
+    [Fact]
+    public void Install_ClaudeTarget_RewritesNestedSkillCrossReferences()
+    {
+        string skillsPath = Path.Combine(_testDirectory, "skills");
+
+        AgentTarget target = new()
+        {
+            Id = "claude",
+            Name = "Claude Code",
+            SkillsPath = skillsPath,
+            AgentsPath = Path.Combine(_testDirectory, "agents"),
+            ConfigPath = _testDirectory,
+            Format = "claude",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        // dotnet-linq references backend/dotnet/orms/ef-core/query-best-practices/SKILL.md in its
+        // body — it must be rewritten to the flat name so the guidance stays valid under Claude discovery.
+        string linq = File.ReadAllText(Path.Combine(skillsPath, "backend-dotnet-linq", "SKILL.md"));
+        Assert.Contains("backend-dotnet-orms-ef-core-query-best-practices/SKILL.md", linq);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/query-best-practices/SKILL.md", linq);
+    }
+
+    [Fact]
+    public void Install_ClaudeTarget_RewritesNestedSkillReferencesInFrontmatterDescription()
+    {
+        string skillsPath = Path.Combine(_testDirectory, "skills");
+
+        AgentTarget target = new()
+        {
+            Id = "claude",
+            Name = "Claude Code",
+            SkillsPath = skillsPath,
+            AgentsPath = Path.Combine(_testDirectory, "agents"),
+            ConfigPath = _testDirectory,
+            Format = "claude",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        // dotnet-linq references backend/dotnet/orms/ef-core/query-best-practices/SKILL.md inside its
+        // folded `description:` frontmatter block. That reference must be flattened just like the body
+        // ones, otherwise the guidance under Claude points at a non-existent nested path.
+        string linq = File.ReadAllText(Path.Combine(skillsPath, "backend-dotnet-linq", "SKILL.md"));
+        string frontmatter = ExtractFrontmatter(linq);
+
+        Assert.Contains("backend-dotnet-orms-ef-core-query-best-practices/SKILL.md", frontmatter);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/query-best-practices/SKILL.md", frontmatter);
+
+        // The name: must stay synced to the flat folder name (not corrupted by the rewrite),
+        // and the folded `description: >` block must remain intact.
+        Assert.Contains("name: backend-dotnet-linq", frontmatter);
+        Assert.Contains("description: >", frontmatter);
+    }
+
+    [Fact]
+    public void Install_OpenCodeTarget_KeepsSkillsNested()
+    {
+        string skillsPath = Path.Combine(_testDirectory, "skills");
+
+        AgentTarget target = new()
+        {
+            Id = "opencode",
+            Name = "OpenCode",
+            SkillsPath = skillsPath,
+            AgentsPath = Path.Combine(_testDirectory, "agents"),
+            ConfigPath = _testDirectory,
+            Format = "opencode",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        // OpenCode preserves the deep nested layout unchanged.
+        Assert.True(File.Exists(Path.Combine(skillsPath, "backend", "dotnet", "api", "SKILL.md")));
+        Assert.False(Directory.Exists(Path.Combine(skillsPath, "backend-dotnet-api")));
+    }
+
+    [Fact]
+    public void Install_ClaudeTarget_RewritesNestedSkillReferencesInAgents()
+    {
+        string agentsPath = Path.Combine(_testDirectory, "agents");
+
+        AgentTarget target = new()
+        {
+            Id = "claude",
+            Name = "Claude Code",
+            SkillsPath = Path.Combine(_testDirectory, "skills"),
+            AgentsPath = agentsPath,
+            ConfigPath = _testDirectory,
+            Format = "claude",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        // temper-backend loads many nested skills (full-path form, e.g.
+        // backend/dotnet/api/SKILL.md). Under Claude they must point at the same flat names
+        // the skills are installed under.
+        string backendAgent = File.ReadAllText(Path.Combine(agentsPath, "temper-backend.md"));
+        Assert.Contains("backend-dotnet-api", backendAgent);
+        Assert.DoesNotContain("backend/dotnet/api/SKILL.md", backendAgent);
+
+        // Non-skill paths the agent mentions must be left untouched.
+        Assert.Contains("Docs/Application/Architecture/backend-config.md", backendAgent);
+
+        // temper-review uses the bare backtick form (`backend/dotnet/api`); it must flatten too.
+        string reviewAgent = File.ReadAllText(Path.Combine(agentsPath, "temper-review.md"));
+        Assert.Contains("`backend-dotnet-api`", reviewAgent);
+        Assert.DoesNotContain("`backend/dotnet/api`", reviewAgent);
+    }
+
+    [Fact]
+    public void Install_OpenCodeTarget_KeepsNestedSkillReferencesInAgents()
+    {
+        string agentsPath = Path.Combine(_testDirectory, "agents");
+
+        AgentTarget target = new()
+        {
+            Id = "opencode",
+            Name = "OpenCode",
+            SkillsPath = Path.Combine(_testDirectory, "skills"),
+            AgentsPath = agentsPath,
+            ConfigPath = _testDirectory,
+            Format = "opencode",
+            Supported = true
+        };
+
+        _service.Install(target, InstallSourceMode.Local);
+
+        // OpenCode copies agents verbatim (.agent.md), so nested references are preserved.
+        string backendAgent = File.ReadAllText(Path.Combine(agentsPath, "temper-backend.agent.md"));
+        Assert.Contains("backend/dotnet/api", backendAgent);
+        Assert.DoesNotContain("backend-dotnet-api", backendAgent);
     }
 
     private static string ExtractFrontmatter(string content)

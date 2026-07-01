@@ -21,10 +21,23 @@ public sealed class ConvertedAgent
 ///
 /// Frontmatter is edited via string surgery (not a YAML round-trip) so multi-line
 /// folded descriptions (<c>&gt;</c>) are preserved verbatim.
+///
+/// Agent bodies instruct agents to load skills by their authored nested path
+/// (<c>backend/dotnet/api</c>, <c>workflow/friday/state-schema/SKILL.md</c>). Because the
+/// Claude target installs skills under flat names, those nested references are rewritten to
+/// the same flat names via the shared <see cref="SkillFlatNameMap"/> — so skills and agents
+/// agree on identical flat names. The OpenCode target does not convert agents, so it keeps
+/// the nested references.
 /// </summary>
 public sealed class ClaudeAssetConverter
 {
-    public ConvertedAgent Convert(string sourceContent)
+    /// <summary>
+    /// Converts an OpenCode agent into a Claude agent. When <paramref name="skillFlatNameMap"/>
+    /// is provided, nested skill references in the body and frontmatter (e.g. a description
+    /// that embeds skill paths) are rewritten to their flat names; unknown paths are left
+    /// untouched. When it is <see langword="null"/>, no reference rewriting is performed.
+    /// </summary>
+    public ConvertedAgent Convert(string sourceContent, SkillFlatNameMap? skillFlatNameMap = null)
     {
         (string frontmatter, string body) = SplitFrontmatter(sourceContent);
 
@@ -38,11 +51,33 @@ public sealed class ClaudeAssetConverter
         List<string> kept = StripOpenCodeKeys(frontmatterLines);
         kept.Add($"tools: {MapPermissionsToTools(permissions)}");
 
+        List<string> rewrittenFrontmatter = RewriteFrontmatterReferences(kept, skillFlatNameMap);
+        string rewrittenBody = skillFlatNameMap is null
+            ? body
+            : skillFlatNameMap.RewriteReferences(body);
+
         return new ConvertedAgent
         {
             FileName = $"{name}.md",
-            Content = BuildDocument(kept, body)
+            Content = BuildDocument(rewrittenFrontmatter, rewrittenBody)
         };
+    }
+
+    private static List<string> RewriteFrontmatterReferences(List<string> lines, SkillFlatNameMap? skillFlatNameMap)
+    {
+        if (skillFlatNameMap is null)
+        {
+            return lines;
+        }
+
+        List<string> rewritten = new(lines.Count);
+
+        foreach (string line in lines)
+        {
+            rewritten.Add(skillFlatNameMap.RewriteReferences(line));
+        }
+
+        return rewritten;
     }
 
     private static (string Frontmatter, string Body) SplitFrontmatter(string content)

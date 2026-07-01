@@ -54,7 +54,7 @@ public sealed class ProductListTests : TestContext
 
 ## Rules
 
-For general C# conventions (syntax, usings, naming, async, DTOs), see `dotnet-csharp`.
+For general C# conventions (syntax, usings, naming, async, DTOs), see `backend/dotnet/csharp/SKILL.md`.
 
 - Never test implementation details — test what the user sees.
 - Never mock component rendering — use bUnit's `RenderComponent<T>`.

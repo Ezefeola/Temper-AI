@@ -109,6 +109,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 ### Main skills
 
 - `architect-proposal-formats`
+- `architect-design-workflow` (Mode A) / `architect-problem-solving-workflow` (Mode B)
 - `architect-document-templates`
 
 ## 4. `temper-tasks`
@@ -168,7 +169,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 
 ### Always-on skill core
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - chosen architecture skill: `clean-architecture` / `hexagonal-architecture` / `vertical-slice-architecture` / `onion-architecture`
 - `result-pattern`
 - `ddd-ubiquitous-language`
@@ -184,10 +185,11 @@ FRIDAY does **not** implement, review, or document the project itself.
 - `entity-configuration`
 - `repository-pattern`
 - `dbcontext-setup`
-- `dotnet-ef-core-queries`
+- `backend-dotnet-orms-ef-core-queries`
 - `repository-usage`
 - `dotnet-linq`
 - `bulk-operations`
+- `backend-config-maintenance` (when a task changes packages — syncs `backend-config.md` Dependencies from the real `.csproj`)
 
 ## 7. `temper-frontend`
 
@@ -208,7 +210,7 @@ FRIDAY does **not** implement, review, or document the project itself.
 
 Blazor path:
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `blazor`
 - `blazor-server`
 - `mudblazor`
@@ -233,7 +235,7 @@ Angular path:
 
 ### Main skills
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `dotnet-testing`
 
 ## 9. `temper-devops`
@@ -265,7 +267,7 @@ Angular path:
 
 ### Main skills
 
-- `dotnet-csharp`
+- `backend-dotnet-csharp`
 - `dotnet-api`
 - `result-pattern`
 - `dto-conventions`

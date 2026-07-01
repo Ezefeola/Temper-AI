@@ -1,50 +1,33 @@
 {
-  "last_updated": "2026-06-22T00:30:00Z",
-  "status": "awaiting-task-approval",
-  "request_summary": "Make temper-backend task and user-story artifacts optional by adding an approved direct-action path when Plan/INDEX.md or task files are missing.",
+  "last_updated": "2026-06-24T01:25:00Z",
+  "status": "idle",
+  "request_summary": "No active workflow. All prior work approved and closed.",
   "context": {
-    "project": "temper-ai CLI",
-    "architecture": "unknown",
-    "stack": "Prompt/skill-driven TemperAI agent workflow",
-    "notes": "Previous review-blocked workflow is superseded for now by this approved change-direction investigation. Explore completed and identified prompt/skill enforcement points for task-only backend execution."
+    "project": "temper-ai toolkit (assets + .NET installer)",
+    "architecture": "prompt/skill-driven agent workflow; installer flattens nested skill dirs to '-'-joined flat names",
+    "stack": ".NET 10 installer; markdown agents/skills assets",
+    "notes": "Clean baseline. Last closed work (all user-approved): (1) skills reorg into per-technology subtrees under backend/dotnet/{csharp,architecture,shared,orms/ef-core}; (2) temper-backend generalized for multi-tech with NO inference — Framework+Language mandatory (hard-stop if missing), tech-root derived only from explicit values, ORM no default (stops only when a data-access task needs it and ORM unspecified); (3) backend-config.md template expanded to purely-technical fields (Framework/Language/ORM + versioned Dependencies). Verified 117/117 tests green. The previously-pending temper-backend direct-action change is now APPROVED and no longer preserved as pending. Nothing is committed unless the user later requests it."
   },
-  "approved_plan": [
-    {
-      "step": 1,
-      "agent": "explore",
-      "phase": null,
-      "description": "Locate where temper-backend and FRIDAY enforce Plan/INDEX.md, task files, and parent work items.",
-      "status": "complete",
-      "output": "Exploration report identifying temper-backend.agent.md, friday implementation-delegation skill, friday state-schema skill, and temper-friday.agent.md as the minimal change surface."
-    },
-    {
-      "step": 2,
-      "agent": "general",
-      "phase": null,
-      "description": "Implement optional direct-action routing and backend-agent support while preserving the formal task-driven path.",
-      "status": "complete",
-      "output": "Workflow assets updated: temper-backend now supports approved direct-action mode; FRIDAY delegation/state rules updated to ask formal-tasks vs direct-action and allow backend direct action without Plan artifacts."
-    }
-  ],
-  "current_step": 2,
-  "total_steps": 2,
-  "current_agent": "general",
+  "approved_plan": [],
+  "current_step": 0,
+  "total_steps": 0,
+  "current_agent": null,
   "session_metrics": {
-    "specialist_runs_total": 2,
-    "specialist_runs_current_thread": 2,
-    "distinct_specialists": ["explore", "general"],
-    "distinct_specialist_count": 2,
+    "specialist_runs_total": 0,
+    "specialist_runs_current_thread": 0,
+    "distinct_specialists": [],
+    "distinct_specialist_count": 0,
     "cycle_rounds_total": 0,
     "recovery_attempts": 0,
     "prompt_failure_retries": 0,
-    "long_outputs_count": 2,
+    "long_outputs_count": 0,
     "large_summaries_count": 0,
-    "last_output_class": "completion-report",
-    "next_action_type": "output-approval",
+    "last_output_class": null,
+    "next_action_type": "none",
     "scope_confusion_signals": 0,
-    "mixed_scope_signal": true,
-    "risk_score": 3
+    "mixed_scope_signal": false,
+    "risk_score": 0
   },
   "block_reason": null,
-  "next_action": "Wait for the user to approve, reject, or request changes to the completed direct-action workflow update."
+  "next_action": "Idle. No specialist queued, no approvals pending. Awaiting the next user request."
 }

@@ -35,7 +35,7 @@ Do not load this skill for Angular.
 
 ## C# Rules
 
-- Follow `dotnet-csharp` for C# syntax and .NET 10 conventions.
+- Follow `backend/dotnet/csharp/SKILL.md` for C# syntax and .NET 10 conventions.
 - Use explicit constructors in services when dependencies are required.
 - Use braces for methods and control flow.
 - Use `async Task`; never use `async void` except required event signatures.

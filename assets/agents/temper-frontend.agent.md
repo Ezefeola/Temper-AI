@@ -55,7 +55,7 @@ Never load Blazor and Angular framework skills in the same task unless the task 
 
 Blazor / .NET 10 work:
 
-- Always load `dotnet-csharp` before writing C#.
+- Always load `backend/dotnet/csharp/SKILL.md` before writing C#.
 - Load `blazor` for Blazor WebAssembly components, pages, routing, services, forms, and API consumption.
 - Load `blazor-server` for Blazor Server or interactive server-rendered components.
 - Load `mudblazor` only when the project already uses MudBlazor or the task explicitly asks for MudBlazor.

@@ -20,6 +20,19 @@ Canonical architecture pattern values for all architect outputs:
 - `Vertical Slice Architecture`
 - `Onion Architecture`
 
+## Content rule — applies to every proposal and plan (CRITICAL)
+
+Proposals and plans present DECISIONS only. They must NEVER contain:
+- Folder structures or directory trees
+- File names or file path enumerations
+- Class names, method names, or namespace suggestions
+- Code snippets in any language
+- "Structure is X" or "Files go in Y" descriptions
+
+The project structure is defined by the architecture skill (loaded by the implementation
+agent at build time), not by the architect. The architect decides WHICH architecture pattern
+and stack, not HOW to organize files.
+
 ---
 
 ## 1. Startup Report
@@ -76,7 +89,9 @@ Rules:
 - Ask only for information that is actually blocking the next step
 - If only one answer is needed, include only one numbered item
 - For technical preference checkpoints, ask only about the blocking decision buckets:
-  architecture pattern, stack, external dependencies
+  architecture pattern, stack, data access pattern (ORM-based stacks only), external dependencies
+- When asking about the data access pattern, present the two mutually exclusive options
+  (`Repository + UnitOfWork` or `Direct DbContext`) and make it easy to answer `no preference`
 - Make it easy for the user to answer `no preference` for any bucket
 
 ---
@@ -101,13 +116,18 @@ Existing constraints: [list or "none"]
 Technical preference capture:
   Stack / platform: [explicit requirement/constraint | explicit no preference | not stated]
   Architecture pattern: [explicit requirement/constraint | explicit no preference | not stated]
+  Data access pattern: [Repository + UnitOfWork | Direct DbContext | explicit no preference | not stated | N/A — no ORM]
   External dependency constraints: [explicit requirement/constraint | explicit no preference | not stated]
   Notes: [approved/banned vendors, license limits, managed vs self-hosted, security/compliance, or "none"]
 
-External dependency signals (from PRD):
-  [PRD requirement that implies a third-party package — e.g. "send email" → MailKit]
-  [PRD requirement that implies a third-party package — e.g. "generate Excel" → ClosedXML]
-  [If none found: "No external dependencies identified beyond base stack"]
+External dependency signals (from context):
+  Needs a new package:
+    [requirement that implies a third-party package — e.g. "email daily report" → needs a mail sender]
+    [requirement that implies a third-party package — e.g. "report in Excel" → needs a spreadsheet builder]
+  Already covered (reuse, do NOT re-propose):
+    [need → existing package from existing codebase / stated constraint / prior backend-config.md]
+    [If none pre-covered: omit this sub-block]
+  [If no external dependencies at all: "No external dependencies identified beyond base stack"]
 
 Architectural implications:
   [Signal] → [what it suggests]
@@ -146,14 +166,7 @@ If critical information is missing, use the clarification request format above.
 
 Emitted during Architectural Design mode. Do NOT generate any files yet.
 Do NOT proceed until the proposal is explicitly confirmed.
-
-**Proposal content rule — CRITICAL:**
-The proposal presents DECISIONS only. It must NEVER contain:
-- Folder structures or directory trees
-- File names or file path enumerations
-- Class names, method names, or namespace suggestions
-- Code snippets in any language
-- "Structure is X" or "Files go in Y" descriptions
+The global content rule above applies — decisions only, never structure or code.
 
 ```
 📐 Architectural proposal
@@ -179,6 +192,9 @@ Database: [value]
 ORM / data access: [value]
   Decision source: [user-required | architect recommendation]
   Reason: [why]
+Data access pattern: [Repository + UnitOfWork | Direct DbContext | N/A — no ORM]
+  Decision source: [user-required | architect recommendation after explicit no preference | architect recommendation after targeted checkpoint]
+  Reason: [tied to domain complexity — rich aggregates / multi-repo transactions favor Repository + UnitOfWork; straightforward CRUD favors Direct DbContext]
 Auth strategy: [value]
   Decision source: [user-required | architect recommendation]
   Reason: [tied to frontend type and stateless/stateful decision]
@@ -205,21 +221,32 @@ Type: [value | None | API Only]
 
 ── External dependencies ────────────────────────────────────────
 
-  Responsibility / Need        Proposed Choice        Constraint Handling
-  ───────────────────────────  ─────────────────────  ─────────────────────────────────────────
-  [e.g. Send email reports]    [e.g. MailKit]         [approved OSS only | no vendor lock-in]
-  [e.g. Generate Excel]        [e.g. ClosedXML]       [commercial license avoided]
-  [e.g. Auth provider]         [e.g. self-hosted JWT] [managed not allowed | compliance]
-  [e.g. Storage / search]      [e.g. Azure Blob]      [vendor preference | data residency]
+  These are packages the architect proposes to satisfy specific needs detected in the
+  context. One bullet per package. The decision is the user's — they may confirm, swap any
+  package, or reject it, and the architect readapts the list without resistance.
 
-  For each row, state whether the choice is:
-  - required by user constraint
-  - selected from an approved/preferred set
-  - recommended by the architect because no preference was given
+  • [Need — e.g. Send the daily purchase-suggestion email]
+      Proposed package: [e.g. MailKit]
+      Why this package: [why it fits THIS need — maturity, license, fit with the chosen stack,
+        active maintenance — one or two concrete reasons, never just "it's popular"]
+      Alternative: [e.g. SendGrid SDK] — [one line on the trade-off vs. the proposed one]
+      Decision source: [required by user constraint | selected from an approved/preferred set |
+        architect recommendation because no preference was given]
 
-  If no external dependencies: "No external packages required beyond base stack."
+  • [Need — e.g. Build the Excel attachment with the purchase suggestions]
+      Proposed package: [e.g. ClosedXML]
+      Why this package: [reason tied to the need]
+      Alternative: [e.g. EPPlus] — [trade-off, e.g. commercial license avoided]
+      Decision source: [...]
 
-  Explicit constraint categories to account for when relevant:
+  Already covered (do NOT propose a new package for these):
+  - [Need] → already satisfied by [existing package, from existing codebase / stated
+    constraint / prior backend-config.md] — reusing it, no new package proposed
+  - [If nothing is pre-covered, omit this block]
+
+  If no external dependencies at all: "No external packages required beyond base stack."
+
+  Constraint categories to respect when relevant:
   - licensing / commercial-use restrictions
   - approved or banned libraries/vendors
   - managed service vs self-hosted requirements
@@ -239,7 +266,7 @@ Type: [value | None | API Only]
 ────────────────────────────────────────────────────────────────
 
 Please confirm this proposal or tell me what you want to change.
-If needed, respond by bucket: architecture pattern, stack, external dependencies.
+If needed, respond by bucket: architecture pattern, stack, data access pattern, external dependencies.
 I will update any decision without resistance.
 If a change introduces a risk, I will note it once — the decision is yours.
 ```

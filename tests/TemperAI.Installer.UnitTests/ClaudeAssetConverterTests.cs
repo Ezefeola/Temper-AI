@@ -131,4 +131,131 @@ public sealed class ClaudeAssetConverterTests
 
         Assert.Contains("Bash", result.Content);
     }
+
+    private static SkillFlatNameMap BuildSkillMap()
+    {
+        return SkillFlatNameMap.Build(
+        [
+            "backend/dotnet/csharp",
+            "backend/dotnet/api",
+            "backend/dotnet/orms/ef-core/queries",
+            "workflow/friday/state-schema"
+        ]);
+    }
+
+    [Fact]
+    public void Convert_WithSkillMap_FlattensFullPathReferenceInBody()
+    {
+        string source = """
+            ---
+            name: temper-backend
+            description: Backend agent.
+            mode: subagent
+            permission:
+              read: allow
+              edit: allow
+            ---
+
+            # Body
+            Load `backend/dotnet/orms/ef-core/queries/SKILL.md` for queries.
+            """;
+
+        ConvertedAgent result = _converter.Convert(source, BuildSkillMap());
+
+        Assert.Contains("backend-dotnet-orms-ef-core-queries/SKILL.md", result.Content);
+        Assert.DoesNotContain("backend/dotnet/orms/ef-core/queries/SKILL.md", result.Content);
+    }
+
+    [Fact]
+    public void Convert_WithSkillMap_FlattensBareBacktickReferenceInBody()
+    {
+        string source = """
+            ---
+            name: temper-backend
+            description: Backend agent.
+            mode: subagent
+            permission:
+              read: allow
+              edit: allow
+            ---
+
+            # Body
+            Load `backend/dotnet/api` before writing controllers.
+            """;
+
+        ConvertedAgent result = _converter.Convert(source, BuildSkillMap());
+
+        Assert.Contains("`backend-dotnet-api`", result.Content);
+        Assert.DoesNotContain("`backend/dotnet/api`", result.Content);
+    }
+
+    [Fact]
+    public void Convert_WithSkillMap_FlattensReferenceInFrontmatterDescription()
+    {
+        string source = """
+            ---
+            name: temper-friday
+            description: Loads workflow/friday/state-schema/SKILL.md on startup.
+            mode: primary
+            permission:
+              read: allow
+              task: allow
+            ---
+
+            # FRIDAY
+            """;
+
+        ConvertedAgent result = _converter.Convert(source, BuildSkillMap());
+
+        Assert.Contains("workflow-friday-state-schema/SKILL.md", result.Content);
+        Assert.DoesNotContain("workflow/friday/state-schema/SKILL.md", result.Content);
+    }
+
+    [Fact]
+    public void Convert_WithSkillMap_LeavesUnknownPathsUntouched()
+    {
+        string source = """
+            ---
+            name: temper-backend
+            description: Backend agent.
+            mode: subagent
+            permission:
+              read: allow
+            ---
+
+            # Body
+            See `Docs/Application/Architecture/backend-config.md` and Plan/INDEX.md.
+            Also `some/unknown/path/SKILL.md`.
+            """;
+
+        ConvertedAgent result = _converter.Convert(source, BuildSkillMap());
+
+        Assert.Contains("Docs/Application/Architecture/backend-config.md", result.Content);
+        Assert.Contains("Plan/INDEX.md", result.Content);
+        Assert.Contains("some/unknown/path/SKILL.md", result.Content);
+    }
+
+    [Fact]
+    public void Convert_WithoutSkillMap_KeepsNestedReferences()
+    {
+        string source = """
+            ---
+            name: temper-backend
+            description: Backend agent.
+            mode: subagent
+            permission:
+              read: allow
+            ---
+
+            # Body
+            Load `backend/dotnet/api` and `backend/dotnet/orms/ef-core/queries/SKILL.md`.
+            """;
+
+        // No map passed — mirrors the OpenCode path, which never rewrites references.
+        ConvertedAgent result = _converter.Convert(source);
+
+        Assert.Contains("backend/dotnet/api", result.Content);
+        Assert.Contains("backend/dotnet/orms/ef-core/queries/SKILL.md", result.Content);
+        Assert.DoesNotContain("backend-dotnet-api", result.Content);
+    }
 }
