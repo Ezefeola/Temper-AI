@@ -9,6 +9,12 @@ produces: [dbcontext, dbsets, configuration-registration]
 
 # DbContext Setup — TemperAI
 
+> **On the DbContext name:** the examples in this and every EF Core skill use `AppDbContext` as an
+> illustrative name for readability. The name is NOT mandated — a project may define one or several
+> DbContexts (e.g. per bounded context or module). Use whatever name(s) the project defines, and
+> apply these rules to whichever DbContext the task targets. Whatever name is chosen, keep every
+> example internally consistent with it.
+
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **ALWAYS keep `DbSet<T>` names aligned with EF conventions and the chosen architecture**

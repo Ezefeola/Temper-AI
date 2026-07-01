@@ -321,7 +321,7 @@ is missing, stop and ask before loading (see notes below).
 | Creating or modifying DbContext | `<tech-root>/orms/<orm>/dbcontext-setup/SKILL.md` (`backend/dotnet/orms/ef-core/dbcontext-setup/SKILL.md`) |
 | **[`Data Access = Repository + UnitOfWork` only]** Creating repositories or UnitOfWork from scratch | `<tech-root>/orms/<orm>/repository-pattern/SKILL.md` (`backend/dotnet/orms/ef-core/repository-pattern/SKILL.md`) |
 | **[`Data Access = Repository + UnitOfWork` only]** Using existing repositories / UnitOfWork in use cases | `<tech-root>/orms/<orm>/repository-usage/SKILL.md` (`backend/dotnet/orms/ef-core/repository-usage/SKILL.md`) |
-| **[`Data Access = Direct DbContext` only]** Using `AppDbContext` directly in use cases (read or write) | `<tech-root>/orms/<orm>/dbcontext-usage/SKILL.md` (`backend/dotnet/orms/ef-core/dbcontext-usage/SKILL.md`) |
+| **[`Data Access = Direct DbContext` only]** Using a `DbContext` directly in use cases (read or write) | `<tech-root>/orms/<orm>/dbcontext-usage/SKILL.md` (`backend/dotnet/orms/ef-core/dbcontext-usage/SKILL.md`) |
 | Writing LINQ expressions over in-memory collections | `<tech-root>/linq/SKILL.md` (`backend/dotnet/linq/SKILL.md`) |
 | Adding, removing, or upgrading a NuGet package (the task changes a `.csproj`) | `<tech-root>/shared/backend-config-maintenance/SKILL.md` (`backend/dotnet/shared/backend-config-maintenance/SKILL.md`) |
 
