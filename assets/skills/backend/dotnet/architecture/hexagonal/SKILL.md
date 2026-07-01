@@ -120,7 +120,7 @@ src/
 │   │   └── Errors/
 │   │
 │   ├── Contracts/
-│   │   ├── Persistence/
+│   │   ├── Persistence/                         # [Repository + UnitOfWork only]
 │   │   │   ├── Repositories/
 │   │   │   │   ├── IProductRepository.cs
 │   │   │   │   └── IOrderRepository.cs
@@ -166,9 +166,9 @@ src/
 │   │   ├── Configurations/
 │   │   │   └── ProductConfiguration.cs
 │   │   ├── Migrations/
-│   │   ├── Repositories/
+│   │   ├── Repositories/                        # [Repository + UnitOfWork only]
 │   │   │   └── ProductRepository.cs
-│   │   ├── UnitOfWork.cs
+│   │   ├── UnitOfWork.cs                        # [Repository + UnitOfWork only]
 │   │   └── AppDbContext.cs
 │   └── DependencyInjection.cs
 │
@@ -182,6 +182,28 @@ src/
     │   └── CreateProductCommand.cs
     └── DependencyInjection.cs
 ```
+
+---
+
+## Data access layout by pattern
+
+The persistence layout depends on the `Data Access` field in `backend-config.md`. The hexagon,
+ports, adapters, and dependency direction are identical for both.
+
+**`Repository + UnitOfWork`** (the tree above):
+- `Core/Contracts/Persistence/Repositories/` — repository interfaces (output ports)
+- `Core/Contracts/Persistence/IUnitOfWork.cs`
+- The persistence driven adapter (e.g. `Adapter.SqlServer/Persistence/`) holds `Repositories/`, `UnitOfWork.cs`, `AppDbContext.cs`, `Configurations/`, `Migrations/`
+- Use cases depend on the repository ports + `IUnitOfWork`
+- Exact contract + rules: load `backend/dotnet/orms/ef-core/repository-pattern` (create) or `repository-usage` (consume)
+
+**`Direct DbContext`** — no repository/UnitOfWork ports:
+- No `Core/Contracts/Persistence/Repositories/` and no `IUnitOfWork.cs`
+- The persistence adapter holds only `AppDbContext.cs`, `Configurations/`, `Migrations/` — no `Repositories/`, no `UnitOfWork.cs`
+- Use cases depend on the `DbContext` directly and call `SaveChangesAsync`
+- Exact usage rules: load `backend/dotnet/orms/ef-core/dbcontext-usage`
+
+Either way, load `backend/dotnet/orms/ef-core/query-best-practices` whenever the task writes queries.
 
 ---
 
@@ -284,103 +306,18 @@ See `backend/dotnet/ddd` for the complete Domain Event implementation pattern.
 
 ## Core — ports, use cases, DTOs
 
-### Output Ports — what the Core needs
+### Persistence output ports — depend on the Data Access pattern
 
-Defined in `Core/Contracts/Persistence/`. Repository interfaces in `Core/Contracts/Persistence/Repositories/`, UnitOfWork at root level. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
+The Core's persistence contracts follow the `Data Access` field in `backend-config.md`. Hexagonal
+does not redefine them — the leaf EF Core skills are the single source of truth.
 
-```csharp
-// IProductRepository.cs — in Core/Contracts/Persistence/Repositories/
-public interface IProductRepository : IGenericRepository<Product>
-{
-    // With tracking — for modification operations
-    Task<Product?> GetByIdAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
+**`Repository + UnitOfWork`:**
+- Repository interfaces (output ports) live in `Core/Contracts/Persistence/Repositories/`; `IUnitOfWork` at `Core/Contracts/Persistence/`. Driven persistence adapters (e.g. `Adapter.SqlServer`) implement them.
+- The exact contracts (`IGenericRepository<TEntity>`, the per-entity repository interface, `IUnitOfWork`, `SaveResult`) and their rules are defined once in `backend/dotnet/orms/ef-core/repository-pattern`. Load it to create them, or `repository-usage` to consume existing ones. Do not restate the contract here.
 
-    // Without tracking — for read-only queries
-    Task<Product?> GetByIdAsNoTrackingAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> ExistsByNameAsync(
-        string productName,
-        CancellationToken cancellationToken = default);
-
-    Task AddAsync(
-        Product product,
-        CancellationToken cancellationToken = default);
-}
-
-// IUnitOfWork.cs — in Core/Contracts/Persistence/
-public interface IUnitOfWork : IDisposable
-{
-    IProductRepository ProductRepository { get; }
-
-    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
-    Task CommitTransactionAsync(CancellationToken cancellationToken = default);
-    Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
-    Task<SaveResult> CompleteAsync(CancellationToken cancellationToken = default);
-}
-
-// SaveResult.cs
-public sealed class SaveResult
-{
-    public bool IsSuccess { get; init; }
-    public int RowsAffected { get; init; }
-    public required string ErrorMessage { get; init; }
-}
-```
-
-### Generic Repository
-
-For base repository operations, use `IGenericRepository` and `GenericRepository` in `Core/Contracts/Persistence/Repositories/`:
-
-```csharp
-// IGenericRepository.cs — in Core/Contracts/Persistence/Repositories/
-public interface IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    IQueryable<TEntity> Query();
-
-    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
-
-    void Add(TEntity entity);
-
-    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
-}
-
-// GenericRepository.cs — in Core/Contracts/Persistence/Repositories/
-public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    protected readonly DbContext _context;
-    protected readonly DbSet<TEntity> _dbSet;
-
-    public GenericRepository(ApplicationDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
-
-    public IQueryable<TEntity> Query()
-    {
-        return _dbSet.AsQueryable();
-    }
-
-    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
-    {
-        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
-    }
-
-    public void Add(TEntity entity)
-    {
-        _dbSet.Add(entity);
-    }
-
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
-}
-```
+**`Direct DbContext`:**
+- No repository or `IUnitOfWork` ports. Use cases depend on the `DbContext` directly and own `SaveChangesAsync`; the persistence adapter exposes only the `DbContext`, configurations, and migrations.
+- Rules are defined in `backend/dotnet/orms/ef-core/dbcontext-usage`.
 
 ### External service output ports
 
@@ -441,11 +378,13 @@ public sealed record CreateProductResponseDto
 
 ### Use cases — implement Input Ports
 
-Use cases are `sealed class` in `Core/UseCases/` that implement Input Ports. They depend on Output Ports, never on concrete adapters.
+Use cases are `sealed class` in `Core/UseCases/` that implement Input Ports. They depend on Output Ports, never on concrete adapters. Their persistence dependency follows the `Data Access` pattern: under `Repository + UnitOfWork` they inject `IUnitOfWork` (+ repositories) as shown below; under `Direct DbContext` they inject the `DbContext` and call `SaveChangesAsync` (see `dbcontext-usage`).
 
 - Explicit constructor injection — never primary constructor.
-- Domain events published explicitly after `CompleteAsync`.
+- Domain events published explicitly after the write is persisted (`CompleteAsync` under Repository + UnitOfWork, `SaveChangesAsync` under Direct DbContext).
 - Result pattern with `HttpStatusCode`.
+
+The example below is the `Repository + UnitOfWork` variant.
 
 ```csharp
 // CreateProduct.cs
@@ -561,10 +500,13 @@ public class ProductsController : ControllerBase
 
 ### Driven adapter — persistence
 
+Applies under `Repository + UnitOfWork`. Under `Direct DbContext` there is no repository adapter —
+the persistence adapter exposes only the `DbContext` (see `dbcontext-usage`). The repository below
+follows the canonical contract in `backend/dotnet/orms/ef-core/repository-pattern`.
+
 ```csharp
 // Adapter.SqlServer/Persistence/Repositories/ProductRepository.cs
 // Implements IProductRepository (an Output Port defined in Core)
-// ALL repositories MUST inherit from GenericRepository
 public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     private readonly AppDbContext _appDbContext;
@@ -657,6 +599,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("Default"));
         });
 
+        // [Repository + UnitOfWork only] — omit under Direct DbContext (register only the DbContext)
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -726,7 +669,7 @@ When generating actual code, the namespace MUST match the folder structure exact
 - `Core` has zero external dependencies — pure C# only
 - Every adapter is a **separate project** — `Adapter.SqlServer`, `Adapter.RabbitMQ`, `Adapter.WebApi`
 - Adapters **never** depend on other adapters — only on `Core`
-- Persistence contracts (repositories, UnitOfWork) in `Core/Contracts/Persistence/`
+- Persistence follows the `Data Access` pattern: under `Repository + UnitOfWork`, repository/UnitOfWork ports live in `Core/Contracts/Persistence/`; under `Direct DbContext` there are none and use cases depend on the `DbContext` (see `dbcontext-usage`)
 - Output Ports in `Core/Contracts/Ports/Output/` — what the Core needs from the outside (external services)
 - Input Ports in `Core/Contracts/Ports/Input/` — what the Core offers to the outside
 - Driving adapters call Input Ports — they never call Output Ports directly
@@ -737,8 +680,7 @@ When generating actual code, the namespace MUST match the folder structure exact
 - Update methods always validate invariants, check if value changed, set `UpdatedAt`
 - Domain Events are contracts only — `sealed record` with data, no behavior
 - Event publication always explicit in the UseCase — never automatic in SaveChanges
-- `UnitOfWork` is the single entry point to all repositories within a persistence adapter
-- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
-- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
+- Under `Repository + UnitOfWork`: `UnitOfWork` is the single entry point to all repositories within a persistence adapter, and repository interfaces/implementations follow `backend/dotnet/orms/ef-core/repository-pattern` (the canonical contract). Repository and UnitOfWork are always used together
+- Under `Direct DbContext`: no repositories or UnitOfWork — use cases inject the `DbContext` and follow `backend/dotnet/orms/ef-core/dbcontext-usage`
 - For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/orms/ef-core/bulk-operations/SKILL.md`
 - For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

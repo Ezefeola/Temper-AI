@@ -17,7 +17,7 @@ description: >
 
 1. **ALWAYS preserve the four-layer project split**: `Api`, `Application`, `Domain`, `Infrastructure`
 2. **NEVER let `Api` depend directly on `Infrastructure`**
-3. **ALWAYS keep repositories and UnitOfWork behind Application contracts**
+3. **ALWAYS respect the `Data Access` pattern**: under `Repository + UnitOfWork`, keep repositories and UnitOfWork behind Application contracts; under `Direct DbContext`, the `DbContext` lives in Infrastructure and use cases depend on it. Never mix the two.
 4. **ALWAYS keep business rules inside Domain entities**
 5. **NEVER let generic shared guidance override Clean dependency direction or layer placement**
 
@@ -100,6 +100,12 @@ TodoManagerFront/                        ← Blazor WASM frontend solution
 ---
 
 ## Mandatory folder structure
+
+The four-project split (`Api`, `Application`, `Domain`, `Infrastructure`) and the dependency
+direction are **fixed** for Clean Architecture regardless of anything else. What changes with the
+`Data Access` pattern in `backend-config.md` is only the **persistence layout** — see
+"Data access layout by pattern" below. The tree here shows the `Repository + UnitOfWork` layout.
+
 ```
 src/
 ├── YourProject.Api/
@@ -109,7 +115,7 @@ src/
 │
 ├── YourProject.Application/
 │   ├── Contracts/
-│   │   ├── Persistence/
+│   │   ├── Persistence/                         # [Repository + UnitOfWork only]
 │   │   │   ├── Repositories/
 │   │   │   │   ├── IProductRepository.cs
 │   │   │   │   └── IOrderRepository.cs
@@ -151,16 +157,41 @@ src/
 │
 └── YourProject.Infrastructure/
     ├── Persistence/
+    │   ├── AppDbContext.cs
     │   ├── Configurations/
     │   │   └── ProductConfiguration.cs
     │   ├── Migrations/
-    │   ├── Repositories/
+    │   ├── Repositories/                         # [Repository + UnitOfWork only]
     │   │   └── ProductRepository.cs
-    │   └── UnitOfWork.cs
+    │   └── UnitOfWork.cs                         # [Repository + UnitOfWork only]
     ├── Services/
     │   └── EventPublisher.cs
     └── DependencyInjection.cs
 ```
+
+---
+
+## Data access layout by pattern
+
+The persistence layout depends on the `Data Access` field in `backend-config.md`. The rest of the
+Clean structure (layers, dependency direction, UseCases, Domain, Services) is identical for both.
+
+**`Repository + UnitOfWork`** (the tree above):
+- `Application/Contracts/Persistence/Repositories/` — repository interfaces (ports)
+- `Application/Contracts/Persistence/IUnitOfWork.cs` — the persistence entry point
+- `Infrastructure/Persistence/Repositories/` — repository implementations
+- `Infrastructure/Persistence/UnitOfWork.cs`
+- Use cases depend on the repository interfaces + `IUnitOfWork`
+- For the exact repository / UnitOfWork contract and rules, load `backend/dotnet/orms/ef-core/repository-pattern` (create) or `repository-usage` (consume)
+
+**`Direct DbContext`** — the repository/UnitOfWork folders do **not** exist:
+- No `Application/Contracts/Persistence/Repositories/` and no `IUnitOfWork.cs`
+- No `Infrastructure/Persistence/Repositories/` and no `UnitOfWork.cs`
+- `Infrastructure/Persistence/` holds only `AppDbContext.cs`, `Configurations/`, and `Migrations/`
+- Use cases depend on the `DbContext` directly and call `SaveChangesAsync`
+- For the exact usage rules, load `backend/dotnet/orms/ef-core/dbcontext-usage`
+
+Either way, load `backend/dotnet/orms/ef-core/query-best-practices` whenever the task writes queries.
 
 ---
 
@@ -217,103 +248,20 @@ See `backend/dotnet/ddd` for the complete Domain Event implementation pattern.
 
 ## Application — contracts and patterns
 
-### Repository contracts
+### Persistence contracts — depend on the Data Access pattern
 
-Defined in `Application/Contracts/Persistence/Repositories/`. These are the ports that Infrastructure implements. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
+The persistence layer follows the `Data Access` field in `backend-config.md`. Clean does not
+redefine the data-access contracts — the leaf EF Core skills own them so there is a single source
+of truth.
 
-```csharp
-// IProductRepository.cs — in Application/Contracts/Persistence/Repositories/
-public interface IProductRepository : IGenericRepository<Product>
-{
-    // With tracking — for modification operations
-    Task<Product?> GetByIdAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
+**`Repository + UnitOfWork`:**
+- Repository interfaces live in `Application/Contracts/Persistence/Repositories/` — the ports Infrastructure implements.
+- `IUnitOfWork` lives in `Application/Contracts/Persistence/` and is the single persistence entry point that exposes the repositories and `CompleteAsync`.
+- The exact contracts (`IGenericRepository<TEntity>`, the per-entity repository interface, `IUnitOfWork`, `SaveResult`) and their rules are defined once in `backend/dotnet/orms/ef-core/repository-pattern`. Load that skill to create them, or `repository-usage` to consume existing ones. Do not restate the contract here.
 
-    // Without tracking — for read-only queries
-    Task<Product?> GetByIdAsNoTrackingAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> ExistsByNameAsync(
-        string productName,
-        CancellationToken cancellationToken = default);
-
-    Task AddAsync(
-        Product product,
-        CancellationToken cancellationToken = default);
-}
-
-// IUnitOfWork.cs — in Application/Contracts/Persistence/
-public interface IUnitOfWork : IDisposable
-{
-    IProductRepository ProductRepository { get; }
-
-    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
-    Task CommitTransactionAsync(CancellationToken cancellationToken = default);
-    Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
-    Task<SaveResult> CompleteAsync(CancellationToken cancellationToken = default);
-}
-
-// SaveResult.cs
-public sealed class SaveResult
-{
-    public bool IsSuccess { get; init; }
-    public int RowsAffected { get; init; }
-    public required string ErrorMessage { get; init; }
-}
-```
-
-### Generic Repository
-
-For base repository operations, use `IGenericRepository` and `GenericRepository` in `Application/Contracts/Persistence/Repositories/`:
-
-```csharp
-// IGenericRepository.cs — in Application/Contracts/Persistence/Repositories/
-public interface IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    IQueryable<TEntity> Query();
-
-    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
-
-    void Add(TEntity entity);
-
-    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
-}
-
-// GenericRepository.cs — in Application/Contracts/Persistence/Repositories/
-public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    protected readonly DbContext _context;
-    protected readonly DbSet<TEntity> _dbSet;
-
-    public GenericRepository(ApplicationDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
-
-    public IQueryable<TEntity> Query()
-    {
-        return _dbSet.AsQueryable();
-    }
-
-    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
-    {
-        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
-    }
-
-    public void Add(TEntity entity)
-    {
-        _dbSet.Add(entity);
-    }
-
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
-}
-```
+**`Direct DbContext`:**
+- No repository or `IUnitOfWork` contracts. Use cases depend on the `DbContext` directly and own `SaveChangesAsync`.
+- Rules are defined in `backend/dotnet/orms/ef-core/dbcontext-usage`.
 
 ### External service contracts
 
@@ -331,11 +279,14 @@ public interface IEventPublisher
 
 ### Use case pattern
 
-Use cases are `sealed class` without `UseCase` suffix. They depend on abstractions (`IUnitOfWork`, `IEventPublisher`), never on concrete implementations.
+Use cases are `sealed class` without `UseCase` suffix, with explicit constructor injection. Their
+persistence dependency follows the `Data Access` pattern: under `Repository + UnitOfWork` they
+inject `IUnitOfWork` (+ repositories) as shown below; under `Direct DbContext` they inject the
+`DbContext` instead (see `dbcontext-usage`). Everything else is identical.
 
 - Interface in the same folder — `ICreateProduct`, `IUpdateProduct`.
 - Explicit constructor injection — never primary constructor.
-- Domain events published explicitly after `CompleteAsync`.
+- Domain events published explicitly after the write is persisted (`CompleteAsync` under Repository + UnitOfWork, `SaveChangesAsync` under Direct DbContext).
 - Result pattern with `HttpStatusCode`.
 
 ```csharp
@@ -411,6 +362,9 @@ public static class DependencyInjection
 
 ### DI structure
 
+Under `Direct DbContext`, register only the database — omit `AddRepositories()` and `AddUnitOfWork()`
+(there are none). The example below is the `Repository + UnitOfWork` wiring.
+
 ```csharp
 // Infrastructure/DependencyInjection.cs
 public static class DependencyInjection
@@ -421,8 +375,8 @@ public static class DependencyInjection
     {
         services
             .AddDatabase(configuration)
-            .AddRepositories()
-            .AddUnitOfWork();
+            .AddRepositories()   // [Repository + UnitOfWork only]
+            .AddUnitOfWork();    // [Repository + UnitOfWork only]
 
         return services;
     }
@@ -468,8 +422,8 @@ When generating actual code, the namespace MUST match the folder structure exact
 - Update methods always validate invariants, check if value changed, set `UpdatedAt`
 - Domain Events are contracts only — `sealed record` with data, no behavior
 - Event publication always explicit in the UseCase — never automatic in SaveChanges
-- `UnitOfWork` is the single entry point to all repositories
-- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
-- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
+- Data access follows the `Data Access` pattern in `backend-config.md` — `Repository + UnitOfWork` or `Direct DbContext` — and only one is used per project
+- Under `Repository + UnitOfWork`: `UnitOfWork` is the single entry point to all repositories, and repository interfaces/implementations follow `backend/dotnet/orms/ef-core/repository-pattern` (the canonical contract). Repository and UnitOfWork are always used together
+- Under `Direct DbContext`: no repositories or UnitOfWork — use cases inject the `DbContext` and follow `backend/dotnet/orms/ef-core/dbcontext-usage`
 - For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/orms/ef-core/bulk-operations/SKILL.md`
 - For data access implementation details, load only the EF Core leaf skill(s) the task actually touches

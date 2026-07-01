@@ -16,7 +16,7 @@ description: >
 ## 🚨 NON-NEGOTIABLE RULES — ZERO TOLERANCE
 
 1. **ALWAYS keep dependencies pointing inward toward `Domain`**
-2. **ALWAYS define persistence contracts in `Domain`** for this architecture
+2. **ALWAYS respect the `Data Access` pattern**: under `Repository + UnitOfWork`, define the persistence contracts in `Domain` for this architecture; under `Direct DbContext`, there are no persistence contracts and use cases depend on the `DbContext` (in `Infrastructure`). Never mix the two.
 3. **NEVER let `Application` or `Api` bypass Domain-owned rules**
 4. **ALWAYS keep aggregates and specifications as Domain concerns**
 5. **NEVER let generic shared guidance override Onion circle boundaries**
@@ -160,7 +160,7 @@ src/
 │   │   ├── ActiveProductsSpecification.cs
 │   │   └── ProductsByPriceRangeSpecification.cs
 │   │
-│   ├── Contracts/
+│   ├── Contracts/                               # [Repository + UnitOfWork only]
 │   │   ├── Persistence/
 │   │   │   ├── Repositories/
 │   │   │   │   ├── IProductRepository.cs
@@ -180,15 +180,38 @@ src/
     │   │   ├── ProductConfiguration.cs
     │   │   └── OrderConfiguration.cs
     │   ├── Migrations/
-    │   ├── Repositories/
+    │   ├── Repositories/                         # [Repository + UnitOfWork only]
     │   │   ├── ProductRepository.cs
     │   │   └── OrderRepository.cs
-    │   ├── UnitOfWork.cs
+    │   ├── UnitOfWork.cs                         # [Repository + UnitOfWork only]
     │   └── AppDbContext.cs
     ├── Services/
     │   └── EmailService.cs
     └── DependencyInjection.cs
 ```
+
+---
+
+## Data access layout by pattern
+
+The persistence layout depends on the `Data Access` field in `backend-config.md`. The circles,
+inward dependency direction, aggregates, and specifications are identical for both.
+
+**`Repository + UnitOfWork`** (the tree above):
+- `Domain/Contracts/Persistence/Repositories/` — repository interfaces (the domain defines what it needs)
+- `Domain/Contracts/Persistence/IUnitOfWork.cs`
+- `Infrastructure/Persistence/` holds `Repositories/`, `UnitOfWork.cs`, `AppDbContext.cs`, `Configurations/`, `Migrations/`
+- Use cases depend on the repository interfaces + `IUnitOfWork`
+- Exact contract + rules: load `backend/dotnet/orms/ef-core/repository-pattern` (create) or `repository-usage` (consume)
+
+**`Direct DbContext`** — no repository/UnitOfWork contracts:
+- No `Domain/Contracts/Persistence/` repositories or `IUnitOfWork.cs`
+- `Infrastructure/Persistence/` holds only `AppDbContext.cs`, `Configurations/`, `Migrations/` — no `Repositories/`, no `UnitOfWork.cs`
+- Use cases depend on the `DbContext` directly and call `SaveChangesAsync`
+- Exact usage rules: load `backend/dotnet/orms/ef-core/dbcontext-usage`
+
+Specifications remain a Domain concern in either pattern. Either way, load
+`backend/dotnet/orms/ef-core/query-best-practices` whenever the task writes queries.
 
 ---
 
@@ -361,104 +384,17 @@ public sealed class ActiveProductsSpecification : ISpecification<Product>
 
 ### Repository contracts — in Domain, not Application
 
-**Key difference from Clean Architecture:** Repository interfaces are defined in `Domain/Contracts/Persistence/Repositories/`. The domain defines what it needs — infrastructure implements it. **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**.
+Persistence contracts follow the `Data Access` field in `backend-config.md`. Onion does not redefine
+the data-access contract — the leaf EF Core skills own it so there is a single source of truth.
 
-```csharp
-// Domain/Contracts/Persistence/Repositories/IProductRepository.cs — MUST inherit from IGenericRepository
-public interface IProductRepository : IGenericRepository<Product>
-{
-    Task<Product?> GetByIdAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
+**`Repository + UnitOfWork`:**
+- **Key difference from Clean Architecture:** repository interfaces and `IUnitOfWork` are defined in `Domain/Contracts/Persistence/` (the domain defines what it needs — infrastructure implements it), not in Application.
+- The exact contracts (`IGenericRepository<TEntity>`, the per-entity repository interface, `IUnitOfWork`, `SaveResult`) and their rules are defined once in `backend/dotnet/orms/ef-core/repository-pattern`. Load it to create them, or `repository-usage` to consume existing ones. Do not restate the contract here.
+- Onion repositories commonly add specification-based queries (e.g. `ListAsync(ISpecification<T>)`) on top of that base — see the Specification pattern above and the repository implementation below.
 
-    Task<Product?> GetByIdAsNoTrackingAsync(
-        Guid productId,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<Product>> ListAsync(
-        ISpecification<Product> specification,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> ExistsByNameAsync(
-        string productName,
-        CancellationToken cancellationToken = default);
-
-    Task AddAsync(
-        Product product,
-        CancellationToken cancellationToken = default);
-}
-
-// Domain/Contracts/Persistence/IUnitOfWork.cs
-public interface IUnitOfWork : IDisposable
-{
-    IProductRepository ProductRepository { get; }
-    IOrderRepository OrderRepository { get; }
-
-    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
-    Task CommitTransactionAsync(CancellationToken cancellationToken = default);
-    Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
-    Task<SaveResult> CompleteAsync(CancellationToken cancellationToken = default);
-}
-
-// SaveResult.cs
-public sealed class SaveResult
-{
-    public bool IsSuccess { get; init; }
-    public int RowsAffected { get; init; }
-    public required string ErrorMessage { get; init; }
-}
-```
-
-### Generic Repository
-
-For base repository operations, use `IGenericRepository` and `GenericRepository` in `Domain/Contracts/Persistence/Repositories/`:
-
-```csharp
-// IGenericRepository.cs — in Domain/Contracts/Persistence/Repositories/
-public interface IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    IQueryable<TEntity> Query();
-
-    Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default);
-
-    void Add(TEntity entity);
-
-    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
-}
-
-// GenericRepository.cs — in Domain/Contracts/Persistence/Repositories/
-public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class, IEntity
-{
-    protected readonly DbContext _context;
-    protected readonly DbSet<TEntity> _dbSet;
-
-    public GenericRepository(ApplicationDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
-
-    public IQueryable<TEntity> Query()
-    {
-        return _dbSet.AsQueryable();
-    }
-
-    public async Task<TEntity?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken)
-    {
-        return await _dbSet.FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
-    }
-
-    public void Add(TEntity entity)
-    {
-        _dbSet.Add(entity);
-    }
-
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
-}
-```
+**`Direct DbContext`:**
+- No repository or `IUnitOfWork` contracts. Use cases depend on the `DbContext` directly and own `SaveChangesAsync`. Specifications remain a Domain concern and are applied against the `DbContext`.
+- Rules are defined in `backend/dotnet/orms/ef-core/dbcontext-usage`.
 
 ---
 
@@ -466,11 +402,15 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
 ### Use case pattern
 
-Use cases are `sealed class` without `UseCase` suffix. They depend on abstractions from the Domain layer (`IUnitOfWork`, repository interfaces), never on concrete implementations.
+Use cases are `sealed class` without `UseCase` suffix, with explicit constructor injection. Their
+persistence dependency follows the `Data Access` pattern: under `Repository + UnitOfWork` they inject
+`IUnitOfWork` (+ repository interfaces from the Domain layer) as shown below; under `Direct DbContext`
+they inject the `DbContext` and call `SaveChangesAsync` (see `dbcontext-usage`). The example below is
+the `Repository + UnitOfWork` variant.
 
 - Interface in the same folder — `ICreateProduct`, `IUpdateProduct`.
 - Explicit constructor injection — never primary constructor.
-- Domain events published explicitly after `CompleteAsync`.
+- Domain events published explicitly after the write is persisted (`CompleteAsync` under Repository + UnitOfWork, `SaveChangesAsync` under Direct DbContext).
 - Result pattern with `HttpStatusCode`.
 
 ```csharp
@@ -586,9 +526,12 @@ public static class DependencyInjection
 
 ### Repository implementation
 
+Applies under `Repository + UnitOfWork`. Under `Direct DbContext` there is no repository layer — use
+cases apply specifications against the `DbContext` directly (see `dbcontext-usage`). The repository
+below follows the canonical contract in `backend/dotnet/orms/ef-core/repository-pattern`.
+
 ```csharp
 // Infrastructure/Persistence/Repositories/ProductRepository.cs
-// ALL repositories MUST inherit from GenericRepository
 public sealed class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     private readonly AppDbContext _appDbContext;
@@ -671,6 +614,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // AddRepositories() and AddUnitOfWork() are [Repository + UnitOfWork only] —
+        // under Direct DbContext, register only the database.
         services
             .AddDatabase(configuration)
             .AddRepositories()
@@ -715,9 +660,10 @@ When generating actual code, the namespace MUST match the folder structure exact
 ## Rules specific to Onion Architecture
 
 - `Domain` zero external dependencies — pure C# only
-- **Repository interfaces live in `Domain/Contracts/Persistence/Repositories/`** — not in Application. The domain defines what it needs.
-- **UnitOfWork interface lives in `Domain/Contracts/`** — not in Application.
-- **Specifications live in `Domain/Specifications/`** — they encapsulate query logic in the domain layer.
+- Data access follows the `Data Access` pattern in `backend-config.md` (`Repository + UnitOfWork` or `Direct DbContext`), and only one is used per project
+- **[Repository + UnitOfWork only]** Repository interfaces live in `Domain/Contracts/Persistence/Repositories/` and the `UnitOfWork` interface in `Domain/Contracts/` — not in Application. The domain defines what it needs; interfaces/implementations follow `backend/dotnet/orms/ef-core/repository-pattern`. Repository and UnitOfWork are always used together.
+- **[Direct DbContext]** No persistence contracts — use cases inject the `DbContext` and follow `backend/dotnet/orms/ef-core/dbcontext-usage`
+- **Specifications live in `Domain/Specifications/`** — they encapsulate query logic in the domain layer (a Domain concern in either pattern).
 - **Aggregate roots** manage consistency within their boundary — no entity outside an aggregate references it directly.
 - **Repository per aggregate root**, not per entity — the aggregate root is the only entry point.
 - All layers depend inward — toward the domain center.
@@ -726,9 +672,7 @@ When generating actual code, the namespace MUST match the folder structure exact
 - Update methods always validate invariants, check if value changed, set `UpdatedAt`.
 - Domain Events are contracts only — `sealed record` with data, no behavior.
 - Event publication always explicit in the UseCase — never automatic in SaveChanges.
-- `UnitOfWork` is the single entry point to all repositories.
-- **All repository interfaces MUST inherit from `IGenericRepository<TEntity>`**
-- **All repository implementations MUST inherit from `GenericRepository<TEntity>`**
+- **[Repository + UnitOfWork only]** `UnitOfWork` is the single entry point to all repositories, and repository interfaces/implementations follow `backend/dotnet/orms/ef-core/repository-pattern` (the canonical contract).
 - **Never use `using static`** — always use explicit `using` directives with the namespace, then reference types by their name. Static usings hide the type origin and make code harder to read and navigate.
 - Domain folder names must be **plural** and different from the class name — `Domain/Entities/Products/Product.cs`, never `Domain/Entities/Product/Product.cs` — this avoids namespace collisions that force fully qualified type names.
 - For bulk insert operations (1000+ rows), use `BulkInsertOperations` from `backend/dotnet/orms/ef-core/bulk-operations/SKILL.md`
